@@ -1,2 +1,2 @@
-# pm_semestral_task
+# CollabFlow
 Semestral task for "Project Management" Unicorn University course
