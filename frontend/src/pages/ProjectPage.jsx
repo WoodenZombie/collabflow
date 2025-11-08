@@ -72,3 +72,85 @@ import ProjectHeader from '../components/projects/ProjectHeader';
       completed: completedProjects
     };
   };
+
+
+  const projectsByStatus = getProjectsByStatus();
+
+  // Calculate total counts for progress bars
+  const totalPending = projects.reduce((sum, p) => sum + p.pending, 0);
+  const totalInProgress = projects.reduce((sum, p) => sum + p.inProgress, 0);
+  const totalDone = projects.reduce((sum, p) => sum + p.done, 0);
+
+  const handleFilterChange = (filter) => {
+    setActiveFilter(filter);
+    // Filter logic will be implemented based on selected filter
+  };  
+
+  return (
+    <div>
+      <ProjectHeader 
+        onCreateTask={() => {}}
+        onCreateAppointment={() => {}}
+        onCreateTeam={() => {}}
+      />
+      
+      <FilterTabs 
+        activeFilter={activeFilter}
+        onFilterChange={handleFilterChange}
+      />
+
+       {/* In Progress Section */}
+       {projectsByStatus.inProgress.length > 0 && (
+        <section>
+          <ProgressBar 
+            count={totalInProgress}
+            label="In Progress"
+            color="purple"
+          />
+          {projectsByStatus.inProgress.map(project => (
+            <ProjectCard 
+              key={project.id}
+              project={project}
+            />
+          ))}
+        </section>
+      )}
+
+      {/* Pending Section */}
+      {projectsByStatus.pending.length > 0 && (
+        <section>
+          <ProgressBar 
+            count={totalPending}
+            label="Pending"
+            color="orange"
+          />
+          {projectsByStatus.pending.map(project => (
+            <ProjectCard 
+              key={project.id}
+              project={project}
+            />
+          ))}
+        </section>
+      )}
+
+      {/* Completed Section */}
+      {projectsByStatus.completed.length > 0 && (
+        <section>
+          <ProgressBar 
+            count={totalDone}
+            label="Completed"
+            color="green"
+          />
+          {projectsByStatus.completed.map(project => (
+            <ProjectCard 
+              key={project.id}
+              project={project}
+            />
+          ))}
+        </section>
+      )}
+    </div>
+  );
+
+
+export default ProjectsPage;
