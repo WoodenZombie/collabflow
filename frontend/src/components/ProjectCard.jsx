@@ -9,9 +9,9 @@
  * - status: 'pending' | 'inProgress' | 'completed'
  * - taskCount: number (number of tasks)
  * - onStatusChange: function (callback when card is clicked for status change)
- * - onSelect: function (optional callback when card is selected/viewed)
+ * - onEdit: function (callback when edit button is clicked)
  */
-function ProjectCard({ title, description, priorityLabel, status, taskCount, onStatusChange, onSelect }) {
+function ProjectCard({ title, description, priorityLabel, status, taskCount, onStatusChange, onEdit }) {
     // Status color mapping
     const statusColors = {
       'pending': '#FFA500', // Orange/Yellow
@@ -28,7 +28,8 @@ function ProjectCard({ title, description, priorityLabel, status, taskCount, onS
       border: `2px solid ${statusColors[status]}`,
       cursor: 'pointer',
       transition: 'transform 0.2s, box-shadow 0.2s',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      position: 'relative'
     };
   
     const priorityStyle = {
@@ -43,14 +44,36 @@ function ProjectCard({ title, description, priorityLabel, status, taskCount, onS
              priorityLabel === 'Important' ? '#9370DB' : '#666'
     };
   
-    const handleCardClick = () => {
-      // Call onSelect if provided (for selecting/viewing the project)
-      if (onSelect) {
-        onSelect();
+    const editButtonStyle = {
+      position: 'absolute',
+      top: '12px',
+      right: '12px',
+      padding: '4px 8px',
+      backgroundColor: '#9E9E9E',
+      color: '#FFFFFF',
+      border: 'none',
+      borderRadius: '4px',
+      fontSize: '12px',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+      zIndex: 10
+    };
+  
+    const handleCardClick = (e) => {
+      // Don't trigger status change if edit button is clicked
+      if (e.target.closest('button')) {
+        return;
       }
       // Call onStatusChange for status cycling
       if (onStatusChange) {
         onStatusChange();
+      }
+    };
+  
+    const handleEditClick = (e) => {
+      e.stopPropagation();
+      if (onEdit) {
+        onEdit();
       }
     };
   
@@ -67,6 +90,18 @@ function ProjectCard({ title, description, priorityLabel, status, taskCount, onS
           e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
         }}
       >
+        {/* Edit Button */}
+        {onEdit && (
+          <button
+            style={editButtonStyle}
+            onClick={handleEditClick}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#757575'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#9E9E9E'}
+          >
+            Edit
+          </button>
+        )}
+  
         {/* Priority Tag */}
         {priorityLabel && (
           <div>
