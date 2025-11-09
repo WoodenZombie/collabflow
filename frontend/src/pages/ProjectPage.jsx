@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import ProjectCard from '../components/projects/ProjectCard';
-import FilterTabs from '../components/projects/FilterTabs';
-import ProjectHeader from '../components/projects/ProjectHeader';
-
+import ProjectCard from '../components/ProjectCard';
+import FilterTabs from '../components/FilterTabs';
+import ProjectHeader from '../components/ProjectHeader';
+import ProgressBar from '../components/ProgressBar';
 
 /**
  * ProjectsPage - Main page for displaying projects
@@ -24,8 +24,10 @@ import ProjectHeader from '../components/projects/ProjectHeader';
  *   ]
  * }
  */
+function ProjectsPage() {
+  const [activeFilter, setActiveFilter] = useState('byTotalTasks');
 
- // Mock data or fake data - will be replaced with backend data
+  // Mock data or fake data - will be replaced with backend data
   // This structure matches Project.Name, Project.Pending, Project.Done, Project.Progress
   const [projects] = useState([
     {
@@ -60,7 +62,7 @@ import ProjectHeader from '../components/projects/ProjectHeader';
     }
   ]);
 
-// Group projects by status based on task counts
+  // Group projects by status based on task counts
   const getProjectsByStatus = () => {
     const inProgressProjects = projects.filter(p => p.inProgress > 0);
     const pendingProjects = projects.filter(p => p.pending > 0 && p.inProgress === 0);
@@ -73,7 +75,6 @@ import ProjectHeader from '../components/projects/ProjectHeader';
     };
   };
 
-
   const projectsByStatus = getProjectsByStatus();
 
   // Calculate total counts for progress bars
@@ -84,7 +85,7 @@ import ProjectHeader from '../components/projects/ProjectHeader';
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
     // Filter logic will be implemented based on selected filter
-  };  
+  };
 
   return (
     <div>
@@ -99,8 +100,8 @@ import ProjectHeader from '../components/projects/ProjectHeader';
         onFilterChange={handleFilterChange}
       />
 
-       {/* In Progress Section */}
-       {projectsByStatus.inProgress.length > 0 && (
+      {/* In Progress Section */}
+      {projectsByStatus.inProgress.length > 0 && (
         <section>
           <ProgressBar 
             count={totalInProgress}
@@ -151,6 +152,6 @@ import ProjectHeader from '../components/projects/ProjectHeader';
       )}
     </div>
   );
-
+}
 
 export default ProjectsPage;

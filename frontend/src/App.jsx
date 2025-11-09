@@ -1,4 +1,4 @@
-import ProjectsPage from './pages/ProjectsPage';
+import ProjectsPage from './pages/ProjectPage';
 import './App.css';
 
 function App() {
