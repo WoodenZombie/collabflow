@@ -3,7 +3,9 @@ import ProjectCard from '../components/ProjectCard';
 import FilterTabs from '../components/FilterTabs';
 import ProjectHeader from '../components/ProjectHeader';
 import ProgressBar from '../components/ProgressBar';
+import DeleteProjectForm from '../components/DeleteProjectForm';
 import { fakeProjects } from '../../data/fakeProjects';
+import { fakeProjectsExtended } from '../../data/fakeProjectsExtended';
 
 /**
  * ProjectPage - Main page for displaying projects grouped by status
@@ -11,6 +13,8 @@ import { fakeProjects } from '../../data/fakeProjects';
  */
 function ProjectPage() {
   const [projects, setProjects] = useState(fakeProjects);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   /**
    * Cycle through status: Pending → In-Progress → Complete → Pending
@@ -35,6 +39,39 @@ function ProjectPage() {
           : project
       )
     );
+  };
+
+  /**
+   * Handle opening delete modal
+   */
+  const handleOpenDeleteModal = (projectId) => {
+    // Find extended project data
+    const extendedProject = fakeProjectsExtended.find(p => p.id === projectId);
+    // Fallback to basic project data if extended not found
+    const project = extendedProject || projects.find(p => p.id === projectId);
+    
+    if (project) {
+      setSelectedProject(project);
+      setIsDeleteModalOpen(true);
+    }
+  };
+
+  /**
+   * Handle closing delete modal
+   */
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setSelectedProject(null);
+  };
+
+  /**
+   * Handle project deletion
+   */
+  const handleDeleteProject = (projectId) => {
+    setProjects(prevProjects => 
+      prevProjects.filter(project => project.id !== projectId)
+    );
+    // Modal will close automatically via onClose callback
   };
 
   /**
@@ -82,6 +119,7 @@ function ProjectPage() {
               status={project.status}
               taskCount={project.taskCount}
               onStatusChange={() => handleStatusChange(project.id)}
+              onDelete={() => handleOpenDeleteModal(project.id)}
             />
           ))}
         </section>
@@ -104,6 +142,7 @@ function ProjectPage() {
               status={project.status}
               taskCount={project.taskCount}
               onStatusChange={() => handleStatusChange(project.id)}
+              onDelete={() => handleOpenDeleteModal(project.id)}
             />
           ))}
         </section>
@@ -126,9 +165,19 @@ function ProjectPage() {
               status={project.status}
               taskCount={project.taskCount}
               onStatusChange={() => handleStatusChange(project.id)}
+              onDelete={() => handleOpenDeleteModal(project.id)}
             />
           ))}
         </section>
+      )}
+
+      {/* Delete Project Modal */}
+      {isDeleteModalOpen && selectedProject && (
+        <DeleteProjectForm
+          project={selectedProject}
+          onClose={handleCloseDeleteModal}
+          onDelete={handleDeleteProject}
+        />
       )}
     </div>
   );
