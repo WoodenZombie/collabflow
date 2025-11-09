@@ -4,7 +4,7 @@ import FilterTabs from '../components/FilterTabs';
 import ProjectHeader from '../components/ProjectHeader';
 import ProgressBar from '../components/ProgressBar';
 import DeleteProjectForm from '../components/DeleteProjectForm';
-import CreateProjectForm from '../components/CreateProjectForm';
+import CreateProjectForm from '../components/CreateProject';   
 import { fakeProjectsExtended } from '../../data/fakeProjects';
 
 /**
