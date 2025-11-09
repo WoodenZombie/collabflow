@@ -13,7 +13,6 @@ import { fakeProjectsExtended } from '../../data/fakeProjects';
 function ProjectPage() {
   const [projects, setProjects] = useState(fakeProjectsExtended);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [viewedProject, setViewedProject] = useState(null); // Track which project is currently viewed
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   /**
@@ -39,32 +38,16 @@ function ProjectPage() {
           : project
       )
     );
-    
-    // Update viewedProject status if it's the same project
-    if (viewedProject && viewedProject.id === projectId) {
-      const updatedProject = projects.find(p => p.id === projectId);
-      if (updatedProject) {
-        setViewedProject({ ...updatedProject, status: cycleStatus(updatedProject.status) });
-      }
-    }
-  };
-
-  /**
-   * Handle project selection/viewing
-   */
-  const handleProjectSelect = (projectId) => {
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      setViewedProject(project);
-    }
   };
 
   /**
    * Handle opening delete modal
    */
   const handleOpenDeleteModal = () => {
-    if (viewedProject) {
-      setSelectedProject(viewedProject);
+    // Find the first completed project to show in modal
+    const firstCompletedProject = projects.find(p => p.status === 'completed');
+    if (firstCompletedProject) {
+      setSelectedProject(firstCompletedProject);
       setIsDeleteModalOpen(true);
     }
   };
@@ -84,10 +67,6 @@ function ProjectPage() {
     setProjects(prevProjects => 
       prevProjects.filter(project => project.id !== projectId)
     );
-    // Clear viewed project if it was deleted
-    if (viewedProject && viewedProject.id === projectId) {
-      setViewedProject(null);
-    }
     // Modal will close automatically via onClose callback
   };
 
@@ -113,47 +92,33 @@ function ProjectPage() {
   const totalInProgress = projectsByStatus.inProgress.length;
   const totalDone = projectsByStatus.completed.length;
 
-  // Check if viewed project is completed
-  const isViewedProjectCompleted = viewedProject?.status === 'completed';
+  // Check if there is at least one completed project
+  const hasCompleted = projects.some(p => p.status === 'completed');
 
   // Page container style
   const pageContainerStyle = {
     padding: '20px',
     fontFamily: 'Arial, sans-serif',
-    display: 'flex',
-    flexDirection: 'column',
-    minHeight: '100vh',
-    paddingBottom: isViewedProjectCompleted ? '100px' : '20px' // Extra space for delete button
+    paddingBottom: hasCompleted ? '90px' : '20px' // Extra space for delete button when visible
   };
 
-  // Delete button container style (fixed at bottom)
-  const deleteButtonContainerStyle = {
+  // Delete button style - fixed at bottom, full-width, no container background
+  const deleteButtonStyle = {
     position: 'fixed',
     bottom: 0,
     left: 0,
     right: 0,
-    padding: '20px',
-    backgroundColor: '#FFFFFF',
-    borderTop: '1px solid #e0e0e0',
-    boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-    zIndex: 100
-  };
-
-  // Delete button style
-  const deleteButtonStyle = {
     width: '100%',
-    maxWidth: '500px',
-    margin: '0 auto',
-    padding: '14px',
+    padding: '14px 20px',
     backgroundColor: '#FF4D4D',
     color: '#FFFFFF',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '0',
     fontSize: '16px',
     fontWeight: 'bold',
     cursor: 'pointer',
     transition: 'background-color 0.2s',
-    display: 'block'
+    zIndex: 100
   };
 
   return (
@@ -180,7 +145,6 @@ function ProjectPage() {
                 status={project.status}
                 taskCount={project.taskCount}
                 onStatusChange={() => handleStatusChange(project.id)}
-                onSelect={() => handleProjectSelect(project.id)}
               />
             ))}
           </section>
@@ -203,7 +167,6 @@ function ProjectPage() {
                 status={project.status}
                 taskCount={project.taskCount}
                 onStatusChange={() => handleStatusChange(project.id)}
-                onSelect={() => handleProjectSelect(project.id)}
               />
             ))}
           </section>
@@ -226,29 +189,26 @@ function ProjectPage() {
                 status={project.status}
                 taskCount={project.taskCount}
                 onStatusChange={() => handleStatusChange(project.id)}
-                onSelect={() => handleProjectSelect(project.id)}
               />
             ))}
           </section>
         )}
       </div>
 
-      {/* Delete Button - Fixed at bottom, only visible when viewed project is completed */}
-      {isViewedProjectCompleted && (
-        <div style={deleteButtonContainerStyle}>
-          <button
-            style={deleteButtonStyle}
-            onClick={handleOpenDeleteModal}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#E63946';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#FF4D4D';
-            }}
-          >
-            Delete
-          </button>
-        </div>
+      {/* Delete Button - Fixed at bottom, only visible if there is at least one completed project */}
+      {hasCompleted && (
+        <button
+          style={deleteButtonStyle}
+          onClick={handleOpenDeleteModal}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#E63946';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#FF4D4D';
+          }}
+        >
+          Delete
+        </button>
       )}
 
       {/* Delete Project Modal */}
