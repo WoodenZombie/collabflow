@@ -1,8 +1,11 @@
 /**
  * ProjectHeader - Header section with title and action icons
  * Matches wireframe layout
+ * 
+ * Props:
+ * - onCreateProject: function (callback when "+" button is clicked)
  */
-function ProjectHeader() {
+function ProjectHeader({ onCreateProject }) {
     const headerStyle = {
       marginBottom: '24px'
     };
@@ -38,10 +41,11 @@ function ProjectHeader() {
         <h1 style={titleStyle}>Project</h1>
         
         <div style={iconsContainerStyle}>
-          {/* Plus icon - Create Task */}
+          {/* Plus icon - Create Project */}
           <button 
             style={iconButtonStyle}
-            title="Create Task"
+            title="Create Project"
+            onClick={onCreateProject}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e0e0'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
           >
