@@ -5,6 +5,7 @@ import UserAvatar from './UserAvatar';
 /**
  * DeleteProjectForm - Modal form for deleting a project
  * Displays project data in read-only mode
+ * Delete button is ONLY visible when project status is "completed"
  * 
  * Props:
  * - project: {
@@ -13,13 +14,13 @@ import UserAvatar from './UserAvatar';
  *     startingDate: string (format: "MM/DD/YY"),
  *     endingDate: string (format: "MM/DD/YY"),
  *     description: string,
+ *     status: 'pending' | 'inProgress' | 'completed',
  *     teams: string[],
  *     users: Array<{ id: string, name: string, initial: string }>
  *   }
  * - onClose: function (callback to close modal)
  * - onDelete: function (callback when delete button is clicked)
  */
-
 function DeleteProjectForm({ project, onClose, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -33,6 +34,9 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
       onClose();
     }, 300);
   };
+
+  // Check if project is completed (only then show Delete button)
+  const isCompleted = project?.status === 'completed';
 
   // Modal overlay styles
   const overlayStyle = {
@@ -59,7 +63,9 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
     maxHeight: '90vh',
     overflowY: 'auto',
     boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-    position: 'relative'
+    position: 'relative',
+    display: 'flex',
+    flexDirection: 'column'
   };
 
   // Header styles
@@ -93,6 +99,13 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
     fontSize: '18px',
     fontWeight: 'bold',
     transition: 'background-color 0.2s'
+  };
+
+  // Content wrapper to push button to bottom
+  const contentStyle = {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column'
   };
 
   // Field container styles
@@ -151,11 +164,11 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
     alignItems: 'center'
   };
 
-  // Delete button styles
+  // Delete button styles - matches wireframe
   const deleteButtonStyle = {
     width: '100%',
     padding: '14px',
-    backgroundColor: '#DC143C',
+    backgroundColor: '#FF4D4D',
     color: '#FFFFFF',
     border: 'none',
     borderRadius: '8px',
@@ -188,75 +201,80 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
           </button>
         </div>
 
-        {/* Project Details */}
-        <div style={fieldContainerStyle}>
-          <label style={labelStyle}>Name</label>
-          <div style={valueStyle}>{project.name || project.title || 'N/A'}</div>
-        </div>
-
-        <div style={fieldContainerStyle}>
-          <label style={labelStyle}>Starting Date</label>
-          <div style={valueStyle}>{project.startingDate || 'N/A'}</div>
-        </div>
-
-        <div style={fieldContainerStyle}>
-          <label style={labelStyle}>Ending date</label>
-          <div style={valueStyle}>{project.endingDate || 'N/A'}</div>
-        </div>
-
-        <div style={fieldContainerStyle}>
-          <label style={labelStyle}>Description</label>
-          <div style={descriptionValueStyle}>
-            {project.description || 'Lorem ipsum'}
+        {/* Content */}
+        <div style={contentStyle}>
+          {/* Project Details */}
+          <div style={fieldContainerStyle}>
+            <label style={labelStyle}>Name</label>
+            <div style={valueStyle}>{project.name || project.title || 'N/A'}</div>
           </div>
-        </div>
 
-        {/* Teams Section */}
-        {project.teams && project.teams.length > 0 && (
-          <div>
-            <h3 style={sectionHeaderStyle}>Teams</h3>
-            <div style={teamsContainerStyle}>
-              {project.teams.map((team, index) => (
-                <TeamTag key={index} name={team} />
-              ))}
+          <div style={fieldContainerStyle}>
+            <label style={labelStyle}>Starting Date</label>
+            <div style={valueStyle}>{project.startingDate || 'N/A'}</div>
+          </div>
+
+          <div style={fieldContainerStyle}>
+            <label style={labelStyle}>Ending date</label>
+            <div style={valueStyle}>{project.endingDate || 'N/A'}</div>
+          </div>
+
+          <div style={fieldContainerStyle}>
+            <label style={labelStyle}>Description</label>
+            <div style={descriptionValueStyle}>
+              {project.description || 'Lorem ipsum'}
             </div>
           </div>
-        )}
 
-        {/* Users Section */}
-        {project.users && project.users.length > 0 && (
-          <div>
-            <h3 style={sectionHeaderStyle}>Users</h3>
-            <div style={usersContainerStyle}>
-              {project.users.map((user) => (
-                <UserAvatar
-                  key={user.id}
-                  initial={user.initial}
-                  name={user.name}
-                />
-              ))}
+          {/* Teams Section */}
+          {project.teams && project.teams.length > 0 && (
+            <div>
+              <h3 style={sectionHeaderStyle}>Teams</h3>
+              <div style={teamsContainerStyle}>
+                {project.teams.map((team, index) => (
+                  <TeamTag key={index} name={team} />
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Delete Button */}
-        <button
-          style={deleteButtonStyle}
-          onClick={handleDelete}
-          disabled={isDeleting}
-          onMouseEnter={(e) => {
-            if (!isDeleting) {
-              e.currentTarget.style.backgroundColor = '#B22222';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isDeleting) {
-              e.currentTarget.style.backgroundColor = '#DC143C';
-            }
-          }}
-        >
-          {isDeleting ? 'Deleting...' : 'Delete'}
-        </button>
+          {/* Users Section */}
+          {project.users && project.users.length > 0 && (
+            <div>
+              <h3 style={sectionHeaderStyle}>Users</h3>
+              <div style={usersContainerStyle}>
+                {project.users.map((user) => (
+                  <UserAvatar
+                    key={user.id}
+                    initial={user.initial}
+                    name={user.name}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Delete Button - ONLY visible when status is "completed" */}
+        {isCompleted && (
+          <button
+            style={deleteButtonStyle}
+            onClick={handleDelete}
+            disabled={isDeleting}
+            onMouseEnter={(e) => {
+              if (!isDeleting) {
+                e.currentTarget.style.backgroundColor = '#E63946';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isDeleting) {
+                e.currentTarget.style.backgroundColor = '#FF4D4D';
+              }
+            }}
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </button>
+        )}
       </div>
     </div>
   );

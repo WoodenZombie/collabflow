@@ -4,15 +4,14 @@ import FilterTabs from '../components/FilterTabs';
 import ProjectHeader from '../components/ProjectHeader';
 import ProgressBar from '../components/ProgressBar';
 import DeleteProjectForm from '../components/DeleteProjectForm';
-import { fakeProjects } from '../../data/fakeProjects';
-import { fakeProjectsExtended } from '../../data/fakeProjectsExtended';
+import { fakeProjectsExtended } from '../../data/fakeProjects';
 
 /**
  * ProjectPage - Main page for displaying projects grouped by status
  * Handles status cycling: Pending → In Progress → Completed → Pending
  */
 function ProjectPage() {
-  const [projects, setProjects] = useState(fakeProjects);
+  const [projects, setProjects] = useState(fakeProjectsExtended);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -45,10 +44,8 @@ function ProjectPage() {
    * Handle opening delete modal
    */
   const handleOpenDeleteModal = (projectId) => {
-    // Find extended project data
-    const extendedProject = fakeProjectsExtended.find(p => p.id === projectId);
-    // Fallback to basic project data if extended not found
-    const project = extendedProject || projects.find(p => p.id === projectId);
+    // Find project data
+    const project = projects.find(p => p.id === projectId);
     
     if (project) {
       setSelectedProject(project);
