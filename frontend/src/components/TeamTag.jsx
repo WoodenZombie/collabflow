@@ -5,8 +5,6 @@
  * - name: string (team name)
  */
 
-
-
 function TeamTag({ name }) {
     const tagStyle = {
       display: 'inline-block',
