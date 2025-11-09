@@ -1,4 +1,4 @@
-
+// Knex schema for MySQL
 exports.up = function(knex) {
   return knex.schema.createTable('projects', table =>{
     table.increments('id');
@@ -12,13 +12,13 @@ exports.up = function(knex) {
     table.integer('team_id').unsigned();
     table.integer('created_by').unsigned();
     table.timestamp('created_at').defaultTo(knex.fn.now());
-
+//brings data from foreign table TEAMS and USERS tables
     table.foreign('team_id').references('id').inTable('teams').onDelete('SET NULL');
     table.foreign('created_by').references('id').inTable('users').onDelete('SET NULL');
   })
 };
 
-
+//drop table
 exports.down = function(knex) {
   return knex.schema.dropTable('projects');
 };
