@@ -4,7 +4,8 @@ import FilterTabs from '../components/FilterTabs';
 import ProjectHeader from '../components/ProjectHeader';
 import ProgressBar from '../components/ProgressBar';
 import DeleteProjectForm from '../components/DeleteProjectForm';
-import CreateProjectForm from '../components/CreateProject';   
+import CreateProjectForm from '../components/CreateProject';
+import EditProjectForm from '../components/EditProjectForm';
 import { fakeProjectsExtended } from '../../data/fakeProjects';
 
 /**
@@ -16,6 +17,8 @@ function ProjectPage() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [projectToEdit, setProjectToEdit] = useState(null);
 
   /**
    * Cycle through status: Pending → In-Progress → Complete → Pending
@@ -94,6 +97,38 @@ function ProjectPage() {
   };
 
   /**
+   * Handle opening edit modal
+   */
+  const handleOpenEditModal = (projectId) => {
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      setProjectToEdit(project);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  /**
+   * Handle closing edit modal
+   */
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setProjectToEdit(null);
+  };
+
+  /**
+   * Handle project update
+   */
+  const handleUpdateProject = (updatedProject) => {
+    setProjects(prevProjects => 
+      prevProjects.map(project => 
+        project.id === updatedProject.id
+          ? updatedProject
+          : project
+      )
+    );
+  };
+
+  /**
    * Group projects by status
    */
   const getProjectsByStatus = () => {
@@ -168,6 +203,7 @@ function ProjectPage() {
                 status={project.status}
                 taskCount={project.taskCount}
                 onStatusChange={() => handleStatusChange(project.id)}
+                onEdit={() => handleOpenEditModal(project.id)}
               />
             ))}
           </section>
@@ -190,6 +226,7 @@ function ProjectPage() {
                 status={project.status}
                 taskCount={project.taskCount}
                 onStatusChange={() => handleStatusChange(project.id)}
+                onEdit={() => handleOpenEditModal(project.id)}
               />
             ))}
           </section>
@@ -212,6 +249,7 @@ function ProjectPage() {
                 status={project.status}
                 taskCount={project.taskCount}
                 onStatusChange={() => handleStatusChange(project.id)}
+                onEdit={() => handleOpenEditModal(project.id)}
               />
             ))}
           </section>
@@ -239,6 +277,15 @@ function ProjectPage() {
         <CreateProjectForm
           onClose={handleCloseCreateModal}
           onCreate={handleCreateProject}
+        />
+      )}
+
+      {/* Edit Project Modal */}
+      {isEditModalOpen && projectToEdit && (
+        <EditProjectForm
+          project={projectToEdit}
+          onClose={handleCloseEditModal}
+          onUpdate={handleUpdateProject}
         />
       )}
 
