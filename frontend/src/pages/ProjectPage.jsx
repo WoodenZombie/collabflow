@@ -3,7 +3,7 @@ import ProjectCard from '../components/ProjectCard';
 import FilterTabs from '../components/FilterTabs';
 import ProjectHeader from '../components/ProjectHeader';
 import ProgressBar from '../components/ProgressBar';
-import { fakeProjects } from '../data/fakeProjects';
+import { fakeProjects } from '../../data/fakeProjects';
 
 /**
  * ProjectPage - Main page for displaying projects grouped by status

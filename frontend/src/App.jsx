@@ -1,10 +1,10 @@
-import ProjectsPage from './pages/ProjectPage';
+import ProjectPage from './pages/ProjectPage';
 import './App.css';
 
 function App() {
   return (
     <div>
-      <ProjectsPage />
+      <ProjectPage />
     </div>
   );
 }
