@@ -19,7 +19,8 @@ import ProgressBar from '../components/ProgressBar';
  *       participants: Array,
  *       pending: number,
  *       inProgress: number,
- *       done: number
+ *       done: number,
+ *       currentStatus: 'pending' | 'inProgress' | 'completed'
  *     }
  *   ]
  * }
@@ -29,7 +30,7 @@ function ProjectsPage() {
 
   // Mock data or fake data - will be replaced with backend data
   // This structure matches Project.Name, Project.Pending, Project.Done, Project.Progress
-  const [projects] = useState([
+  const [projects, setProjects] = useState([
     {
       id: '1',
       name: 'Landing page for Azunyan senpai',
@@ -38,7 +39,8 @@ function ProjectsPage() {
       participants: [],
       pending: 5,
       inProgress: 25,
-      done: 10
+      done: 10,
+      currentStatus: 'inProgress' // 'pending' | 'inProgress' | 'completed'
     },
     {
       id: '2',
@@ -48,7 +50,8 @@ function ProjectsPage() {
       participants: [],
       pending: 8,
       inProgress: 12,
-      done: 5
+      done: 5,
+      currentStatus: 'pending'
     },
     {
       id: '3',
@@ -58,15 +61,41 @@ function ProjectsPage() {
       participants: [],
       pending: 2,
       inProgress: 8,
-      done: 2
+      done: 2,
+      currentStatus: 'completed'
     }
   ]);
 
-  // Group projects by status based on task counts
+  /**
+   * Cycle through status: Pending → In-Process → Complete → Pending
+   */
+  const cycleStatus = (currentStatus) => {
+    const statusCycle = {
+      'pending': 'inProgress',
+      'inProgress': 'completed',
+      'completed': 'pending'
+    };
+    return statusCycle[currentStatus] || 'pending';
+  };
+
+  /**
+   * Handle status change when clicking on ProgressBar
+   */
+  const handleStatusChange = (projectId) => {
+    setProjects(prevProjects => 
+      prevProjects.map(project => 
+        project.id === projectId
+          ? { ...project, currentStatus: cycleStatus(project.currentStatus) }
+          : project
+      )
+    );
+  };
+
+  // Group projects by current status
   const getProjectsByStatus = () => {
-    const inProgressProjects = projects.filter(p => p.inProgress > 0);
-    const pendingProjects = projects.filter(p => p.pending > 0 && p.inProgress === 0);
-    const completedProjects = projects.filter(p => p.done > 0 && p.inProgress === 0 && p.pending === 0);
+    const inProgressProjects = projects.filter(p => p.currentStatus === 'inProgress');
+    const pendingProjects = projects.filter(p => p.currentStatus === 'pending');
+    const completedProjects = projects.filter(p => p.currentStatus === 'completed');
     
     return {
       inProgress: inProgressProjects,
@@ -78,9 +107,9 @@ function ProjectsPage() {
   const projectsByStatus = getProjectsByStatus();
 
   // Calculate total counts for progress bars
-  const totalPending = projects.reduce((sum, p) => sum + p.pending, 0);
-  const totalInProgress = projects.reduce((sum, p) => sum + p.inProgress, 0);
-  const totalDone = projects.reduce((sum, p) => sum + p.done, 0);
+  const totalPending = projects.filter(p => p.currentStatus === 'pending').length;
+  const totalInProgress = projects.filter(p => p.currentStatus === 'inProgress').length;
+  const totalDone = projects.filter(p => p.currentStatus === 'completed').length;
 
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
@@ -107,11 +136,18 @@ function ProjectsPage() {
             count={totalInProgress}
             label="In Progress"
             color="purple"
+            onClick={() => {
+              // Change status of all projects in this section
+              projectsByStatus.inProgress.forEach(project => {
+                handleStatusChange(project.id);
+              });
+            }}
           />
           {projectsByStatus.inProgress.map(project => (
             <ProjectCard 
               key={project.id}
               project={project}
+              onStatusChange={() => handleStatusChange(project.id)}
             />
           ))}
         </section>
@@ -124,11 +160,18 @@ function ProjectsPage() {
             count={totalPending}
             label="Pending"
             color="orange"
+            onClick={() => {
+              // Change status of all projects in this section
+              projectsByStatus.pending.forEach(project => {
+                handleStatusChange(project.id);
+              });
+            }}
           />
           {projectsByStatus.pending.map(project => (
             <ProjectCard 
               key={project.id}
               project={project}
+              onStatusChange={() => handleStatusChange(project.id)}
             />
           ))}
         </section>
@@ -141,11 +184,18 @@ function ProjectsPage() {
             count={totalDone}
             label="Completed"
             color="green"
+            onClick={() => {
+              // Change status of all projects in this section
+              projectsByStatus.completed.forEach(project => {
+                handleStatusChange(project.id);
+              });
+            }}
           />
           {projectsByStatus.completed.map(project => (
             <ProjectCard 
               key={project.id}
               project={project}
+              onStatusChange={() => handleStatusChange(project.id)}
             />
           ))}
         </section>
