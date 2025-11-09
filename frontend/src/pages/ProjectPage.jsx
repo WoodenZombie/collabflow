@@ -4,6 +4,7 @@ import FilterTabs from '../components/FilterTabs';
 import ProjectHeader from '../components/ProjectHeader';
 import ProgressBar from '../components/ProgressBar';
 import DeleteProjectForm from '../components/DeleteProjectForm';
+import CreateProjectForm from '../components/CreateProjectForm';
 import { fakeProjectsExtended } from '../../data/fakeProjects';
 
 /**
@@ -14,6 +15,7 @@ function ProjectPage() {
   const [projects, setProjects] = useState(fakeProjectsExtended);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   /**
    * Cycle through status: Pending → In-Progress → Complete → Pending
@@ -71,6 +73,27 @@ function ProjectPage() {
   };
 
   /**
+   * Handle opening create modal
+   */
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  /**
+   * Handle closing create modal
+   */
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  /**
+   * Handle project creation
+   */
+  const handleCreateProject = (newProject) => {
+    setProjects(prevProjects => [...prevProjects, newProject]);
+  };
+
+  /**
    * Group projects by status
    */
   const getProjectsByStatus = () => {
@@ -124,7 +147,7 @@ function ProjectPage() {
   return (
     <>
       <div style={pageContainerStyle}>
-        <ProjectHeader />
+        <ProjectHeader onCreateProject={handleOpenCreateModal} />
         
         <FilterTabs />
 
@@ -209,6 +232,14 @@ function ProjectPage() {
         >
           Delete
         </button>
+      )}
+
+      {/* Create Project Modal */}
+      {isCreateModalOpen && (
+        <CreateProjectForm
+          onClose={handleCloseCreateModal}
+          onCreate={handleCreateProject}
+        />
       )}
 
       {/* Delete Project Modal */}
