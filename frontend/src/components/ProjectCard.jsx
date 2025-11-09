@@ -9,8 +9,9 @@
  * - status: 'pending' | 'inProgress' | 'completed'
  * - taskCount: number (number of tasks)
  * - onStatusChange: function (callback when card is clicked)
+ * - onDelete: function (callback when delete button is clicked)
  */
-function ProjectCard({ title, description, priorityLabel, status, taskCount, onStatusChange }) {
+function ProjectCard({ title, description, priorityLabel, status, taskCount, onStatusChange, onDelete }) {
     // Status color mapping
     const statusColors = {
       'pending': '#FFA500', // Orange/Yellow
@@ -27,7 +28,8 @@ function ProjectCard({ title, description, priorityLabel, status, taskCount, onS
       border: `2px solid ${statusColors[status]}`,
       cursor: 'pointer',
       transition: 'transform 0.2s, box-shadow 0.2s',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      position: 'relative'
     };
   
     const priorityStyle = {
@@ -42,9 +44,38 @@ function ProjectCard({ title, description, priorityLabel, status, taskCount, onS
              priorityLabel === 'Important' ? '#9370DB' : '#666'
     };
   
+    const deleteButtonStyle = {
+      position: 'absolute',
+      top: '12px',
+      right: '12px',
+      padding: '4px 8px',
+      backgroundColor: '#DC143C',
+      color: '#FFFFFF',
+      border: 'none',
+      borderRadius: '4px',
+      fontSize: '12px',
+      cursor: 'pointer',
+      fontWeight: 'bold'
+    };
+  
+    const handleCardClick = (e) => {
+      // Don't trigger status change if delete button is clicked
+      if (e.target.closest('button')) {
+        return;
+      }
+      onStatusChange();
+    };
+  
+    const handleDeleteClick = (e) => {
+      e.stopPropagation();
+      if (onDelete) {
+        onDelete();
+      }
+    };
+  
     return (
       <div 
-        onClick={onStatusChange}
+        onClick={handleCardClick}
         style={cardStyle}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-2px)';
@@ -55,6 +86,18 @@ function ProjectCard({ title, description, priorityLabel, status, taskCount, onS
           e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
         }}
       >
+        {/* Delete Button */}
+        {onDelete && (
+          <button
+            style={deleteButtonStyle}
+            onClick={handleDeleteClick}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#B22222'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#DC143C'}
+          >
+            Delete
+          </button>
+        )}
+  
         {/* Priority Tag */}
         {priorityLabel && (
           <div>
