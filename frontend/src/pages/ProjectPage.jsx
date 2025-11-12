@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProjectCard from '../components/ProjectCard';
 import FilterTabs from '../components/FilterTabs';
 import ProjectHeader from '../components/ProjectHeader';
@@ -6,19 +6,45 @@ import ProgressBar from '../components/ProgressBar';
 import DeleteProjectForm from '../components/DeleteProjectForm';
 import CreateProjectForm from '../components/CreateProject';
 import EditProjectForm from '../components/EditProjectForm';
-import { fakeProjectsExtended } from '../../data/fakeProjects';
+import { getAllProjects, createProject, updateProject, deleteProject } from '../services/projectApi';
 
 /**
  * ProjectPage - Main page for displaying projects grouped by status
  * Handles status cycling: Pending → In Progress → Completed → Pending
  */
 function ProjectPage() {
-  const [projects, setProjects] = useState(fakeProjectsExtended);
+  const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  /**
+   * Load projects from API on component mount
+   */
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  /**
+   * Load all projects from backend
+   */
+  const loadProjects = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getAllProjects();
+      setProjects(data);
+    } catch (err) {
+      console.error('Failed to load projects:', err);
+      setError('Failed to load projects. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   /**
    * Cycle through status: Pending → In-Progress → Complete → Pending
@@ -35,14 +61,26 @@ function ProjectPage() {
   /**
    * Handle status change when clicking on ProjectCard
    */
-  const handleStatusChange = (projectId) => {
-    setProjects(prevProjects => 
-      prevProjects.map(project => 
-        project.id === projectId
-          ? { ...project, status: cycleStatus(project.status) }
-          : project
-      )
-    );
+  const handleStatusChange = async (projectId) => {
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const newStatus = cycleStatus(project.status);
+    const updatedProject = { ...project, status: newStatus };
+
+    try {
+      // Update project on backend
+      const savedProject = await updateProject(projectId, updatedProject);
+      // Update local state
+      setProjects(prevProjects => 
+        prevProjects.map(p => 
+          p.id === projectId ? savedProject : p
+        )
+      );
+    } catch (err) {
+      console.error('Failed to update project status:', err);
+      setError('Failed to update project status. Please try again.');
+    }
   };
 
   /**
@@ -68,11 +106,20 @@ function ProjectPage() {
   /**
    * Handle project deletion
    */
-  const handleDeleteProject = (projectId) => {
-    setProjects(prevProjects => 
-      prevProjects.filter(project => project.id !== projectId)
-    );
-    // Modal will close automatically via onClose callback
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await deleteProject(projectId);
+      // Remove from local state
+      setProjects(prevProjects => 
+        prevProjects.filter(project => project.id !== projectId)
+      );
+      // Close modal
+      setIsDeleteModalOpen(false);
+      setSelectedProject(null);
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+      setError('Failed to delete project. Please try again.');
+    }
   };
 
   /**
@@ -92,8 +139,18 @@ function ProjectPage() {
   /**
    * Handle project creation
    */
-  const handleCreateProject = (newProject) => {
-    setProjects(prevProjects => [...prevProjects, newProject]);
+  const handleCreateProject = async (newProject) => {
+    try {
+      // Create project on backend
+      const savedProject = await createProject(newProject);
+      // Add to local state
+      setProjects(prevProjects => [...prevProjects, savedProject]);
+      // Close modal
+      setIsCreateModalOpen(false);
+    } catch (err) {
+      console.error('Failed to create project:', err);
+      setError('Failed to create project. Please try again.');
+    }
   };
 
   /**
@@ -118,14 +175,23 @@ function ProjectPage() {
   /**
    * Handle project update
    */
-  const handleUpdateProject = (updatedProject) => {
-    setProjects(prevProjects => 
-      prevProjects.map(project => 
-        project.id === updatedProject.id
-          ? updatedProject
-          : project
-      )
-    );
+  const handleUpdateProject = async (updatedProject) => {
+    try {
+      // Update project on backend
+      const savedProject = await updateProject(updatedProject.id, updatedProject);
+      // Update local state
+      setProjects(prevProjects => 
+        prevProjects.map(project => 
+          project.id === savedProject.id ? savedProject : project
+        )
+      );
+      // Close modal
+      setIsEditModalOpen(false);
+      setProjectToEdit(null);
+    } catch (err) {
+      console.error('Failed to update project:', err);
+      setError('Failed to update project. Please try again.');
+    }
   };
 
   /**
@@ -179,8 +245,33 @@ function ProjectPage() {
     zIndex: 100
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <p>Loading projects...</p>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && projects.length === 0) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <p style={{ color: 'red' }}>{error}</p>
+        <button onClick={loadProjects}>Retry</button>
+      </div>
+    );
+  }
+
   return (
     <>
+      {error && (
+        <div style={{ padding: '10px', backgroundColor: '#ffebee', color: '#c62828', textAlign: 'center' }}>
+          {error}
+          <button onClick={() => setError(null)} style={{ marginLeft: '10px' }}>×</button>
+        </div>
+      )}
       <div style={pageContainerStyle}>
         <ProjectHeader onCreateProject={handleOpenCreateModal} />
         

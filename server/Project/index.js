@@ -6,6 +6,17 @@ const globalErrorHandler = require('./controllers/errorController');
 
 const ports = process.env.PORT || 3000;
 
+// Enable CORS for frontend communication
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'http://localhost:5173'); // Vite default port
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 //it parsed req.body to a readable JSON format  
 app.use(express.json());
 
