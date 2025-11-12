@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
-import ProjectCard from '../components/ProjectCard';
-import FilterTabs from '../components/FilterTabs';
-import ProjectHeader from '../components/ProjectHeader';
-import ProgressBar from '../components/ProgressBar';
-import DeleteProjectForm from '../components/DeleteProjectForm';
-import CreateProjectForm from '../components/CreateProject';
-import EditProjectForm from '../components/EditProjectForm';
-import { getAllProjects, createProject, updateProject, deleteProject } from '../services/projectApi';
+import { useState, useEffect } from "react";
+import ProjectCard from "../components/ProjectCard";
+import FilterTabs from "../components/FilterTabs";
+import ProjectHeader from "../components/ProjectHeader";
+import ProgressBar from "../components/ProgressBar";
+import DeleteProjectForm from "../components/DeleteProjectForm";
+import CreateProjectForm from "../components/CreateProject";
+import EditProjectForm from "../components/EditProjectForm";
+import {
+  getAllProjects,
+  createProject,
+  updateProject,
+  deleteProject,
+} from "../services/projectApi";
 
 /**
  * ProjectPage - Main page for displaying projects grouped by status
@@ -39,8 +44,8 @@ function ProjectPage() {
       const data = await getAllProjects();
       setProjects(data);
     } catch (err) {
-      console.error('Failed to load projects:', err);
-      setError('Failed to load projects. Please try again later.');
+      console.error("Failed to load projects:", err);
+      setError("Failed to load projects. Please try again later.");
     } finally {
       setIsLoading(false);
     }
@@ -51,18 +56,18 @@ function ProjectPage() {
    */
   const cycleStatus = (currentStatus) => {
     const statusCycle = {
-      'pending': 'inProgress',
-      'inProgress': 'completed',
-      'completed': 'pending'
+      pending: "inProgress",
+      inProgress: "completed",
+      completed: "pending",
     };
-    return statusCycle[currentStatus] || 'pending';
+    return statusCycle[currentStatus] || "pending";
   };
 
   /**
    * Handle status change when clicking on ProjectCard
    */
   const handleStatusChange = async (projectId) => {
-    const project = projects.find(p => p.id === projectId);
+    const project = projects.find((p) => p.id === projectId);
     if (!project) return;
 
     const newStatus = cycleStatus(project.status);
@@ -72,14 +77,12 @@ function ProjectPage() {
       // Update project on backend
       const savedProject = await updateProject(projectId, updatedProject);
       // Update local state
-      setProjects(prevProjects => 
-        prevProjects.map(p => 
-          p.id === projectId ? savedProject : p
-        )
+      setProjects((prevProjects) =>
+        prevProjects.map((p) => (p.id === projectId ? savedProject : p))
       );
     } catch (err) {
-      console.error('Failed to update project status:', err);
-      setError('Failed to update project status. Please try again.');
+      console.error("Failed to update project status:", err);
+      setError("Failed to update project status. Please try again.");
     }
   };
 
@@ -88,7 +91,9 @@ function ProjectPage() {
    */
   const handleOpenDeleteModal = () => {
     // Find the first completed project to show in modal
-    const firstCompletedProject = projects.find(p => p.status === 'completed');
+    const firstCompletedProject = projects.find(
+      (p) => p.status === "completed"
+    );
     if (firstCompletedProject) {
       setSelectedProject(firstCompletedProject);
       setIsDeleteModalOpen(true);
@@ -110,15 +115,15 @@ function ProjectPage() {
     try {
       await deleteProject(projectId);
       // Remove from local state
-      setProjects(prevProjects => 
-        prevProjects.filter(project => project.id !== projectId)
+      setProjects((prevProjects) =>
+        prevProjects.filter((project) => project.id !== projectId)
       );
       // Close modal
       setIsDeleteModalOpen(false);
       setSelectedProject(null);
     } catch (err) {
-      console.error('Failed to delete project:', err);
-      setError('Failed to delete project. Please try again.');
+      console.error("Failed to delete project:", err);
+      setError("Failed to delete project. Please try again.");
     }
   };
 
@@ -144,12 +149,12 @@ function ProjectPage() {
       // Create project on backend
       const savedProject = await createProject(newProject);
       // Add to local state
-      setProjects(prevProjects => [...prevProjects, savedProject]);
+      setProjects((prevProjects) => [...prevProjects, savedProject]);
       // Close modal
       setIsCreateModalOpen(false);
     } catch (err) {
-      console.error('Failed to create project:', err);
-      setError('Failed to create project. Please try again.');
+      console.error("Failed to create project:", err);
+      setError("Failed to create project. Please try again.");
     }
   };
 
@@ -157,7 +162,7 @@ function ProjectPage() {
    * Handle opening edit modal
    */
   const handleOpenEditModal = (projectId) => {
-    const project = projects.find(p => p.id === projectId);
+    const project = projects.find((p) => p.id === projectId);
     if (project) {
       setProjectToEdit(project);
       setIsEditModalOpen(true);
@@ -178,10 +183,13 @@ function ProjectPage() {
   const handleUpdateProject = async (updatedProject) => {
     try {
       // Update project on backend
-      const savedProject = await updateProject(updatedProject.id, updatedProject);
+      const savedProject = await updateProject(
+        updatedProject.id,
+        updatedProject
+      );
       // Update local state
-      setProjects(prevProjects => 
-        prevProjects.map(project => 
+      setProjects((prevProjects) =>
+        prevProjects.map((project) =>
           project.id === savedProject.id ? savedProject : project
         )
       );
@@ -189,8 +197,8 @@ function ProjectPage() {
       setIsEditModalOpen(false);
       setProjectToEdit(null);
     } catch (err) {
-      console.error('Failed to update project:', err);
-      setError('Failed to update project. Please try again.');
+      console.error("Failed to update project:", err);
+      setError("Failed to update project. Please try again.");
     }
   };
 
@@ -198,14 +206,16 @@ function ProjectPage() {
    * Group projects by status
    */
   const getProjectsByStatus = () => {
-    const inProgressProjects = projects.filter(p => p.status === 'inProgress');
-    const pendingProjects = projects.filter(p => p.status === 'pending');
-    const completedProjects = projects.filter(p => p.status === 'completed');
-    
+    const inProgressProjects = projects.filter(
+      (p) => p.status === "inProgress"
+    );
+    const pendingProjects = projects.filter((p) => p.status === "pending");
+    const completedProjects = projects.filter((p) => p.status === "completed");
+
     return {
       inProgress: inProgressProjects,
       pending: pendingProjects,
-      completed: completedProjects
+      completed: completedProjects,
     };
   };
 
@@ -217,38 +227,38 @@ function ProjectPage() {
   const totalDone = projectsByStatus.completed.length;
 
   // Check if there is at least one completed project
-  const hasCompleted = projects.some(p => p.status === 'completed');
+  const hasCompleted = projects.some((p) => p.status === "completed");
 
   // Page container style
   const pageContainerStyle = {
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif',
-    paddingBottom: hasCompleted ? '90px' : '20px' // Extra space for delete button when visible
+    padding: "20px",
+    fontFamily: "Arial, sans-serif",
+    paddingBottom: hasCompleted ? "90px" : "20px", // Extra space for delete button when visible
   };
 
   // Delete button style - fixed at bottom, full-width, no container background
   const deleteButtonStyle = {
-    position: 'fixed',
+    position: "fixed",
     bottom: 0,
     left: 0,
     right: 0,
-    width: '100%',
-    padding: '14px 20px',
-    backgroundColor: '#FF4D4D',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '0',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-    zIndex: 100
+    width: "100%",
+    padding: "14px 20px",
+    backgroundColor: "#FF4D4D",
+    color: "#FFFFFF",
+    border: "none",
+    borderRadius: "0",
+    fontSize: "16px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
+    zIndex: 100,
   };
 
   // Show loading state
   if (isLoading) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
+      <div style={{ padding: "20px", textAlign: "center" }}>
         <p>Loading projects...</p>
       </div>
     );
@@ -257,8 +267,8 @@ function ProjectPage() {
   // Show error state
   if (error && projects.length === 0) {
     return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <p style={{ color: 'red' }}>{error}</p>
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        <p style={{ color: "red" }}>{error}</p>
         <button onClick={loadProjects}>Retry</button>
       </div>
     );
@@ -267,26 +277,35 @@ function ProjectPage() {
   return (
     <>
       {error && (
-        <div style={{ padding: '10px', backgroundColor: '#ffebee', color: '#c62828', textAlign: 'center' }}>
+        <div
+          style={{
+            padding: "10px",
+            backgroundColor: "#ffebee",
+            color: "#c62828",
+            textAlign: "center",
+          }}
+        >
           {error}
-          <button onClick={() => setError(null)} style={{ marginLeft: '10px' }}>×</button>
+          <button onClick={() => setError(null)} style={{ marginLeft: "10px" }}>
+            ×
+          </button>
         </div>
       )}
       <div style={pageContainerStyle}>
         <ProjectHeader onCreateProject={handleOpenCreateModal} />
-        
+
         <FilterTabs />
 
         {/* In Progress Section */}
         {projectsByStatus.inProgress.length > 0 && (
-          <section style={{ marginBottom: '30px' }}>
-            <ProgressBar 
+          <section style={{ marginBottom: "30px" }}>
+            <ProgressBar
               count={totalInProgress}
               label="In Progress"
               color="purple"
             />
-            {projectsByStatus.inProgress.map(project => (
-              <ProjectCard 
+            {projectsByStatus.inProgress.map((project) => (
+              <ProjectCard
                 key={project.id}
                 title={project.title}
                 description={project.description}
@@ -302,14 +321,10 @@ function ProjectPage() {
 
         {/* Pending Section */}
         {projectsByStatus.pending.length > 0 && (
-          <section style={{ marginBottom: '30px' }}>
-            <ProgressBar 
-              count={totalPending}
-              label="Pending"
-              color="yellow"
-            />
-            {projectsByStatus.pending.map(project => (
-              <ProjectCard 
+          <section style={{ marginBottom: "30px" }}>
+            <ProgressBar count={totalPending} label="Pending" color="yellow" />
+            {projectsByStatus.pending.map((project) => (
+              <ProjectCard
                 key={project.id}
                 title={project.title}
                 description={project.description}
@@ -325,14 +340,10 @@ function ProjectPage() {
 
         {/* Completed Section */}
         {projectsByStatus.completed.length > 0 && (
-          <section style={{ marginBottom: '30px' }}>
-            <ProgressBar 
-              count={totalDone}
-              label="Completed"
-              color="green"
-            />
-            {projectsByStatus.completed.map(project => (
-              <ProjectCard 
+          <section style={{ marginBottom: "30px" }}>
+            <ProgressBar count={totalDone} label="Completed" color="green" />
+            {projectsByStatus.completed.map((project) => (
+              <ProjectCard
                 key={project.id}
                 title={project.title}
                 description={project.description}
@@ -353,10 +364,10 @@ function ProjectPage() {
           style={deleteButtonStyle}
           onClick={handleOpenDeleteModal}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#E63946';
+            e.currentTarget.style.backgroundColor = "#E63946";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#FF4D4D';
+            e.currentTarget.style.backgroundColor = "#FF4D4D";
           }}
         >
           Delete
