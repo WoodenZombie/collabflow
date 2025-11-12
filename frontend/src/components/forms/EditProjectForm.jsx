@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import UserAvatar from './UserAvatar';
-
+import UserAvatar from '../userAvatar/UserAvatar';
+import styles from './editProject.module.css';
 /**
  * EditProjectForm - Modal form for editing an existing project
  * 
@@ -189,257 +189,80 @@ function EditProjectForm({ project, onClose, onUpdate }) {
     onClose();
   };
 
-  // Modal overlay styles
-  const overlayStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px'
-  };
-
-  // Modal content styles
-  const modalStyle = {
-    backgroundColor: '#FFFFFF',
-    borderRadius: '8px',
-    padding: '24px',
-    maxWidth: '500px',
-    width: '100%',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
-    position: 'relative'
-  };
-
-  // Header styles
-  const headerStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '24px',
-    paddingBottom: '16px',
-    borderBottom: '1px solid #e0e0e0'
-  };
-
-  const titleStyle = {
-    fontSize: '24px',
-    fontWeight: 'bold',
-    color: '#333333',
-    margin: 0
-  };
-
-  const closeButtonStyle = {
-    width: '32px',
-    height: '32px',
-    borderRadius: '50%',
-    border: 'none',
-    backgroundColor: '#f5f5f5',
-    color: '#666666',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '18px',
-    fontWeight: 'bold',
-    transition: 'background-color 0.2s'
-  };
-
-  // Field container styles
-  const fieldContainerStyle = {
-    marginBottom: '20px'
-  };
-
-  const labelStyle = {
-    fontSize: '14px',
-    fontWeight: '500',
-    color: '#333333',
-    marginBottom: '8px',
-    display: 'block'
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '8px 12px',
-    fontSize: '14px',
-    border: '1px solid #e0e0e0',
-    borderRadius: '4px',
-    backgroundColor: '#f9f9f9',
-    color: '#333333',
-    boxSizing: 'border-box'
-  };
-
-  const textareaStyle = {
-    ...inputStyle,
-    minHeight: '80px',
-    resize: 'vertical',
-    fontFamily: 'inherit'
-  };
-
-  const errorStyle = {
-    fontSize: '12px',
-    color: '#DC143C',
-    marginTop: '4px'
-  };
-
-  // Team selection styles
-  const teamSelectStyle = {
-    ...inputStyle,
-    marginBottom: '8px'
-  };
-
-  const teamTagsContainerStyle = {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-    marginTop: '8px'
-  };
-
-  const teamTagStyle = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '4px 8px',
-    backgroundColor: '#E3F2FD',
-    borderRadius: '4px',
-    fontSize: '12px',
-    gap: '6px'
-  };
-
-  const removeTeamButtonStyle = {
-    background: 'none',
-    border: 'none',
-    color: '#1976D2',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 'bold',
-    padding: 0,
-    marginLeft: '4px'
-  };
-
-  // Users container styles
-  const usersContainerStyle = {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '12px',
-    marginTop: '8px',
-    alignItems: 'center'
-  };
-
-  const userSelectStyle = {
-    ...inputStyle,
-    marginBottom: '8px'
-  };
-
-  const addUserButtonStyle = {
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    border: '1px solid #e0e0e0',
-    backgroundColor: '#f5f5f5',
-    color: '#666666',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '20px',
-    fontWeight: 'bold'
-  };
-
-  // Submit button style
-  const submitButtonStyle = {
-    width: '100%',
-    padding: '14px',
-    backgroundColor: '#9E9E9E',
-    color: '#FFFFFF',
-    border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-    marginTop: '24px'
-  };
-
   if (!project) {
     return null;
   }
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlayStyle} onClick={onClose}>
+      <div className={styles.modalStyle} onClick={(e) => e.stopPropagation()}>
         <form onSubmit={handleSubmit}>
           {/* Header */}
-          <div style={headerStyle}>
-            <h2 style={titleStyle}>Edit Project Details</h2>
+          <div className={styles.headerStyle}>
+            <h2 className={styles.titleStyle}>Edit Project Details</h2>
             <button
               type="button"
-              style={closeButtonStyle}
+              className={styles.closeButtonStyle}
               onClick={onClose}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e0e0e0'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
               aria-label="Close"
             >
-              ×
+              <div className="cross">
+            </div>
             </button>
           </div>
 
           {/* Name Field */}
-          <div style={fieldContainerStyle}>
-            <label style={labelStyle}>Name</label>
+          <div className={styles.fieldContainer}>
+            <label className={styles.labelStyle}>Name</label>
             <input
               type="text"
-              style={inputStyle}
+              className={styles.inputStyle}
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
             />
-            {errors.name && <div style={errorStyle}>{errors.name}</div>}
+            {errors.name && <div className={styles.errorStyle}>{errors.name}</div>}
           </div>
 
           {/* Starting Date Field */}
-          <div style={fieldContainerStyle}>
-            <label style={labelStyle}>Starting Date</label>
+          <div className={styles.fieldContainer}>
+            <label className={styles.labelStyle}>Starting Date</label>
             <input
               type="date"
-              style={inputStyle}
+              className={styles.inputStyle}
               value={formData.startingDate}
               onChange={(e) => handleChange('startingDate', e.target.value)}
             />
-            {errors.startingDate && <div style={errorStyle}>{errors.startingDate}</div>}
+            {errors.startingDate && <div className={styles.errorStyle}>{errors.startingDate}</div>}
           </div>
 
           {/* Ending Date Field */}
-          <div style={fieldContainerStyle}>
-            <label style={labelStyle}>Ending date</label>
+          <div className={styles.fieldContainer}>
+            <label className={styles.labelStyle}>Ending date</label>
             <input
               type="date"
-              style={inputStyle}
+              className={styles.inputStyle}
               value={formData.endingDate}
               onChange={(e) => handleChange('endingDate', e.target.value)}
             />
-            {errors.endingDate && <div style={errorStyle}>{errors.endingDate}</div>}
+            {errors.endingDate && <div className={styles.errorStyle}>{errors.endingDate}</div>}
           </div>
 
           {/* Description Field */}
-          <div style={fieldContainerStyle}>
-            <label style={labelStyle}>Description</label>
+          <div className={styles.fieldContainer}>
+            <label className={styles.labelStyle}>Description</label>
             <textarea
-              style={textareaStyle}
+              className={styles.textareaStyle}
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
             />
-            {errors.description && <div style={errorStyle}>{errors.description}</div>}
+            {errors.description && <div className={styles.errorStyle}>{errors.description}</div>}
           </div>
 
           {/* Teams Field */}
-          <div style={fieldContainerStyle}>
-            <label style={labelStyle}>Teams</label>
+          <div className={styles.fieldContainer}>
+            <label className={styles.labelStyle}>Teams</label>
             <select
-              style={teamSelectStyle}
+              className={styles.teamSelectStyle}
               onChange={handleTeamChange}
               defaultValue=""
             >
@@ -451,13 +274,13 @@ function EditProjectForm({ project, onClose, onUpdate }) {
               ))}
             </select>
             {formData.teams.length > 0 && (
-              <div style={teamTagsContainerStyle}>
+              <div className={styles.teamTagsContainerStyle}>
                 {formData.teams.map(team => (
-                  <div key={team} style={teamTagStyle}>
+                  <div key={team} className={styles.teamTagStyle}>
                     {team}
                     <button
                       type="button"
-                      style={removeTeamButtonStyle}
+                      className={styles.removeTeamButtonStyle}
                       onClick={() => handleRemoveTeam(team)}
                       aria-label={`Remove ${team}`}
                     >
@@ -467,14 +290,14 @@ function EditProjectForm({ project, onClose, onUpdate }) {
                 ))}
               </div>
             )}
-            {errors.teams && <div style={errorStyle}>{errors.teams}</div>}
+            {errors.teams && <div className={styles.errorStyle}>{errors.teams}</div>}
           </div>
 
           {/* Users Field */}
-          <div style={fieldContainerStyle}>
-            <label style={labelStyle}>Users</label>
+          <div className={styles.fieldContainer}>
+            <label className={styles.labelStyle}>Users</label>
             <select
-              style={userSelectStyle}
+              className={styles.userSelectStyle}
               onChange={handleUserChange}
               defaultValue=""
             >
@@ -488,7 +311,7 @@ function EditProjectForm({ project, onClose, onUpdate }) {
                 ))}
             </select>
             {formData.users.length > 0 && (
-              <div style={usersContainerStyle}>
+              <div className={styles.usersContainerStyle}>
                 {formData.users.map(user => (
                   <div key={user.id} style={{ position: 'relative' }}>
                     <UserAvatar
@@ -526,7 +349,7 @@ function EditProjectForm({ project, onClose, onUpdate }) {
           </div>
 
           {/* Submit Button */}
-          <button type="submit" style={submitButtonStyle}>
+          <button type="submit" className={styles.submitButtonStyle}>
             Edit
           </button>
         </form>

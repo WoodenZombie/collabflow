@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import ProjectCard from "../components/ProjectCard";
-import FilterTabs from "../components/FilterTabs";
-import ProjectHeader from "../components/ProjectHeader";
-import ProgressBar from "../components/ProgressBar";
-import DeleteProjectForm from "../components/DeleteProjectForm";
-import CreateProjectForm from "../components/CreateProject";
-import EditProjectForm from "../components/EditProjectForm";
+import ProjectCard from '../components/projectCard/ProjectCard';
+import FilterTabs from '../components/filterTabs/FilterTabs';
+import ProjectHeader from '../components/ProjectHeader/ProjectHeader';
+import ProgressBar from '../components/progressBar/ProgressBar';
+import DeleteProjectForm from '../components/forms/DeleteProjectForm';
+import CreateProjectForm from '../components/createProject/CreateProject';
+import EditProjectForm from '../components/forms/EditProjectForm';
 import {
   getAllProjects,
   createProject,
   updateProject,
   deleteProject,
 } from "../services/projectApi";
+import styles from './projectPage.module.css';
 
 /**
  * ProjectPage - Main page for displaying projects grouped by status
@@ -229,32 +230,6 @@ function ProjectPage() {
   // Check if there is at least one completed project
   const hasCompleted = projects.some((p) => p.status === "completed");
 
-  // Page container style
-  const pageContainerStyle = {
-    padding: "20px",
-    fontFamily: "Arial, sans-serif",
-    paddingBottom: hasCompleted ? "90px" : "20px", // Extra space for delete button when visible
-  };
-
-  // Delete button style - fixed at bottom, full-width, no container background
-  const deleteButtonStyle = {
-    position: "fixed",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    width: "100%",
-    padding: "14px 20px",
-    backgroundColor: "#FF4D4D",
-    color: "#FFFFFF",
-    border: "none",
-    borderRadius: "0",
-    fontSize: "16px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "background-color 0.2s",
-    zIndex: 100,
-  };
-
   // Show loading state
   if (isLoading) {
     return (
@@ -291,84 +266,88 @@ function ProjectPage() {
           </button>
         </div>
       )}
-      <div style={pageContainerStyle}>
+      <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
         <ProjectHeader onCreateProject={handleOpenCreateModal} />
 
         <FilterTabs />
 
-        {/* In Progress Section */}
-        {projectsByStatus.inProgress.length > 0 && (
-          <section style={{ marginBottom: "30px" }}>
-            <ProgressBar
-              count={totalInProgress}
-              label="In Progress"
-              color="purple"
-            />
-            {projectsByStatus.inProgress.map((project) => (
-              <ProjectCard
-                key={project.id}
-                title={project.title}
-                description={project.description}
-                priorityLabel={project.priority}
-                status={project.status}
-                taskCount={project.taskCount}
-                onStatusChange={() => handleStatusChange(project.id)}
-                onEdit={() => handleOpenEditModal(project.id)}
+        <main className={styles.main}>
+          {/* In Progress Section */}
+          {projectsByStatus.inProgress.length > 0 && (
+            <section className={styles.section}>
+              <ProgressBar 
+                count={totalInProgress}
+                label="In Progress"
+                color="purple"
               />
-            ))}
-          </section>
-        )}
+              {projectsByStatus.inProgress.map(project => (
+                <ProjectCard 
+                  key={project.id}
+                  title={project.title}
+                  description={project.description}
+                  priorityLabel={project.priority}
+                  status={project.status}
+                  taskCount={project.taskCount}
+                  onStatusChange={() => handleStatusChange(project.id)}
+                  onEdit={() => handleOpenEditModal(project.id)}
+                />
+              ))}
+            </section>
+          )}
 
-        {/* Pending Section */}
-        {projectsByStatus.pending.length > 0 && (
-          <section style={{ marginBottom: "30px" }}>
-            <ProgressBar count={totalPending} label="Pending" color="yellow" />
-            {projectsByStatus.pending.map((project) => (
-              <ProjectCard
-                key={project.id}
-                title={project.title}
-                description={project.description}
-                priorityLabel={project.priority}
-                status={project.status}
-                taskCount={project.taskCount}
-                onStatusChange={() => handleStatusChange(project.id)}
-                onEdit={() => handleOpenEditModal(project.id)}
+          {/* Pending Section */}
+          {projectsByStatus.pending.length > 0 && (
+            <section className={styles.section}>
+              <ProgressBar 
+                count={totalPending}
+                label="Pending"
+                color="yellow"
               />
-            ))}
-          </section>
-        )}
+              {projectsByStatus.pending.map(project => (
+                <ProjectCard 
+                  key={project.id}
+                  title={project.title}
+                  description={project.description}
+                  priorityLabel={project.priority}
+                  status={project.status}
+                  taskCount={project.taskCount}
+                  onStatusChange={() => handleStatusChange(project.id)}
+                  onEdit={() => handleOpenEditModal(project.id)}
+                />
+              ))}
+            </section>
+          )}
 
-        {/* Completed Section */}
-        {projectsByStatus.completed.length > 0 && (
-          <section style={{ marginBottom: "30px" }}>
-            <ProgressBar count={totalDone} label="Completed" color="green" />
-            {projectsByStatus.completed.map((project) => (
-              <ProjectCard
-                key={project.id}
-                title={project.title}
-                description={project.description}
-                priorityLabel={project.priority}
-                status={project.status}
-                taskCount={project.taskCount}
-                onStatusChange={() => handleStatusChange(project.id)}
-                onEdit={() => handleOpenEditModal(project.id)}
+          {/* Completed Section */}
+          {projectsByStatus.completed.length > 0 && (
+            <section className={styles.section}>
+              <ProgressBar 
+                count={totalDone}
+                label="Completed"
+                color="green"
               />
-            ))}
-          </section>
-        )}
+              {projectsByStatus.completed.map(project => (
+                <ProjectCard 
+                  key={project.id}
+                  title={project.title}
+                  description={project.description}
+                  priorityLabel={project.priority}
+                  status={project.status}
+                  taskCount={project.taskCount}
+                  onStatusChange={() => handleStatusChange(project.id)}
+                  onEdit={() => handleOpenEditModal(project.id)}
+                />
+              ))}
+            </section>
+          )}
+        </main>
       </div>
 
       {/* Delete Button - Fixed at bottom, only visible if there is at least one completed project */}
       {hasCompleted && (
         <button
-          style={deleteButtonStyle}
+          className={styles.deleteButtonStyle}
           onClick={handleOpenDeleteModal}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#E63946";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#FF4D4D";
-          }}
         >
           Delete
         </button>
