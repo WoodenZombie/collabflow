@@ -1,0 +1,8 @@
+.tagStyle {
+    display: inline-block;
+    padding: 4px 12px;
+    font-size: 14px;
+    color: #475569;
+    background-color: transparent;
+    border-radius: 4px;
+}
