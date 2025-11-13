@@ -1,18 +1,18 @@
 import { useState, useEffect } from "react";
-import ProjectCard from '../components/projectCard/ProjectCard';
-import FilterTabs from '../components/filterTabs/FilterTabs';
-import ProjectHeader from '../components/ProjectHeader/ProjectHeader';
-import ProgressBar from '../components/progressBar/ProgressBar';
-import DeleteProjectForm from '../components/forms/DeleteProjectForm';
-import CreateProjectForm from '../components/createProject/CreateProject';
-import EditProjectForm from '../components/forms/EditProjectForm';
+import ProjectCard from "../components/projectCard/ProjectCard";
+import FilterTabs from "../components/filterTabs/FilterTabs";
+import ProjectHeader from "../components/ProjectHeader/ProjectHeader";
+import ProgressBar from "../components/progressBar/ProgressBar";
+import DeleteProjectForm from "../components/forms/DeleteProjectForm";
+import CreateProjectForm from "../components/createProject/CreateProject";
+import EditProjectForm from "../components/forms/EditProjectForm";
 import {
   getAllProjects,
   createProject,
   updateProject,
   deleteProject,
 } from "../services/projectApi";
-import styles from './projectPage.module.css';
+import styles from "./projectPage.module.css";
 
 /**
  * ProjectPage - Main page for displaying projects grouped by status
@@ -272,16 +272,16 @@ function ProjectPage() {
         <FilterTabs />
 
         <main className={styles.main}>
-          {/* In Progress Section */}
-          {projectsByStatus.inProgress.length > 0 && (
+          {/* Pending Section */}
+          {projectsByStatus.pending.length > 0 && (
             <section className={styles.section}>
-              <ProgressBar 
-                count={totalInProgress}
-                label="In Progress"
-                color="purple"
+              <ProgressBar
+                count={totalPending}
+                label="Pending"
+                color="yellow"
               />
-              {projectsByStatus.inProgress.map(project => (
-                <ProjectCard 
+              {projectsByStatus.pending.map((project) => (
+                <ProjectCard
                   key={project.id}
                   title={project.title}
                   description={project.description}
@@ -295,16 +295,16 @@ function ProjectPage() {
             </section>
           )}
 
-          {/* Pending Section */}
-          {projectsByStatus.pending.length > 0 && (
+          {/* In Progress Section */}
+          {projectsByStatus.inProgress.length > 0 && (
             <section className={styles.section}>
-              <ProgressBar 
-                count={totalPending}
-                label="Pending"
-                color="yellow"
+              <ProgressBar
+                count={totalInProgress}
+                label="In Progress"
+                color="purple"
               />
-              {projectsByStatus.pending.map(project => (
-                <ProjectCard 
+              {projectsByStatus.inProgress.map((project) => (
+                <ProjectCard
                   key={project.id}
                   title={project.title}
                   description={project.description}
@@ -321,13 +321,9 @@ function ProjectPage() {
           {/* Completed Section */}
           {projectsByStatus.completed.length > 0 && (
             <section className={styles.section}>
-              <ProgressBar 
-                count={totalDone}
-                label="Completed"
-                color="green"
-              />
-              {projectsByStatus.completed.map(project => (
-                <ProjectCard 
+              <ProgressBar count={totalDone} label="Completed" color="green" />
+              {projectsByStatus.completed.map((project) => (
+                <ProjectCard
                   key={project.id}
                   title={project.title}
                   description={project.description}
