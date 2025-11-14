@@ -1,14 +1,14 @@
 /**
- * Project API Service
- * Handles all HTTP requests to the backend API for projects
+ * Task API Service
+ * Handles all HTTP requests to the backend API for tasks
  */
 
 const API_BASE_URL = "http://localhost:3000/api";
 
 /**
- * Map backend project data to frontend format
+ * Map backend task data to frontend format
  */
-const mapBackendToFrontend = (backendProject) => {
+const mapBackendToFrontend = (backendTask) => {
   // Map backend status to frontend status
   const statusMap = {
     Planning: "pending",
@@ -17,17 +17,17 @@ const mapBackendToFrontend = (backendProject) => {
   };
 
   return {
-    id: String(backendProject.id),
-    name: backendProject.name,
-    title: backendProject.name,
-    description: backendProject.description || "",
-    startingDate: backendProject.start_date
-      ? formatDate(backendProject.start_date)
+    id: String(backendTask.id),
+    name: backendTask.name,
+    title: backendTask.name,
+    description: backendTask.description || "",
+    startingDate: backendTask.start_date
+      ? formatDate(backendTask.start_date)
       : "",
-    endingDate: backendProject.end_date
-      ? formatDate(backendProject.end_date)
+    endingDate: backendTask.end_date
+      ? formatDate(backendTask.end_date)
       : "",
-    status: statusMap[backendProject.status] || "pending",
+    status: statusMap[backendTask.status] || "pending",
     taskCount: 0,
     teams: [],
     users: [],
@@ -35,9 +35,9 @@ const mapBackendToFrontend = (backendProject) => {
 };
 
 /**
- * Map frontend project data to backend format
+ * Map frontend task data to backend format
  */
-const mapFrontendToBackend = (frontendProject) => {
+const mapFrontendToBackend = (frontendTask) => {
   // Map frontend status to backend status
   const statusMap = {
     pending: "Planning",
@@ -46,17 +46,17 @@ const mapFrontendToBackend = (frontendProject) => {
   };
 
   const backendData = {
-    name: frontendProject.name || frontendProject.title,
-    description: frontendProject.description || "",
-    status: statusMap[frontendProject.status] || "Planning",
+    name: frontendTask.name || frontendTask.title,
+    description: frontendTask.description || "",
+    status: statusMap[frontendTask.status] || "Planning",
   };
 
   // Add dates if provided
-  if (frontendProject.startingDate) {
-    backendData.start_date = parseDate(frontendProject.startingDate);
+  if (frontendTask.startingDate) {
+    backendData.start_date = parseDate(frontendTask.startingDate);
   }
-  if (frontendProject.endingDate) {
-    backendData.end_date = parseDate(frontendProject.endingDate);
+  if (frontendTask.endingDate) {
+    backendData.end_date = parseDate(frontendTask.endingDate);
   }
 
   return backendData;
@@ -95,9 +95,9 @@ const parseDate = (dateString) => {
 };
 
 /**
- * Get all projects
+ * Get all tasks
  */
-export const getAllProjects = async () => {
+export const getAllTasks = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/projects`);
     if (!response.ok) {
@@ -106,15 +106,15 @@ export const getAllProjects = async () => {
     const data = await response.json();
     return data.map(mapBackendToFrontend);
   } catch (error) {
-    console.error("Error fetching projects:", error);
+    console.error("Error fetching tasks:", error);
     throw error;
   }
 };
 
 /**
- * Get project by ID
+ * Get task by ID
  */
-export const getProjectById = async (id) => {
+export const getTaskById = async (id) => {
   try {
     const response = await fetch(`${API_BASE_URL}/projects/${id}`);
     if (!response.ok) {
@@ -123,17 +123,17 @@ export const getProjectById = async (id) => {
     const data = await response.json();
     return mapBackendToFrontend(data);
   } catch (error) {
-    console.error("Error fetching project:", error);
+    console.error("Error fetching task:", error);
     throw error;
   }
 };
 
 /**
- * Create a new project
+ * Create a new task
  */
-export const createProject = async (projectData) => {
+export const createTask = async (taskData) => {
   try {
-    const backendData = mapFrontendToBackend(projectData);
+    const backendData = mapFrontendToBackend(taskData);
     const response = await fetch(`${API_BASE_URL}/projects`, {
       method: "POST",
       headers: {
@@ -150,17 +150,17 @@ export const createProject = async (projectData) => {
     const data = await response.json();
     return mapBackendToFrontend(data);
   } catch (error) {
-    console.error("Error creating project:", error);
+    console.error("Error creating task:", error);
     throw error;
   }
 };
 
 /**
- * Update a project
+ * Update a task
  */
-export const updateProject = async (id, projectData) => {
+export const updateTask = async (id, taskData) => {
   try {
-    const backendData = mapFrontendToBackend(projectData);
+    const backendData = mapFrontendToBackend(taskData);
     const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
       method: "PUT",
       headers: {
@@ -177,15 +177,15 @@ export const updateProject = async (id, projectData) => {
     const data = await response.json();
     return mapBackendToFrontend(data);
   } catch (error) {
-    console.error("Error updating project:", error);
+    console.error("Error updating task:", error);
     throw error;
   }
 };
 
 /**
- * Delete a project
+ * Delete a task
  */
-export const deleteProject = async (id) => {
+export const deleteTask = async (id) => {
   try {
     const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
       method: "DELETE",
@@ -199,7 +199,8 @@ export const deleteProject = async (id) => {
     const data = await response.json();
     return mapBackendToFrontend(data);
   } catch (error) {
-    console.error("Error deleting project:", error);
+    console.error("Error deleting task:", error);
     throw error;
   }
 };
+

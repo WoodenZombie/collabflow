@@ -1,15 +1,15 @@
 import { useState } from 'react';
 import TeamTag from './../teamTag/TeamTag';
 import UserAvatar from '../userAvatar/UserAvatar';
-import styles from './deleteProject.module.css';
+import styles from './deleteTask.module.css';
 
 /**
- * DeleteProjectForm - Modal form for deleting a project
- * Displays project data in read-only mode
- * Delete button is ONLY visible when project status is "completed"
+ * DeleteTaskForm - Modal form for deleting a task
+ * Displays task data in read-only mode
+ * Delete button is ONLY visible when task status is "completed"
  * 
  * Props:
- * - project: {
+ * - task: {
  *     id: string,
  *     name: string,
  *     startingDate: string (format: "MM/DD/YY"),
@@ -22,13 +22,13 @@ import styles from './deleteProject.module.css';
  * - onClose: function (callback to close modal)
  * - onDelete: function (callback when delete button is clicked)
  */
-function DeleteProjectForm({ project, onClose, onDelete }) {
+function DeleteTaskForm({ task, onClose, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = () => {
     setIsDeleting(true);
     // Call onDelete callback
-    onDelete(project.id);
+    onDelete(task.id);
     // Close modal after a brief delay
     setTimeout(() => {
       setIsDeleting(false);
@@ -36,10 +36,10 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
     }, 300);
   };
 
-  // Check if project is completed (only then show Delete button)
-  const isCompleted = project?.status === 'completed';
+  // Check if task is completed (only then show Delete button)
+  const isCompleted = task?.status === 'completed';
 
-  if (!project) {
+  if (!task) {
     return null;
   }
 
@@ -48,7 +48,7 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
       <div className={styles.modalStyle} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className={styles.headerStyle}>
-          <h2 className={styles.titleStyle}>Delete Project</h2>
+          <h2 className={styles.titleStyle}>Delete Task</h2>
           <button
             className={styles.closeButtonStyle}
             onClick={onClose}
@@ -63,35 +63,35 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
 
         {/* Content */}
         <div className={styles.contentStyle}>
-          {/* Project Details */}
+          {/* Task Details */}
           <div className={styles.fieldContainer}>
             <label className={styles.labelStyle}>Name</label>
-            <div className={styles.valueStyle}>{project.name || project.title || 'N/A'}</div>
+            <div className={styles.valueStyle}>{task.name || task.title || 'N/A'}</div>
           </div>
 
           <div className={styles.fieldContainer}>
             <label className={styles.labelStyle}>Starting Date</label>
-            <div className={styles.valueStyle}>{project.startingDate || 'N/A'}</div>
+            <div className={styles.valueStyle}>{task.startingDate || 'N/A'}</div>
           </div>
 
           <div className={styles.fieldContainer}>
             <label className={styles.labelStyle}>Ending date</label>
-            <div className={styles.valueStyle}>{project.endingDate || 'N/A'}</div>
+            <div className={styles.valueStyle}>{task.endingDate || 'N/A'}</div>
           </div>
 
           <div className={`${styles.fieldContainer} ${styles.description}`}>
             <label className={styles.labelStyle}>Description</label>
             <div className={styles.descriptionValueStyle}>
-              {project.description || 'Lorem ipsum'}
+              {task.description || 'Lorem ipsum'}
             </div>
           </div>
 
           {/* Teams Section */}
-          {project.teams && project.teams.length > 0 && (
+          {task.teams && task.teams.length > 0 && (
             <div>
               <h3 className={styles.sectionHeaderStyle}>Teams</h3>
               <div className={styles.teamsContainerStyle}>
-                {project.teams.map((team, index) => (
+                {task.teams.map((team, index) => (
                   <TeamTag key={index} name={team} />
                 ))}
               </div>
@@ -99,11 +99,11 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
           )}
 
           {/* Users Section */}
-          {project.users && project.users.length > 0 && (
+          {task.users && task.users.length > 0 && (
             <div>
               <h3 className={styles.sectionHeaderStyle}>Users</h3>
               <div className={styles.usersContainerStyle}>
-                {project.users.map((user) => (
+                {task.users.map((user) => (
                   <UserAvatar
                     key={user.id}
                     initial={user.initial}
@@ -140,4 +140,4 @@ function DeleteProjectForm({ project, onClose, onDelete }) {
   );
 }
 
-export default DeleteProjectForm;
+export default DeleteTaskForm;

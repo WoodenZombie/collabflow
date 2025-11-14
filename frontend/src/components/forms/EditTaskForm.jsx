@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import UserAvatar from '../userAvatar/UserAvatar';
-import styles from './editProject.module.css';
+import styles from './editTask.module.css';
 /**
- * EditProjectForm - Modal form for editing an existing project
+ * EditTaskForm - Modal form for editing an existing task
  * 
  * Props:
- * - project: object (project to edit)
+ * - task: object (task to edit)
  * - onClose: function (callback to close modal)
- * - onUpdate: function (callback when form is submitted with updated project data)
+ * - onUpdate: function (callback when form is submitted with updated task data)
  */
-function EditProjectForm({ project, onClose, onUpdate }) {
+function EditTaskForm({ task, onClose, onUpdate }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -38,9 +38,9 @@ function EditProjectForm({ project, onClose, onUpdate }) {
     { id: '10', name: 'Jack', initial: 'J' }
   ];
 
-  // Load project data into form when component mounts or project changes
+  // Load task data into form when component mounts or task changes
   useEffect(() => {
-    if (project) {
+    if (task) {
       // Convert date format from MM/DD/YY to YYYY-MM-DD for date inputs
       const parseDate = (dateString) => {
         if (!dateString) return '';
@@ -55,15 +55,15 @@ function EditProjectForm({ project, onClose, onUpdate }) {
       };
 
       setFormData({
-        name: project.name || project.title || '',
-        description: project.description || '',
-        startingDate: parseDate(project.startingDate),
-        endingDate: parseDate(project.endingDate),
-        teams: project.teams || [],
-        users: project.users || []
+        name: task.name || task.title || '',
+        description: task.description || '',
+        startingDate: parseDate(task.startingDate),
+        endingDate: parseDate(task.endingDate),
+        teams: task.teams || [],
+        users: task.users || []
       });
     }
-  }, [project]);
+  }, [task]);
 
   // Handle input changes
   const handleChange = (field, value) => {
@@ -170,9 +170,9 @@ function EditProjectForm({ project, onClose, onUpdate }) {
       return `${month}/${day}/${year}`;
     };
 
-    // Create updated project object
-    const updatedProject = {
-      ...project, // Keep all existing fields
+    // Create updated task object
+    const updatedTask = {
+      ...task, // Keep all existing fields
       name: formData.name.trim(),
       title: formData.name.trim(), // Update title to match name
       description: formData.description.trim(),
@@ -183,13 +183,13 @@ function EditProjectForm({ project, onClose, onUpdate }) {
     };
 
     // Call onUpdate callback
-    onUpdate(updatedProject);
+    onUpdate(updatedTask);
 
     // Close modal
     onClose();
   };
 
-  if (!project) {
+  if (!task) {
     return null;
   }
 
@@ -199,7 +199,7 @@ function EditProjectForm({ project, onClose, onUpdate }) {
         <form onSubmit={handleSubmit}>
           {/* Header */}
           <div className={styles.headerStyle}>
-            <h2 className={styles.titleStyle}>Edit Project Details</h2>
+            <h2 className={styles.titleStyle}>Edit Task Details</h2>
             <button
               type="button"
               className={styles.closeButtonStyle}
@@ -358,4 +358,4 @@ function EditProjectForm({ project, onClose, onUpdate }) {
   );
 }
 
-export default EditProjectForm;
+export default EditTaskForm;

@@ -1,10 +1,10 @@
-import ProjectPage from './pages/ProjectPage';
+import TasksPage from './pages/TasksPage';
 import './App.css';
 
 function App() {
   return (
     <div>
-      <ProjectPage />
+      <TasksPage />
     </div>
   );
 }

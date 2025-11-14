@@ -1,38 +1,38 @@
-import { useState } from 'react';
-import styles from './createProject.module.css';
+import { useState } from "react";
+import styles from "./createTask.module.css";
 /**
- * CreateProjectForm - Modal form for creating a new project
- * 
+ * CreateTaskForm - Modal form for creating a new task
+ *
  * Props:
  * - onClose: function (callback to close modal)
- * - onCreate: function (callback when form is submitted with project data)
+ * - onCreate: function (callback when form is submitted with task data)
  */
-function CreateProjectForm({ onClose, onCreate }) {
+function CreateTaskForm({ onClose, onCreate }) {
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    startingDate: '',
-    endingDate: '',
+    name: "",
+    description: "",
+    startingDate: "",
+    endingDate: "",
     teams: [],
-    users: []
+    users: [],
   });
 
   const [errors, setErrors] = useState({});
 
   // Available teams
-  const availableTeams = ['Frontend', 'Backend', 'QA'];
+  const availableTeams = ["Frontend", "Backend", "QA"];
 
   // Handle input changes
   const handleChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
     // Clear error for this field when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
   };
@@ -41,20 +41,20 @@ function CreateProjectForm({ onClose, onCreate }) {
   const handleTeamChange = (e) => {
     const selectedTeam = e.target.value;
     if (selectedTeam && !formData.teams.includes(selectedTeam)) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        teams: [...prev.teams, selectedTeam]
+        teams: [...prev.teams, selectedTeam],
       }));
     }
     // Reset select to placeholder
-    e.target.value = '';
+    e.target.value = "";
   };
 
   // Remove team
   const handleRemoveTeam = (teamToRemove) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      teams: prev.teams.filter(team => team !== teamToRemove)
+      teams: prev.teams.filter((team) => team !== teamToRemove),
     }));
   };
 
@@ -63,23 +63,23 @@ function CreateProjectForm({ onClose, onCreate }) {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
+      newErrors.description = "Description is required";
     }
 
     if (!formData.startingDate) {
-      newErrors.startingDate = 'Starting date is required';
+      newErrors.startingDate = "Starting date is required";
     }
 
     if (!formData.endingDate) {
-      newErrors.endingDate = 'Ending date is required';
+      newErrors.endingDate = "Ending date is required";
     }
 
     if (formData.teams.length === 0) {
-      newErrors.teams = 'At least one team is required';
+      newErrors.teams = "At least one team is required";
     }
 
     setErrors(newErrors);
@@ -97,29 +97,29 @@ function CreateProjectForm({ onClose, onCreate }) {
     // Format dates to match existing format (MM/DD/YY)
     const formatDate = (dateString) => {
       const date = new Date(dateString);
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
       const year = String(date.getFullYear()).slice(-2);
       return `${month}/${day}/${year}`;
     };
 
-    // Create new project object
-    const newProject = {
+    // Create new task object
+    const newTask = {
       id: String(Date.now()), // Generate unique ID
       name: formData.name.trim(),
       title: formData.name.trim(), // Use name as title too
       description: formData.description.trim(),
       startingDate: formatDate(formData.startingDate),
       endingDate: formatDate(formData.endingDate),
-      status: 'pending', // Default status
-      priority: 'Not that important', // Default priority
+      status: "pending", // Default status
+      priority: "Not that important", // Default priority
       taskCount: 0, // Default task count
       teams: formData.teams,
-      users: formData.users // Can be empty for now
+      users: formData.users, // Can be empty for now
     };
 
     // Call onCreate callback
-    onCreate(newProject);
+    onCreate(newTask);
 
     // Close modal
     onClose();
@@ -131,7 +131,7 @@ function CreateProjectForm({ onClose, onCreate }) {
         <form onSubmit={handleSubmit}>
           {/* Header */}
           <div className={styles.headerStyle}>
-            <h2 className={styles.titleStyle}>Create a new Project</h2>
+            <h2 className={styles.titleStyle}>Create a new Task</h2>
             <button
               type="button"
               className={styles.closeButtonStyle}
@@ -150,9 +150,11 @@ function CreateProjectForm({ onClose, onCreate }) {
               className={styles.inputStyle}
               placeholder="Task"
               value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
+              onChange={(e) => handleChange("name", e.target.value)}
             />
-            {errors.name && <div className={styles.errorStyle}>{errors.name}</div>}
+            {errors.name && (
+              <div className={styles.errorStyle}>{errors.name}</div>
+            )}
           </div>
 
           {/* Description Field */}
@@ -162,9 +164,11 @@ function CreateProjectForm({ onClose, onCreate }) {
               className={styles.textareaStyle}
               placeholder="Lorem Ipsum"
               value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
+              onChange={(e) => handleChange("description", e.target.value)}
             />
-            {errors.description && <div className={styles.errorStyle}>{errors.description}</div>}
+            {errors.description && (
+              <div className={styles.errorStyle}>{errors.description}</div>
+            )}
           </div>
 
           {/* Starting Date Field */}
@@ -174,9 +178,11 @@ function CreateProjectForm({ onClose, onCreate }) {
               type="date"
               className={styles.inputStyle}
               value={formData.startingDate}
-              onChange={(e) => handleChange('startingDate', e.target.value)}
+              onChange={(e) => handleChange("startingDate", e.target.value)}
             />
-            {errors.startingDate && <div className={styles.errorStyle}>{errors.startingDate}</div>}
+            {errors.startingDate && (
+              <div className={styles.errorStyle}>{errors.startingDate}</div>
+            )}
           </div>
 
           {/* Ending Date Field */}
@@ -186,9 +192,11 @@ function CreateProjectForm({ onClose, onCreate }) {
               type="date"
               className={styles.inputStyle}
               value={formData.endingDate}
-              onChange={(e) => handleChange('endingDate', e.target.value)}
+              onChange={(e) => handleChange("endingDate", e.target.value)}
             />
-            {errors.endingDate && <div className={styles.errorStyle}>{errors.endingDate}</div>}
+            {errors.endingDate && (
+              <div className={styles.errorStyle}>{errors.endingDate}</div>
+            )}
           </div>
 
           {/* Teams Field */}
@@ -199,8 +207,10 @@ function CreateProjectForm({ onClose, onCreate }) {
               onChange={handleTeamChange}
               defaultValue=""
             >
-              <option value="" disabled>Choose team</option>
-              {availableTeams.map(team => (
+              <option value="" disabled>
+                Choose team
+              </option>
+              {availableTeams.map((team) => (
                 <option key={team} value={team}>
                   {team}
                 </option>
@@ -208,7 +218,7 @@ function CreateProjectForm({ onClose, onCreate }) {
             </select>
             {formData.teams.length > 0 && (
               <div className={styles.teamTagsContainerStyle}>
-                {formData.teams.map(team => (
+                {formData.teams.map((team) => (
                   <div key={team} className={styles.teamTagStyle}>
                     {team}
                     <button
@@ -223,12 +233,14 @@ function CreateProjectForm({ onClose, onCreate }) {
                 ))}
               </div>
             )}
-            {errors.teams && <div className={styles.errorStyle}>{errors.teams}</div>}
+            {errors.teams && (
+              <div className={styles.errorStyle}>{errors.teams}</div>
+            )}
           </div>
 
           {/* Submit Button */}
           <button type="submit" className={styles.submitButtonStyle}>
-            Create new project
+            Create new task
           </button>
         </form>
       </div>
@@ -236,4 +248,4 @@ function CreateProjectForm({ onClose, onCreate }) {
   );
 }
 
-export default CreateProjectForm;
+export default CreateTaskForm;
