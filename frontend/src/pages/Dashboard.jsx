@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ProjectCard from "../components/projectCard/ProjectCard";
+import CreateProjectForm from "../components/createProject/CreateProject";
 
 const mockProjects = [
   {
@@ -20,19 +21,58 @@ const mockProjects = [
 
 function Dashboard() {
   const [projects, setProjects] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     setProjects(mockProjects);
   }, []);
 
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const handleCreateProject = (newProject) => {
+    // TODO: Add project to backend via API
+    // For now, add to local state
+    setProjects((prevProjects) => [...prevProjects, newProject]);
+    setIsCreateModalOpen(false);
+  };
+
   return (
     <div>
-      <h1>Projects</h1>
       <div>
-        {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
-        ))}
+        <h1>Projects</h1>
+        <button onClick={handleOpenCreateModal} title="Create Project">
+          +
+        </button>
       </div>
+      {projects.length === 0 ? (
+        <div>
+          <p>No projects available</p>
+        </div>
+      ) : (
+        <div>
+          {projects.map((project) => {
+            // Validate project has required fields
+            if (!project || !project.id) {
+              return null;
+            }
+            return <ProjectCard key={project.id} project={project} />;
+          })}
+        </div>
+      )}
+
+      {/* Create Project Modal */}
+      {isCreateModalOpen && (
+        <CreateProjectForm
+          onClose={handleCloseCreateModal}
+          onCreate={handleCreateProject}
+        />
+      )}
     </div>
   );
 }

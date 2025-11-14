@@ -8,9 +8,16 @@ function ProjectCard({ project }) {
     done: "Done",
   };
 
+  // Validate project exists and has required fields
+  if (!project || !project.id) {
+    return null;
+  }
+
   const handleClick = () => {
     // Navigate to tasks page with project ID
-    navigate(`/tasks/${project.id}`);
+    if (project.id) {
+      navigate(`/tasks/${project.id}`);
+    }
   };
 
   const handleButtonClick = (e) => {
@@ -20,8 +27,8 @@ function ProjectCard({ project }) {
 
   return (
     <div onClick={handleClick} style={{ cursor: "pointer" }}>
-      <div>{project.title}</div>
-      <div>{project.description}</div>
+      <div>{project.title || "Untitled Project"}</div>
+      <div>{project.description || "No description"}</div>
       {project.participants && project.participants.length > 0 && (
         <div>Participants: {project.participants.join(", ")}</div>
       )}
