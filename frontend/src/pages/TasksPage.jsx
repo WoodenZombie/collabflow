@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import TaskCard from "../components/taskCard/TaskCard";
 import FilterTabs from "../components/filterTabs/FilterTabs";
 import TaskHeader from "../components/TaskHeader/TaskHeader";
@@ -23,6 +23,7 @@ import styles from "./tasksPage.module.css";
 function TasksPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -32,6 +33,16 @@ function TasksPage() {
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Check if createTask param is in URL and open modal
+  useEffect(() => {
+    if (searchParams.get("createTask") === "true") {
+      setIsCreateModalOpen(true);
+      // Remove the query parameter from URL
+      searchParams.delete("createTask");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   /**
    * Load tasks from API on component mount or when projectId changes

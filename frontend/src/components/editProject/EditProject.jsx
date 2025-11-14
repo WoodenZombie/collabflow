@@ -1,6 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-function CreateProjectForm({ onClose, onCreate }) {
+/**
+ * EditProjectForm - Modal form for editing a project
+ *
+ * Props:
+ * - project: object (project to edit)
+ * - onClose: function (callback to close modal)
+ * - onUpdate: function (callback when form is submitted with updated project data)
+ */
+function EditProjectForm({ project, onClose, onUpdate }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -21,6 +29,33 @@ function CreateProjectForm({ onClose, onCreate }) {
     { id: "2", name: "Bob", initial: "B" },
     { id: "3", name: "Charlie", initial: "C" },
   ];
+
+  // Initialize form data from project
+  useEffect(() => {
+    if (project) {
+      // Parse dates from MM/DD/YY to YYYY-MM-DD format for input
+      const parseDate = (dateString) => {
+        if (!dateString) return "";
+        const parts = dateString.split("/");
+        if (parts.length === 3) {
+          const month = parts[0].padStart(2, "0");
+          const day = parts[1].padStart(2, "0");
+          const year = "20" + parts[2];
+          return `${year}-${month}-${day}`;
+        }
+        return "";
+      };
+
+      setFormData({
+        title: project.title || "",
+        description: project.description || "",
+        startingDate: parseDate(project.startingDate) || "",
+        endingDate: parseDate(project.endingDate) || "",
+        teams: project.teams || [],
+        users: project.users || [],
+      });
+    }
+  }, [project]);
 
   // Handle input changes
   const handleChange = (field, value) => {
@@ -46,7 +81,6 @@ function CreateProjectForm({ onClose, onCreate }) {
         teams: [...prev.teams, selectedTeam],
       }));
     }
-    // Reset select to placeholder
     e.target.value = "";
   };
 
@@ -118,9 +152,9 @@ function CreateProjectForm({ onClose, onCreate }) {
       return `${month}/${day}/${year}`;
     };
 
-    // Create new project object
-    const newProject = {
-      id: Date.now(), // Generate unique ID
+    // Create updated project object
+    const updatedProject = {
+      ...project,
       title: formData.title.trim(),
       description: formData.description.trim(),
       startingDate: formatDate(formData.startingDate),
@@ -128,15 +162,18 @@ function CreateProjectForm({ onClose, onCreate }) {
       teams: formData.teams,
       users: formData.users,
       participants: formData.users.map((u) => u.name),
-      progress: { waiting: 0, inProgress: 0, done: 0 },
     };
 
-    // Call onCreate callback
-    onCreate(newProject);
+    // Call onUpdate callback
+    onUpdate(updatedProject);
 
     // Close modal
     onClose();
   };
+
+  if (!project) {
+    return null;
+  }
 
   return (
     <div onClick={onClose}>
@@ -144,61 +181,69 @@ function CreateProjectForm({ onClose, onCreate }) {
         <form onSubmit={handleSubmit}>
           {/* Header */}
           <div>
-            <h2>Create a new Project</h2>
+            <h2>Edit Project Details</h2>
             <button type="button" onClick={onClose}>
               ×
             </button>
           </div>
 
-          {/* Title Field */}
+          {/* Name Field */}
           <div>
-            <label>Title</label>
+            <label>Name</label>
+            <div>{project.title || "Untitled Project"}</div>
             <input
               type="text"
-              placeholder="Project title"
               value={formData.title}
               onChange={(e) => handleChange("title", e.target.value)}
             />
             {errors.title && <div>{errors.title}</div>}
           </div>
 
+          {/* Starting Date Field */}
+          <div>
+            <label>Starting Date</label>
+            <div>{project.startingDate || ""}</div>
+            <input
+              type="date"
+              value={formData.startingDate}
+              onChange={(e) => handleChange("startingDate", e.target.value)}
+            />
+            {errors.startingDate && <div>{errors.startingDate}</div>}
+          </div>
+
+          {/* Ending Date Field */}
+          <div>
+            <label>Ending date</label>
+            <div>{project.endingDate || ""}</div>
+            <input
+              type="date"
+              value={formData.endingDate}
+              onChange={(e) => handleChange("endingDate", e.target.value)}
+            />
+            {errors.endingDate && <div>{errors.endingDate}</div>}
+          </div>
+
           {/* Description Field */}
           <div>
             <label>Description</label>
+            <div>{project.description || "No description"}</div>
             <textarea
-              placeholder="Project description"
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
             />
             {errors.description && <div>{errors.description}</div>}
           </div>
 
-          {/* Duration Field */}
-          <div>
-            <label>Duration</label>
-            <div>
-              <label>Starting Date</label>
-              <input
-                type="date"
-                value={formData.startingDate}
-                onChange={(e) => handleChange("startingDate", e.target.value)}
-              />
-              {errors.startingDate && <div>{errors.startingDate}</div>}
-            </div>
-            <div>
-              <label>Ending Date</label>
-              <input
-                type="date"
-                value={formData.endingDate}
-                onChange={(e) => handleChange("endingDate", e.target.value)}
-              />
-              {errors.endingDate && <div>{errors.endingDate}</div>}
-            </div>
-          </div>
-
           {/* Teams Field */}
           <div>
             <label>Teams</label>
+            <div>
+              {project.teams && project.teams.length > 0 ? (
+                project.teams.map((team) => <span key={team}>{team}</span>)
+              ) : (
+                <span>No teams</span>
+              )}
+            </div>
             <select onChange={handleTeamChange} defaultValue="">
               <option value="" disabled>
                 Choose team
@@ -230,6 +275,21 @@ function CreateProjectForm({ onClose, onCreate }) {
           <div>
             <label>Users</label>
             <div>
+              {project.users && project.users.length > 0 ? (
+                project.users.map((user) => (
+                  <div key={typeof user === "string" ? user : user.id || user}>
+                    <span>
+                      {typeof user === "string"
+                        ? user
+                        : user.initial || user.name || "?"}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <span>No users</span>
+              )}
+            </div>
+            <div>
               {formData.users.map((user) => (
                 <div key={user.id}>
                   <span>{user.initial}</span>
@@ -244,7 +304,6 @@ function CreateProjectForm({ onClose, onCreate }) {
               <button
                 type="button"
                 onClick={() => {
-                  // Simple add user - could be improved with a dropdown
                   const availableUser = availableUsers.find(
                     (u) =>
                       !formData.users.find((existing) => existing.id === u.id)
@@ -260,11 +319,11 @@ function CreateProjectForm({ onClose, onCreate }) {
           </div>
 
           {/* Submit Button */}
-          <button type="submit">Create new project</button>
+          <button type="submit">Edit</button>
         </form>
       </div>
     </div>
   );
 }
 
-export default CreateProjectForm;
+export default EditProjectForm;

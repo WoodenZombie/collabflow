@@ -22,7 +22,10 @@ function ProjectCard({ project }) {
 
   const handleButtonClick = (e) => {
     e.stopPropagation(); // Prevent navigation when clicking the button
-    // TODO: Add functionality for the + button
+    // Navigate to tasks page with project ID and open create task modal
+    if (project.id) {
+      navigate(`/tasks/${project.id}?createTask=true`);
+    }
   };
 
   return (
