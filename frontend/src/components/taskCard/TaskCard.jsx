@@ -19,7 +19,6 @@ function TaskCard({
   description,
   priorityLabel,
   status,
-  taskCount,
   onStatusChange,
   onEdit,
 }) {
@@ -47,6 +46,7 @@ function TaskCard({
       : priorityLabel === "Important"
       ? styles.important
       : styles.normal;
+
   return (
     <div onClick={handleCardClick} className={styles.cardStyle}>
       {/* Edit Button */}
@@ -70,9 +70,6 @@ function TaskCard({
 
       {/* Task Description */}
       <p className={styles.description}>{description}</p>
-
-      {/* Task Count */}
-      <div className={styles.taskCount}>Tasks: {taskCount}</div>
     </div>
   );
 }

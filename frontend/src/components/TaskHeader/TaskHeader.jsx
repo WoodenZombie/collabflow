@@ -10,7 +10,7 @@ import styles from "./taskHeader.module.css";
 function TaskHeader({ onCreateTask }) {
   return (
     <div className={styles.headerStyle}>
-      <h1 className={styles.titleStyle}>Task</h1>
+      <h1 className={styles.titleStyle}>Project name</h1>
 
       <div className={styles.iconsContainerStyle}>
         {/* Plus icon - Create Task */}
