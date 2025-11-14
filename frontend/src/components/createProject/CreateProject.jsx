@@ -24,12 +24,37 @@ function CreateProjectForm({ onClose, onCreate }) {
 
   // Handle input changes
   const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+
+      // Real-time validation for date fields
+      if (field === "startingDate" || field === "endingDate") {
+        // Validate dates when both are filled
+        if (updated.startingDate && updated.endingDate) {
+          const startDate = new Date(updated.startingDate);
+          const endDate = new Date(updated.endingDate);
+          if (startDate > endDate) {
+            setErrors((prev) => ({
+              ...prev,
+              endingDate: "Ending date must be after starting date",
+            }));
+          } else {
+            setErrors((prev) => ({
+              ...prev,
+              endingDate: "",
+            }));
+          }
+        }
+      }
+
+      return updated;
+    });
+
     // Clear error for this field when user starts typing
-    if (errors[field]) {
+    if (errors[field] && field !== "endingDate") {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
@@ -95,6 +120,15 @@ function CreateProjectForm({ onClose, onCreate }) {
 
     if (!formData.endingDate) {
       newErrors.endingDate = "Ending date is required";
+    }
+
+    // Validate that starting date is not after ending date
+    if (formData.startingDate && formData.endingDate) {
+      const startDate = new Date(formData.startingDate);
+      const endDate = new Date(formData.endingDate);
+      if (startDate > endDate) {
+        newErrors.endingDate = "Ending date must be after starting date";
+      }
     }
 
     setErrors(newErrors);
