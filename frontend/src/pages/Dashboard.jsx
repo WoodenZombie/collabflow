@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ProjectCard from "../components/projectCard/ProjectCard";
 
 const mockProjects = [
   {
@@ -26,14 +27,11 @@ function Dashboard() {
 
   return (
     <div>
-      <h1>Projectsą</h1>
+      <h1>Projects</h1>
       <div>
-        {projects.map((project) => {
-          <div key={project.id}>
-            <h2>{project.title}</h2>
-            <p>{project.description}</p>
-          </div>;
-        })}
+        {projects.map((project) => (
+          <ProjectCard key={project.id} project={project} />
+        ))}
       </div>
     </div>
   );

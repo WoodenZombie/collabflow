@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import TaskCard from "../components/taskCard/TaskCard";
 import FilterTabs from "../components/filterTabs/FilterTabs";
 import TaskHeader from "../components/TaskHeader/TaskHeader";
@@ -17,9 +18,13 @@ import styles from "./tasksPage.module.css";
 /**
  * TasksPage - Main page for displaying tasks grouped by status
  * Handles status cycling: Pending → In Progress → Completed → Pending
+ * Can filter tasks by projectId if provided in URL
  */
 function TasksPage() {
+  const { projectId } = useParams();
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -29,11 +34,35 @@ function TasksPage() {
   const [error, setError] = useState(null);
 
   /**
-   * Load tasks from API on component mount
+   * Load tasks from API on component mount or when projectId changes
    */
   useEffect(() => {
     loadTasks();
-  }, []);
+  }, [projectId]);
+
+  /**
+   * Filter tasks by projectId when tasks or projectId changes
+   */
+  useEffect(() => {
+    if (projectId) {
+      // Filter tasks by projectId
+      // Since API returns projects as tasks, we filter by matching id
+      // Also check for project_id in case real tasks are returned
+      const filtered = tasks.filter((task) => {
+        const taskId = task.id?.toString();
+        const taskProjectId = task.project_id?.toString();
+        const projectIdStr = projectId.toString();
+
+        // Match if task.id equals projectId (when API returns projects as tasks)
+        // OR if task.project_id equals projectId (when API returns actual tasks)
+        return taskId === projectIdStr || taskProjectId === projectIdStr;
+      });
+      setFilteredTasks(filtered);
+    } else {
+      // If no projectId, show all tasks
+      setFilteredTasks(tasks);
+    }
+  }, [tasks, projectId]);
 
   /**
    * Load all tasks from backend
@@ -68,7 +97,7 @@ function TasksPage() {
    * Handle status change when clicking on TaskCard
    */
   const handleStatusChange = async (taskId) => {
-    const task = tasks.find((t) => t.id === taskId);
+    const task = filteredTasks.find((t) => t.id === taskId);
     if (!task) return;
 
     const newStatus = cycleStatus(task.status);
@@ -79,6 +108,10 @@ function TasksPage() {
       const savedTask = await updateTask(taskId, updatedTask);
       // Update local state
       setTasks((prevTasks) =>
+        prevTasks.map((t) => (t.id === taskId ? savedTask : t))
+      );
+      // Update filtered tasks
+      setFilteredTasks((prevTasks) =>
         prevTasks.map((t) => (t.id === taskId ? savedTask : t))
       );
     } catch (err) {
@@ -92,7 +125,7 @@ function TasksPage() {
    */
   const handleOpenDeleteModal = () => {
     // Find the first completed task to show in modal
-    const firstCompletedTask = tasks.find(
+    const firstCompletedTask = filteredTasks.find(
       (t) => t.status === "completed"
     );
     if (firstCompletedTask) {
@@ -116,7 +149,9 @@ function TasksPage() {
     try {
       await deleteTask(taskId);
       // Remove from local state
-      setTasks((prevTasks) =>
+      setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+      // Remove from filtered tasks
+      setFilteredTasks((prevTasks) =>
         prevTasks.filter((task) => task.id !== taskId)
       );
       // Close modal
@@ -147,10 +182,23 @@ function TasksPage() {
    */
   const handleCreateTask = async (newTask) => {
     try {
+      // Add projectId to new task if projectId is in URL
+      const taskToCreate = projectId
+        ? { ...newTask, project_id: parseInt(projectId) }
+        : newTask;
+
       // Create task on backend
-      const savedTask = await createTask(newTask);
+      const savedTask = await createTask(taskToCreate);
       // Add to local state
       setTasks((prevTasks) => [...prevTasks, savedTask]);
+      // Add to filtered tasks if it matches the current project
+      if (
+        !projectId ||
+        savedTask.project_id === parseInt(projectId) ||
+        savedTask.id === projectId
+      ) {
+        setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
+      }
       // Close modal
       setIsCreateModalOpen(false);
     } catch (err) {
@@ -163,7 +211,7 @@ function TasksPage() {
    * Handle opening edit modal
    */
   const handleOpenEditModal = (taskId) => {
-    const task = tasks.find((t) => t.id === taskId);
+    const task = filteredTasks.find((t) => t.id === taskId);
     if (task) {
       setTaskToEdit(task);
       setIsEditModalOpen(true);
@@ -184,15 +232,14 @@ function TasksPage() {
   const handleUpdateTask = async (updatedTask) => {
     try {
       // Update task on backend
-      const savedTask = await updateTask(
-        updatedTask.id,
-        updatedTask
-      );
+      const savedTask = await updateTask(updatedTask.id, updatedTask);
       // Update local state
       setTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task.id === savedTask.id ? savedTask : task
-        )
+        prevTasks.map((task) => (task.id === savedTask.id ? savedTask : task))
+      );
+      // Update filtered tasks
+      setFilteredTasks((prevTasks) =>
+        prevTasks.map((task) => (task.id === savedTask.id ? savedTask : task))
       );
       // Close modal
       setIsEditModalOpen(false);
@@ -207,11 +254,13 @@ function TasksPage() {
    * Group tasks by status
    */
   const getTasksByStatus = () => {
-    const inProgressTasks = tasks.filter(
+    const inProgressTasks = filteredTasks.filter(
       (t) => t.status === "inProgress"
     );
-    const pendingTasks = tasks.filter((t) => t.status === "pending");
-    const completedTasks = tasks.filter((t) => t.status === "completed");
+    const pendingTasks = filteredTasks.filter((t) => t.status === "pending");
+    const completedTasks = filteredTasks.filter(
+      (t) => t.status === "completed"
+    );
 
     return {
       inProgress: inProgressTasks,
@@ -228,7 +277,7 @@ function TasksPage() {
   const totalDone = tasksByStatus.completed.length;
 
   // Check if there is at least one completed task
-  const hasCompleted = tasks.some((t) => t.status === "completed");
+  const hasCompleted = filteredTasks.some((t) => t.status === "completed");
 
   // Show loading state
   if (isLoading) {
@@ -240,7 +289,7 @@ function TasksPage() {
   }
 
   // Show error state
-  if (error && tasks.length === 0) {
+  if (error && filteredTasks.length === 0 && !isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
         <p style={{ color: "red" }}>{error}</p>
@@ -267,6 +316,21 @@ function TasksPage() {
         </div>
       )}
       <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+        {projectId && (
+          <button
+            onClick={() => navigate("/")}
+            style={{
+              marginBottom: "20px",
+              padding: "10px 20px",
+              backgroundColor: "#f0f0f0",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            ← Back to Dashboard
+          </button>
+        )}
         <TaskHeader onCreateTask={handleOpenCreateModal} />
 
         <FilterTabs />
