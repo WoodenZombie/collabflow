@@ -13,7 +13,6 @@ import {
   updateTask,
   deleteTask,
 } from "../services/taskApi";
-import { getProjectById } from "../services/projectApi";
 import styles from "./tasksPage.module.css";
 
 /**
@@ -34,7 +33,18 @@ function TasksPage() {
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [projectName, setProjectName] = useState("");
+
+  // Get project name from tasks (task API)
+  // If projectId exists, find the task with matching id and use its title
+  const projectName =
+    projectId && tasks.length > 0
+      ? (() => {
+          const projectTask = tasks.find(
+            (task) => task.id?.toString() === projectId.toString()
+          );
+          return projectTask?.title || projectTask?.name || "Project name";
+        })()
+      : "";
 
   // Check if createTask param is in URL and open modal
   useEffect(() => {
@@ -51,23 +61,7 @@ function TasksPage() {
    */
   useEffect(() => {
     loadTasks();
-    if (projectId) {
-      loadProjectName();
-    }
   }, [projectId]);
-
-  /**
-   * Load project name by projectId
-   */
-  const loadProjectName = async () => {
-    try {
-      const project = await getProjectById(projectId);
-      setProjectName(project.title || project.name || "");
-    } catch (err) {
-      console.error("Failed to load project name:", err);
-      setProjectName("");
-    }
-  };
 
   /**
    * Filter tasks by projectId when tasks or projectId changes
