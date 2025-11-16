@@ -166,9 +166,16 @@ function TasksPage() {
   };
 
   /**
-   * Handle task deletion
+   * Handle task deletion with confirmation
    */
-  const handleDeleteTask = async (taskId) => {
+  const handleDeleteTaskClick = async (taskId) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm("Are you sure you want to delete this task?");
+    
+    if (!confirmed) {
+      return; // User cancelled deletion
+    }
+
     try {
       await deleteTask(taskId);
       // Remove from local state
@@ -177,9 +184,8 @@ function TasksPage() {
       setFilteredTasks((prevTasks) =>
         prevTasks.filter((task) => task.id !== taskId)
       );
-      // Close modal
-      setIsDeleteModalOpen(false);
-      setSelectedTask(null);
+      // Clear any previous errors
+      setError(null);
     } catch (err) {
       console.error("Failed to delete task:", err);
       setError("Failed to delete task. Please try again.");
@@ -366,6 +372,7 @@ function TasksPage() {
                   taskCount={task.taskCount}
                   onStatusChange={() => handleStatusChange(task.id)}
                   onEdit={() => handleOpenEditModal(task.id)}
+                  onDelete={() => handleDeleteTaskClick(task.id)}
                 />
               ))}
             </section>
@@ -389,6 +396,7 @@ function TasksPage() {
                   taskCount={task.taskCount}
                   onStatusChange={() => handleStatusChange(task.id)}
                   onEdit={() => handleOpenEditModal(task.id)}
+                  onDelete={() => handleDeleteTaskClick(task.id)}
                 />
               ))}
             </section>
@@ -408,6 +416,7 @@ function TasksPage() {
                   taskCount={task.taskCount}
                   onStatusChange={() => handleStatusChange(task.id)}
                   onEdit={() => handleOpenEditModal(task.id)}
+                  onDelete={() => handleDeleteTaskClick(task.id)}
                 />
               ))}
             </section>
@@ -447,7 +456,7 @@ function TasksPage() {
         <DeleteTaskForm
           task={selectedTask}
           onClose={handleCloseDeleteModal}
-          onDelete={handleDeleteTask}
+          onDelete={handleDeleteTaskClick}
         />
       )}
     </>
