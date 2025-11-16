@@ -13,6 +13,7 @@ import {
   updateTask,
   deleteTask,
 } from "../services/taskApi";
+import { getProjectById } from "../services/projectApi";
 import styles from "./tasksPage.module.css";
 
 /**
@@ -33,6 +34,7 @@ function TasksPage() {
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [projectName, setProjectName] = useState("");
 
   // Check if createTask param is in URL and open modal
   useEffect(() => {
@@ -49,7 +51,23 @@ function TasksPage() {
    */
   useEffect(() => {
     loadTasks();
+    if (projectId) {
+      loadProjectName();
+    }
   }, [projectId]);
+
+  /**
+   * Load project name by projectId
+   */
+  const loadProjectName = async () => {
+    try {
+      const project = await getProjectById(projectId);
+      setProjectName(project.title || project.name || "");
+    } catch (err) {
+      console.error("Failed to load project name:", err);
+      setProjectName("");
+    }
+  };
 
   /**
    * Filter tasks by projectId when tasks or projectId changes
@@ -327,22 +345,11 @@ function TasksPage() {
         </div>
       )}
       <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
-        {projectId && (
-          <button
-            onClick={() => navigate("/")}
-            style={{
-              marginBottom: "20px",
-              padding: "10px 20px",
-              backgroundColor: "#f0f0f0",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            ← Back to Dashboard
-          </button>
-        )}
-        <TaskHeader onCreateTask={handleOpenCreateModal} />
+        <TaskHeader
+          projectName={projectName}
+          onBack={projectId ? () => navigate("/") : null}
+          onCreateTask={handleOpenCreateModal}
+        />
 
         <FilterTabs />
 

@@ -24,9 +24,7 @@ const mapBackendToFrontend = (backendTask) => {
     startingDate: backendTask.start_date
       ? formatDate(backendTask.start_date)
       : "",
-    endingDate: backendTask.end_date
-      ? formatDate(backendTask.end_date)
-      : "",
+    endingDate: backendTask.end_date ? formatDate(backendTask.end_date) : "",
     status: statusMap[backendTask.status] || "pending",
     taskCount: 0,
     teams: [],
@@ -96,6 +94,7 @@ const parseDate = (dateString) => {
 
 /**
  * Get all tasks
+ * Fetches all projects from /api/projects endpoint
  */
 export const getAllTasks = async () => {
   try {
@@ -203,4 +202,3 @@ export const deleteTask = async (id) => {
     throw error;
   }
 };
-
