@@ -8,20 +8,24 @@
   text-align: left;
   margin-bottom: 1.875rem;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.5rem;
 }
 
 .backButtonStyle {
   border: none;
   background-color: transparent;
-  font-size: 2rem;
   font-weight: 700;
   cursor: pointer;
   padding: 0;
-  margin-right: 0.25rem;
   color: inherit;
   transition: 0.2s ease-in-out;
+  width: 30px;
+}
+
+.backButtonStyle img {
+  width: 100%;
+  height: auto;
 }
 
 .backButtonStyle:hover {

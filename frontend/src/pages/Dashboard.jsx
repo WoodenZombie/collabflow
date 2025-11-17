@@ -3,6 +3,7 @@ import ProjectCard from "../components/projectCard/ProjectCard";
 import CreateProjectForm from "../components/createProject/CreateProject";
 import EditProjectForm from "../components/editProject/EditProject";
 import DeleteProjectForm from "../components/deleteProject/DeleteProject";
+import styles from "./dashboard.module.css";
 
 const mockProjects = [
   {
@@ -100,10 +101,10 @@ function Dashboard() {
   };
 
   return (
-    <div>
-      <div>
+    <div className={styles.container}>
+      <div className={styles.header}>
         <h1>Projects</h1>
-        <button onClick={handleOpenCreateModal} title="Create Project">
+        <button onClick={handleOpenCreateModal} className={styles.createButton} title="Create Project">
           +
         </button>
       </div>
@@ -112,7 +113,7 @@ function Dashboard() {
           <p>No projects available</p>
         </div>
       ) : (
-        <div>
+        <div className={styles.projectCardContainer}>
           {projects.map((project) => {
             // Validate project has required fields
             if (!project || !project.id) {
@@ -121,12 +122,14 @@ function Dashboard() {
             return (
               <div key={project.id}>
                 <ProjectCard project={project} />
-                <button onClick={() => handleOpenEditModal(project)}>
+                <div className={styles.projectActions}>
+                  <button className={`${styles.button} ${styles.edit}`} onClick={() => handleOpenEditModal(project)}>
                   Edit
                 </button>
-                <button onClick={() => handleOpenDeleteModal(project)}>
+                <button className={`${styles.button} ${styles.delete}`} onClick={() => handleOpenDeleteModal(project)}>
                   Delete
                 </button>
+                </div>
               </div>
             );
           })}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import styles from "./createProjectModal.module.css";
 
 function CreateProjectForm({ onClose, onCreate }) {
   const [formData, setFormData] = useState({
@@ -173,132 +174,159 @@ function CreateProjectForm({ onClose, onCreate }) {
   };
 
   return (
-    <div onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        <form onSubmit={handleSubmit}>
-          {/* Header */}
-          <div>
-            <h2>Create a new Project</h2>
-            <button type="button" onClick={onClose}>
-              ×
-            </button>
-          </div>
+  <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <form onSubmit={handleSubmit}>
+        {/* Header */}
+        <div className={styles.header}>
+          <h2 className={styles.title}>Create a new Project</h2>
+          <button
+            type="button"
+            className={styles.closeButton}
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
 
-          {/* Title Field */}
-          <div>
-            <label>Title</label>
-            <input
-              type="text"
-              placeholder="Project title"
-              value={formData.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-            />
-            {errors.title && <div>{errors.title}</div>}
-          </div>
+        {/* Title Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Title</label>
+          <input
+            type="text"
+            className={styles.input}
+            placeholder="Project title"
+            value={formData.title}
+            onChange={(e) => handleChange("title", e.target.value)}
+          />
+          {errors.title && <div className={styles.error}>{errors.title}</div>}
+        </div>
 
-          {/* Description Field */}
-          <div>
-            <label>Description</label>
-            <textarea
-              placeholder="Project description"
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-            />
-            {errors.description && <div>{errors.description}</div>}
-          </div>
+        {/* Description Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Description</label>
+          <textarea
+            className={styles.textarea}
+            placeholder="Project description"
+            value={formData.description}
+            onChange={(e) => handleChange("description", e.target.value)}
+          />
+          {errors.description && (
+            <div className={styles.error}>{errors.description}</div>
+          )}
+        </div>
 
-          {/* Duration Field */}
-          <div>
-            <label>Duration</label>
-            <div>
-              <label>Starting Date</label>
+        {/* Duration Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Duration</label>
+          <div className={styles.durationContainer}>
+            <div className={styles.dateField}>
+              <label className={styles.label}>Starting Date</label>
               <input
                 type="date"
+                className={styles.input}
                 value={formData.startingDate}
                 onChange={(e) => handleChange("startingDate", e.target.value)}
               />
-              {errors.startingDate && <div>{errors.startingDate}</div>}
+              {errors.startingDate && (
+                <div className={styles.error}>{errors.startingDate}</div>
+              )}
             </div>
-            <div>
-              <label>Ending Date</label>
+            <div className={styles.dateField}>
+              <label className={styles.label}>Ending Date</label>
               <input
                 type="date"
+                className={styles.input}
                 value={formData.endingDate}
                 onChange={(e) => handleChange("endingDate", e.target.value)}
               />
-              {errors.endingDate && <div>{errors.endingDate}</div>}
+              {errors.endingDate && (
+                <div className={styles.error}>{errors.endingDate}</div>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Teams Field */}
-          <div>
-            <label>Teams</label>
-            <select onChange={handleTeamChange} defaultValue="">
-              <option value="" disabled>
-                Choose team
+        {/* Teams Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Teams</label>
+          <select
+            className={styles.select}
+            onChange={handleTeamChange}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Choose team
+            </option>
+            {availableTeams.map((team) => (
+              <option key={team} value={team}>
+                {team}
               </option>
-              {availableTeams.map((team) => (
-                <option key={team} value={team}>
+            ))}
+          </select>
+          {formData.teams.length > 0 && (
+            <div className={styles.tagsContainer}>
+              {formData.teams.map((team) => (
+                <div key={team} className={styles.tag}>
                   {team}
-                </option>
+                  <button
+                    type="button"
+                    className={styles.removeTagButton}
+                    onClick={() => handleRemoveTeam(team)}
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
-            </select>
-            {formData.teams.length > 0 && (
-              <div>
-                {formData.teams.map((team) => (
-                  <div key={team}>
-                    {team}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTeam(team)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
-          {/* Users Field */}
-          <div>
-            <label>Users</label>
-            <div>
+        {/* Users Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Users</label>
+          <div className={styles.userFieldContainer}>
+            <div className={styles.tagsContainer}>
               {formData.users.map((user) => (
-                <div key={user.id}>
+                <div key={user.id} className={styles.tag}>
                   <span>{user.initial}</span>
                   <button
                     type="button"
+                    className={styles.removeTagButton}
                     onClick={() => handleRemoveUser(user.id)}
                   >
                     ×
                   </button>
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={() => {
-                  // Simple add user - could be improved with a dropdown
-                  const availableUser = availableUsers.find(
-                    (u) =>
-                      !formData.users.find((existing) => existing.id === u.id)
-                  );
-                  if (availableUser) {
-                    handleUserChange(availableUser.id);
-                  }
-                }}
-              >
-                +
-              </button>
             </div>
+            <button
+              type="button"
+              className={styles.addUserButton}
+              onClick={() => {
+                // Simple add user - could be improved with a dropdown
+                const availableUser = availableUsers.find(
+                  (u) =>
+                    !formData.users.find((existing) => existing.id === u.id)
+                );
+                if (availableUser) {
+                  handleUserChange(availableUser.id);
+                }
+              }}
+            >
+              +
+            </button>
           </div>
+        </div>
 
-          {/* Submit Button */}
-          <button type="submit">Create new project</button>
-        </form>
-      </div>
+        {/* Submit Button */}
+        <button type="submit" className={styles.submitButton}>
+          Create new project
+        </button>
+      </form>
     </div>
-  );
+  </div>
+);
 }
 
 export default CreateProjectForm;

@@ -19,7 +19,7 @@ function TaskHeader({ projectName, onBack, onCreateTask }) {
             className={styles.backButtonStyle}
             title="Back to Dashboard"
           >
-            &lt;
+            <img src="../arrow-left-svgrepo-com.svg" alt="arrow back to dashboard" width={30} />
           </button>
         )}
         {projectName || "Project name"}

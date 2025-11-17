@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import styles from "./editProject.module.css";
 /**
  * EditProjectForm - Modal form for editing a project
  *
@@ -210,154 +210,194 @@ function EditProjectForm({ project, onClose, onUpdate }) {
   }
 
   return (
-    <div onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()}>
-        <form onSubmit={handleSubmit}>
-          {/* Header */}
-          <div>
-            <h2>Edit Project Details</h2>
-            <button type="button" onClick={onClose}>
-              ×
-            </button>
-          </div>
+  <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <form onSubmit={handleSubmit}>
+        {/* Header */}
+        <div className={styles.header}>
+          <h2 className={styles.title}>Edit Project Details</h2>
+          <button
+            type="button"
+            className={styles.closeButton}
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </div>
 
-          {/* Name Field */}
-          <div>
-            <label>Name</label>
-            <div>{project.title || "Untitled Project"}</div>
-            <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-            />
-            {errors.title && <div>{errors.title}</div>}
+        {/* Name Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Name</label>
+          <div className={styles.field}>
+            <div className={styles.currentValue}>
+            {project.title || "Untitled Project"}
           </div>
-
-          {/* Starting Date Field */}
-          <div>
-            <label>Starting Date</label>
-            <div>{project.startingDate || ""}</div>
-            <input
-              type="date"
-              value={formData.startingDate}
-              onChange={(e) => handleChange("startingDate", e.target.value)}
-            />
-            {errors.startingDate && <div>{errors.startingDate}</div>}
+          <input
+            type="text"
+            className={styles.input}
+            value={formData.title}
+            onChange={(e) => handleChange("title", e.target.value)}
+          />
           </div>
+          {errors.title && <div className={styles.error}>{errors.title}</div>}
+        </div>
 
-          {/* Ending Date Field */}
-          <div>
-            <label>Ending date</label>
-            <div>{project.endingDate || ""}</div>
-            <input
-              type="date"
-              value={formData.endingDate}
-              onChange={(e) => handleChange("endingDate", e.target.value)}
-            />
-            {errors.endingDate && <div>{errors.endingDate}</div>}
+        {/* Starting Date Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Starting Date</label>
+            <div className={styles.currentValue}>
+            {project.startingDate || "Not set"}
           </div>
+          <input
+            type="date"
+            className={styles.input}
+            value={formData.startingDate}
+            onChange={(e) => handleChange("startingDate", e.target.value)}
+          />
+          {errors.startingDate && (
+            <div className={styles.error}>{errors.startingDate}</div>
+          )}
+        </div>
 
-          {/* Description Field */}
-          <div>
-            <label>Description</label>
-            <div>{project.description || "No description"}</div>
-            <textarea
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-            />
-            {errors.description && <div>{errors.description}</div>}
+        {/* Ending Date Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Ending date</label>
+          <div className={styles.currentValue}>
+            {project.endingDate || "Not set"}
           </div>
+          <input
+            type="date"
+            className={styles.input}
+            value={formData.endingDate}
+            onChange={(e) => handleChange("endingDate", e.target.value)}
+          />
+          {errors.endingDate && (
+            <div className={styles.error}>{errors.endingDate}</div>
+          )}
+        </div>
 
-          {/* Teams Field */}
-          <div>
-            <label>Teams</label>
-            <div>
-              {project.teams && project.teams.length > 0 ? (
-                project.teams.map((team) => <span key={team}>{team}</span>)
-              ) : (
-                <span>No teams</span>
-              )}
-            </div>
-            <select onChange={handleTeamChange} defaultValue="">
-              <option value="" disabled>
-                Choose team
-              </option>
-              {availableTeams.map((team) => (
-                <option key={team} value={team}>
+        {/* Description Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Description</label>
+          <div className={styles.currentValue}>
+            {project.description || "No description"}
+          </div>
+          <textarea
+            className={styles.textarea}
+            value={formData.description}
+            onChange={(e) => handleChange("description", e.target.value)}
+          />
+          {errors.description && (
+            <div className={styles.error}>{errors.description}</div>
+          )}
+        </div>
+
+        {/* Teams Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Teams</label>
+          <div className={styles.currentValueTagsContainer}>
+            {project.teams && project.teams.length > 0 ? (
+              project.teams.map((team) => (
+                <span key={team} className={styles.currentValueTag}>
                   {team}
-                </option>
-              ))}
-            </select>
-            {formData.teams.length > 0 && (
-              <div>
-                {formData.teams.map((team) => (
-                  <div key={team}>
-                    {team}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTeam(team)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
+                </span>
+              ))
+            ) : (
+              <span className={styles.currentValueTag}>No teams</span>
             )}
           </div>
-
-          {/* Users Field */}
-          <div>
-            <label>Users</label>
-            <div>
-              {project.users && project.users.length > 0 ? (
-                project.users.map((user) => (
-                  <div key={typeof user === "string" ? user : user.id || user}>
-                    <span>
-                      {typeof user === "string"
-                        ? user
-                        : user.initial || user.name || "?"}
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <span>No users</span>
-              )}
+          <select
+            className={styles.select}
+            onChange={handleTeamChange}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Choose team to add
+            </option>
+            {availableTeams.map((team) => (
+              <option key={team} value={team}>
+                {team}
+              </option>
+            ))}
+          </select>
+          {formData.teams.length > 0 && (
+            <div className={styles.tagsContainer}>
+              {formData.teams.map((team) => (
+                <div key={team} className={styles.tag}>
+                  {team}
+                  <button
+                    type="button"
+                    className={styles.removeTagButton}
+                    onClick={() => handleRemoveTeam(team)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
-            <div>
+          )}
+        </div>
+
+        {/* Users Field */}
+        <div className={styles.fieldContainer}>
+          <label className={styles.label}>Users</label>
+          <div className={styles.currentValueTagsContainer}>
+            {project.users && project.users.length > 0 ? (
+              project.users.map((user) => (
+                <div
+                  key={typeof user === "string" ? user : user.id || user}
+                  className={styles.currentValueTag}
+                >
+                  {typeof user === "string"
+                    ? user
+                    : user.initial || user.name || "?"}
+                </div>
+              ))
+            ) : (
+              <span className={styles.currentValueTag}>No users</span>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div className={styles.tagsContainer} style={{ flexGrow: 1, marginTop: 0 }}>
               {formData.users.map((user) => (
-                <div key={user.id}>
+                <div key={user.id} className={styles.tag}>
                   <span>{user.initial}</span>
                   <button
                     type="button"
+                    className={styles.removeTagButton}
                     onClick={() => handleRemoveUser(user.id)}
                   >
                     ×
                   </button>
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={() => {
-                  const availableUser = availableUsers.find(
-                    (u) =>
-                      !formData.users.find((existing) => existing.id === u.id)
-                  );
-                  if (availableUser) {
-                    handleUserChange(availableUser.id);
-                  }
-                }}
-              >
-                +
-              </button>
             </div>
+            <button
+              type="button"
+              className={styles.addUserButton}
+              onClick={() => {
+                const availableUser = availableUsers.find(
+                  (u) =>
+                    !formData.users.find((existing) => existing.id === u.id)
+                );
+                if (availableUser) {
+                  handleUserChange(availableUser.id);
+                }
+              }}
+            >
+              +
+            </button>
           </div>
+        </div>
 
-          {/* Submit Button */}
-          <button type="submit">Edit</button>
-        </form>
-      </div>
+        {/* Submit Button */}
+        <button type="submit" className={styles.submitButton}>
+          Edit
+        </button>
+      </form>
     </div>
-  );
+  </div>
+);
 }
 
 export default EditProjectForm;

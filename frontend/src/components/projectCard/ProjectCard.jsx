@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import styles from "./projectCard.module.css";
 
 function ProjectCard({ project }) {
   const navigate = useNavigate();
@@ -28,23 +29,37 @@ function ProjectCard({ project }) {
     }
   };
 
-  return (
-    <div onClick={handleClick} style={{ cursor: "pointer" }}>
-      <div>{project.title || "Untitled Project"}</div>
-      <div>{project.description || "No description"}</div>
+return (
+    <div className={styles.card} onClick={handleClick}>
+      <div className={styles.header}>
+        <div className={styles.title}>{project.title || "Untitled Project"}</div>
+        <button className={styles.addButton} onClick={handleButtonClick}>+</button>
+      </div>
+
+      <div className={styles.description}>
+        {project.description || "No description"}
+      </div>
+
       {project.participants && project.participants.length > 0 && (
-        <div>Participants: {project.participants.join(", ")}</div>
+        <div className={styles.participants}>
+          {project.participants.map((p, idx) => (
+            <div key={idx} className={styles.participant}>{p}</div>
+          ))}
+        </div>
       )}
+
       {project.progress && (
-        <div>
+        <div className={styles.progress}>
           {Object.entries(project.progress).map(([status, count]) => (
-            <div key={status}>
+            <div
+              key={status}
+              className={`${styles.progressSegment} ${styles[status]}`}
+            >
               {statusLabels[status]}: {count}
             </div>
           ))}
         </div>
       )}
-      <button onClick={handleButtonClick}>+</button>
     </div>
   );
 }
