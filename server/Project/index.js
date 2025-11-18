@@ -38,6 +38,11 @@ app.use((req, res, next) => {
 //catch errors from errorController in controllers
 app.use(globalErrorHandler);
 
-app.listen(ports, () => {
-  console.log(`Example app listening on ${ports}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(ports, () => {
+    console.log(`Example app listening on ${ports}`);
+  });
+}
+
+
+module.exports = app;
