@@ -1,10 +1,10 @@
 const express = require("express");
-const router = require("./routes/project");
-const app = express();
+const projectRouter = require("./routes/project");
+const cardRouter = require("./routes/card");
 const customError = require("./services/customError");
 const globalErrorHandler = require("./controllers/errorController");
 
-const ports = process.env.PORT || 3000;
+const app = express();
 
 // Enable CORS for frontend communication
 app.use((req, res, next) => {
@@ -14,30 +14,37 @@ app.use((req, res, next) => {
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept"
   );
+
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
+
   next();
 });
 
-//it parsed req.body to a readable JSON format
+// Parse JSON request body
 app.use(express.json());
 
-//to reach router project you need write /api/projects. It's need for connecting with frontend
-app.use("/api", router);
+// Register API routes
+app.use("/api", projectRouter);
+app.use("/api", cardRouter);
 
-//Sents an error if user write invalid url, for e.g. /api/projeghg/3
+// Handle unknown routes (404)
 app.use((req, res, next) => {
-  const err = new customError(
-    `Can't find ${req.originalUrl} on the server`,
-    404
-  );
+  const err = new customError(`Can't find ${req.originalUrl} on this server`, 404);
   next(err);
 });
 
-//catch errors from errorController in controllers
+// Global error handler
 app.use(globalErrorHandler);
 
-app.listen(ports, () => {
-  console.log(`Example app listening on ${ports}`);
-});
+// Start server only when not running tests
+if (process.env.NODE_ENV !== "test") {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+// Export app for testing (required for Jest + Supertest)
+module.exports = app;
