@@ -19,10 +19,16 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.editButtonStyle {
+.actionsContainer {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.editButtonStyle {
   padding: 4px 8px;
   background-color: #69759c;
   color: #fff;
@@ -31,12 +37,27 @@
   font-size: 12px;
   cursor: pointer;
   font-weight: bold;
-  z-index: 10;
   transition: background-color 0.2s;
 }
 
-.editButton:hover {
-  background-color: #757575;
+.editButtonStyle:hover {
+  background-color: #5a6580;
+}
+
+.deleteButtonStyle {
+  padding: 4px 8px;
+  background-color: #DC143C;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.deleteButtonStyle:hover {
+  background-color: #B22222;
 }
 
 .priorityStyle {

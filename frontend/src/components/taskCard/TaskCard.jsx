@@ -10,6 +10,7 @@
  * - taskCount: number (number of tasks)
  * - onStatusChange: function (callback when card is clicked for status change)
  * - onEdit: function (callback when edit button is clicked)
+ * - onDelete: function (callback when delete button is clicked)
  */
 
 import styles from "./taskCard.module.css";
@@ -21,9 +22,10 @@ function TaskCard({
   status,
   onStatusChange,
   onEdit,
+  onDelete,
 }) {
   const handleCardClick = (e) => {
-    // Don't trigger status change if edit button is clicked
+    // Don't trigger status change if button is clicked
     if (e.target.closest("button")) {
       return;
     }
@@ -40,6 +42,13 @@ function TaskCard({
     }
   };
 
+  const handleDeleteClick = (e) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete();
+    }
+  };
+
   const priorityClass =
     priorityLabel === "High Priority"
       ? styles.highPriority
@@ -49,12 +58,22 @@ function TaskCard({
 
   return (
     <div onClick={handleCardClick} className={styles.cardStyle}>
-      {/* Edit Button */}
-      {onEdit && (
-        <button className={styles.editButtonStyle} onClick={handleEditClick}>
-          Edit
-        </button>
-      )}
+      {/* Action Buttons Container */}
+      <div className={styles.actionsContainer}>
+        {/* Edit Button */}
+        {onEdit && (
+          <button className={styles.editButtonStyle} onClick={handleEditClick}>
+            Edit
+          </button>
+        )}
+
+        {/* Delete Button */}
+        {onDelete && (
+          <button className={styles.deleteButtonStyle} onClick={handleDeleteClick}>
+            Delete
+          </button>
+        )}
+      </div>
 
       {/* Priority Tag */}
       {priorityLabel && (
