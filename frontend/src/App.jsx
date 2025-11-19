@@ -4,7 +4,12 @@ import TasksPage from "./pages/TasksPage";
 import "./App.css";
 
 function App() {
-  return <TasksPage />
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/tasks/:projectId" element={<TasksPage />} />
+    </Routes>
+  );
 }
 
 export default App;
