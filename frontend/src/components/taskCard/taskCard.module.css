@@ -1,0 +1,102 @@
+.cardStyle {
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  border-radius: 24px;
+  padding: 12px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #E2E8F0;
+  position: relative;
+}
+
+.cardStyle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.actionsContainer {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.editButtonStyle {
+  padding: 4px 8px;
+  background-color: #69759c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.editButtonStyle:hover {
+  background-color: #5a6580;
+}
+
+.deleteButtonStyle {
+  padding: 4px 8px;
+  background-color: #DC143C;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.deleteButtonStyle:hover {
+  background-color: #B22222;
+}
+
+.priorityStyle {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 1rem;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.highPriority {
+  background-color: #FFF1F2;
+  color: #F43F5E;
+}
+
+.important {
+  background-color: #EEF2FF;
+  color: #4F46E5;
+}
+
+.normal {
+  background-color: #FFF1F2;
+  color: #F43F5E;
+}
+
+.title {
+  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #1E293B;
+}
+
+.description {
+  color: #475569;
+  font-size: 14px;
+}
+
+.taskCount {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #999;
+}

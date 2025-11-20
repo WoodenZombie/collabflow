@@ -1,81 +1,82 @@
-.cardStyle {
-  background-color: #fff;
+.header {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  border-radius: 24px;
-  padding: 12px;
-  margin-top: 12px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  border: 1px solid #E2E8F0;
-  position: relative;
-}
-
-.cardStyle:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.editButtonStyle {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 4px 8px;
-  background-color: #69759c;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  font-weight: bold;
-  z-index: 10;
-  transition: background-color 0.2s;
-}
-
-.editButton:hover {
-  background-color: #757575;
-}
-
-.priorityStyle {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 1rem;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.highPriority {
-  background-color: #FFF1F2;
-  color: #F43F5E;
-}
-
-.important {
-  background-color: #EEF2FF;
-  color: #4F46E5;
-}
-
-.normal {
-  background-color: #FFF1F2;
-  color: #F43F5E;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .title {
-  margin-bottom: 8px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.addButton {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
   font-size: 18px;
-  font-weight: bold;
-  color: #1E293B;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.addButton:hover {
+  background-color: #333333;
 }
 
 .description {
-  color: #475569;
-  font-size: 14px;
+  font-size: 0.9rem;
+  text-align: left;
+  color: #666666;
+  line-height: 1.4;
+  margin-block: 10px;
 }
 
-.taskCount {
-  margin-top: 12px;
-  font-size: 12px;
-  color: #999;
+.participants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.participant {
+  background-color: #f0f0f0;
+  color: #555;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.progressSegment {
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.waiting {
+  background-color: #0AAAF4;
+}
+
+.inProgress {
+  background-color: #F8BD1C;
+}
+
+.done {
+  background-color: #22C55E;
 }

@@ -1,85 +1,67 @@
-/**
- * ProjectCard - Displays individual project information
- * Clicking the card cycles status: Pending → In Progress → Completed → Pending
- * 
- * Props:
- * - title: string (project title)
- * - description: string (project description)
- * - priorityLabel: string (priority label like "High Priority", "Important", etc.)
- * - status: 'pending' | 'inProgress' | 'completed'
- * - taskCount: number (number of tasks)
- * - onStatusChange: function (callback when card is clicked for status change)
- * - onEdit: function (callback when edit button is clicked)
- */
+import { useNavigate } from "react-router-dom";
+import styles from "./projectCard.module.css";
 
-import styles from './projectCard.module.css';
+function ProjectCard({ project }) {
+  const navigate = useNavigate();
+  const statusLabels = {
+    waiting: "Waiting",
+    inProgress: "In Progress",
+    done: "Done",
+  };
 
-function ProjectCard({ title, description, priorityLabel, status, taskCount, onStatusChange, onEdit }) {
-  
-    const handleCardClick = (e) => {
-      // Don't trigger status change if edit button is clicked
-      if (e.target.closest('button')) {
-        return;
-      }
-      // Call onStatusChange for status cycling
-      if (onStatusChange) {
-        onStatusChange();
-      }
-    };
-  
-    const handleEditClick = (e) => {
-      e.stopPropagation();
-      if (onEdit) {
-        onEdit();
-      }
-    };
-  
-    const priorityClass =
-      priorityLabel === 'High Priority'
-        ? styles.highPriority
-        : priorityLabel === 'Important'
-        ? styles.important
-        : styles.normal;
-    return (
-      <div 
-        onClick={handleCardClick}
-        className={styles.cardStyle}
-      >
-        {/* Edit Button */}
-        {onEdit && (
-          <button
-            className={styles.editButtonStyle}
-            onClick={handleEditClick}
-          >
-            Edit
-          </button>
-        )}
-  
-        {/* Priority Tag */}
-        {priorityLabel && (
-          <div>
-            <span className={`${styles.priorityStyle} ${priorityClass}`}>
-              {priorityLabel}
-            </span>
-          </div>
-        )}
-        
-        {/* Project Title */}
-        <h3 className={styles.title}>
-          {title}
-        </h3>
-        
-        {/* Project Description */}
-        <p className={styles.description}>
-          {description}
-        </p>
-        
-        {/* Task Count */}
-        <div className={styles.taskCount}>
-          Tasks: {taskCount}
-        </div>
-      </div>
-    );
+  // Validate project exists and has required fields
+  if (!project || !project.id) {
+    return null;
   }
-  
-  export default ProjectCard;
+
+  const handleClick = () => {
+    // Navigate to tasks page with project ID
+    if (project.id) {
+      navigate(`/tasks/${project.id}`);
+    }
+  };
+
+  const handleButtonClick = (e) => {
+    e.stopPropagation(); // Prevent navigation when clicking the button
+    // Navigate to tasks page with project ID and open create task modal
+    if (project.id) {
+      navigate(`/tasks/${project.id}?createTask=true`);
+    }
+  };
+
+  return (
+    <div className={styles.card} onClick={handleClick}>
+      <div className={styles.header}>
+        <div className={styles.title}>{project.title || "Untitled Project"}</div>
+        <button className={styles.addButton} onClick={handleButtonClick}>+</button>
+      </div>
+
+      <div className={styles.description}>
+        {project.description || "No description"}
+      </div>
+
+      {project.participants && project.participants.length > 0 && (
+        <div className={styles.participants}>
+          {project.participants.map((p, idx) => (
+            <div key={idx} className={styles.participant}>{p}</div>
+          ))}
+        </div>
+      )}
+
+      {project.progress && (
+        <div className={styles.progress}>
+          {Object.entries(project.progress).map(([status, count]) => (
+            <div
+              key={status}
+              className={`${styles.progressSegment} ${styles[status]}`}
+            >
+              {statusLabels[status]}: {count}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default ProjectCard;
