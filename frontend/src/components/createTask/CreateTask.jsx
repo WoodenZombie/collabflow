@@ -94,25 +94,17 @@ function CreateTaskForm({ onClose, onCreate }) {
       return;
     }
 
-    // Format dates to match existing format (MM/DD/YY)
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const year = String(date.getFullYear()).slice(-2);
-      return `${month}/${day}/${year}`;
-    };
-
     // Create new task object
+    // Note: dates are kept in YYYY-MM-DD format (from date input) for backend compatibility
     const newTask = {
       id: String(Date.now()), // Generate unique ID
       name: formData.name.trim(),
       title: formData.name.trim(), // Use name as title too
       description: formData.description.trim(),
-      startingDate: formatDate(formData.startingDate),
-      endingDate: formatDate(formData.endingDate),
+      startingDate: formData.startingDate, // Keep as YYYY-MM-DD format
+      endingDate: formData.endingDate, // Keep as YYYY-MM-DD format (will be mapped to due_date)
       status: "pending", // Default status
-      priority: "Not that important", // Default priority
+      priority: "Medium", // Default priority (must be 'High', 'Medium', or 'Low' for backend)
       taskCount: 0, // Default task count
       teams: formData.teams,
       users: formData.users, // Can be empty for now

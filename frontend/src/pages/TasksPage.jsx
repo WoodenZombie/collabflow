@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import TaskCard from "../components/taskCard/TaskCard";
 import FilterTabs from "../components/filterTabs/FilterTabs";
@@ -34,17 +34,33 @@ function TasksPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Get project name from tasks (task API)
-  // If projectId exists, find the task with matching id and use its title
-  const projectName =
-    projectId && tasks.length > 0
-      ? (() => {
-          const projectTask = tasks.find(
-            (task) => task.id?.toString() === projectId.toString()
-          );
-          return projectTask?.title || projectTask?.name || "Project name";
-        })()
-      : "";
+  // Get project name - for now using a placeholder since we don't have project API yet
+  // TODO: Fetch project name from project API when available
+  const projectName = projectId ? `Project ${projectId}` : "";
+
+  /**
+   * Load all tasks from backend
+   * Uses projectId for tasks API
+   */
+  const loadTasks = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      if (!projectId) {
+        console.warn("No projectId provided, cannot load tasks");
+        setTasks([]);
+        return;
+      }
+      const projectIdNum = parseInt(projectId);
+      const data = await getAllTasks(projectIdNum);
+      setTasks(data);
+    } catch (err) {
+      console.error("Failed to load tasks:", err);
+      setError("Failed to load tasks. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [projectId]);
 
   // Check if createTask param is in URL and open modal
   useEffect(() => {
@@ -61,7 +77,7 @@ function TasksPage() {
    */
   useEffect(() => {
     loadTasks();
-  }, [projectId]);
+  }, [loadTasks]);
 
   /**
    * Filter tasks by projectId when tasks or projectId changes
@@ -88,23 +104,6 @@ function TasksPage() {
   }, [tasks, projectId]);
 
   /**
-   * Load all tasks from backend
-   */
-  const loadTasks = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await getAllTasks();
-      setTasks(data);
-    } catch (err) {
-      console.error("Failed to load tasks:", err);
-      setError("Failed to load tasks. Please try again later.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
    * Cycle through status: Pending → In-Progress → Complete → Pending
    */
   const cycleStatus = (currentStatus) => {
@@ -121,14 +120,16 @@ function TasksPage() {
    */
   const handleStatusChange = async (taskId) => {
     const task = filteredTasks.find((t) => t.id === taskId);
-    if (!task) return;
+    if (!task || !projectId) return;
 
     const newStatus = cycleStatus(task.status);
     const updatedTask = { ...task, status: newStatus };
 
     try {
       // Update task on backend
-      const savedTask = await updateTask(taskId, updatedTask);
+      const projectIdNum = parseInt(projectId);
+      const taskIdNum = parseInt(taskId);
+      const savedTask = await updateTask(projectIdNum, taskIdNum, updatedTask);
       // Update local state
       setTasks((prevTasks) =>
         prevTasks.map((t) => (t.id === taskId ? savedTask : t))
@@ -170,14 +171,18 @@ function TasksPage() {
    */
   const handleDeleteTaskClick = async (taskId) => {
     // Show confirmation dialog
-    const confirmed = window.confirm("Are you sure you want to delete this task?");
-    
-    if (!confirmed) {
-      return; // User cancelled deletion
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this task?"
+    );
+
+    if (!confirmed || !projectId) {
+      return; // User cancelled deletion or no projectId
     }
 
     try {
-      await deleteTask(taskId);
+      const projectIdNum = parseInt(projectId);
+      const taskIdNum = parseInt(taskId);
+      await deleteTask(projectIdNum, taskIdNum);
       // Remove from local state
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
       // Remove from filtered tasks
@@ -211,23 +216,18 @@ function TasksPage() {
    */
   const handleCreateTask = async (newTask) => {
     try {
-      // Add projectId to new task if projectId is in URL
-      const taskToCreate = projectId
-        ? { ...newTask, project_id: parseInt(projectId) }
-        : newTask;
+      if (!projectId) {
+        setError("Cannot create task: No project selected.");
+        return;
+      }
 
+      const projectIdNum = parseInt(projectId);
       // Create task on backend
-      const savedTask = await createTask(taskToCreate);
+      const savedTask = await createTask(projectIdNum, newTask);
       // Add to local state
       setTasks((prevTasks) => [...prevTasks, savedTask]);
-      // Add to filtered tasks if it matches the current project
-      if (
-        !projectId ||
-        savedTask.project_id === parseInt(projectId) ||
-        savedTask.id === projectId
-      ) {
-        setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
-      }
+      // Add to filtered tasks (should always match since we're creating for this project)
+      setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
       // Close modal
       setIsCreateModalOpen(false);
     } catch (err) {
@@ -260,8 +260,15 @@ function TasksPage() {
    */
   const handleUpdateTask = async (updatedTask) => {
     try {
+      if (!projectId) {
+        setError("Cannot update task: No project selected.");
+        return;
+      }
+
+      const projectIdNum = parseInt(projectId);
+      const taskIdNum = parseInt(updatedTask.id);
       // Update task on backend
-      const savedTask = await updateTask(updatedTask.id, updatedTask);
+      const savedTask = await updateTask(projectIdNum, taskIdNum, updatedTask);
       // Update local state
       setTasks((prevTasks) =>
         prevTasks.map((task) => (task.id === savedTask.id ? savedTask : task))

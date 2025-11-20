@@ -1,121 +1,174 @@
 /**
  * Task API Service
  * Handles all HTTP requests to the backend API for tasks
+ * Uses nested routes: /api/projects/:projectId/tasks
  */
 
 const API_BASE_URL = "http://localhost:3000/api";
 
 /**
+ * Map status_id to frontend status string
+ * Backend uses status_id (1, 2, 3, 4) which maps to statuses table
+ * Frontend expects: "pending", "inProgress", "completed"
+ * Default mapping: 1 = pending, 2 = inProgress, 3 = review, 4 = completed
+ */
+const mapStatusIdToStatus = (statusId) => {
+  const statusMap = {
+    1: "pending", // To Do
+    2: "inProgress", // In Progress
+    3: "pending", // Review (treating as pending)
+    4: "completed", // Done
+  };
+  return statusMap[statusId] || "pending";
+};
+
+/**
  * Map backend task data to frontend format
+ * Backend tasks have: id, title, description, priority, status_id, project_id, due_date, created_by, created_at, updated_at
  */
 const mapBackendToFrontend = (backendTask) => {
-  // Map backend status to frontend status
-  const statusMap = {
-    Planning: "pending",
-    "In Progress": "inProgress",
-    Completed: "completed",
-  };
-
   return {
     id: String(backendTask.id),
-    name: backendTask.name,
-    title: backendTask.name,
+    name: backendTask.title,
+    title: backendTask.title,
     description: backendTask.description || "",
-    startingDate: backendTask.start_date
-      ? formatDate(backendTask.start_date)
-      : "",
-    endingDate: backendTask.end_date ? formatDate(backendTask.end_date) : "",
-    status: statusMap[backendTask.status] || "pending",
+    startingDate: "",
+    endingDate: backendTask.due_date || "",
+    status: mapStatusIdToStatus(backendTask.status_id),
+    priority: backendTask.priority || "Medium",
     taskCount: 0,
     teams: [],
     users: [],
+    list_id: backendTask.project_id, // For compatibility
+    project_id: backendTask.project_id,
+    status_id: backendTask.status_id, // Keep original for updates
   };
 };
 
 /**
- * Map frontend task data to backend format
+ * Convert date string to YYYY-MM-DD format (for MySQL DATE column)
+ * Handles ISO datetime strings, YYYY-MM-DD format, MM/DD/YY format, and null/empty values
+ */
+const formatDateForBackend = (dateString) => {
+  if (!dateString) return null;
+
+  // If it's already in YYYY-MM-DD format, return as is
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    return dateString;
+  }
+
+  // Try to parse the date string (handles ISO datetime, MM/DD/YY, etc.)
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      // Try parsing MM/DD/YY format manually
+      const mmddyyMatch = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if (mmddyyMatch) {
+        const [, month, day, year] = mmddyyMatch;
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      }
+      return null;
+    }
+
+    // Format as YYYY-MM-DD
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  } catch (error) {
+    console.warn("Error formatting date:", error);
+    return null;
+  }
+};
+
+/**
+ * Map frontend task data to backend task format
+ * Backend expects: title, description, priority (optional), status_id (optional), due_date (DATE format)
  */
 const mapFrontendToBackend = (frontendTask) => {
-  // Map frontend status to backend status
-  const statusMap = {
-    pending: "Planning",
-    inProgress: "In Progress",
-    completed: "Completed",
-  };
-
   const backendData = {
-    name: frontendTask.name || frontendTask.title,
+    title: frontendTask.name || frontendTask.title,
     description: frontendTask.description || "",
-    status: statusMap[frontendTask.status] || "Planning",
   };
 
-  // Add dates if provided
-  if (frontendTask.startingDate) {
-    backendData.start_date = parseDate(frontendTask.startingDate);
+  // Add priority if provided
+  if (frontendTask.priority) {
+    backendData.priority = frontendTask.priority;
   }
+
+  // Map frontend status to status_id if provided
+  if (frontendTask.status) {
+    const statusToIdMap = {
+      pending: 1,
+      inProgress: 2,
+      completed: 4,
+    };
+    backendData.status_id = statusToIdMap[frontendTask.status] || 1;
+  }
+
+  // Add due_date if endingDate is provided, convert to DATE format (YYYY-MM-DD)
   if (frontendTask.endingDate) {
-    backendData.end_date = parseDate(frontendTask.endingDate);
+    const formattedDate = formatDateForBackend(frontendTask.endingDate);
+    if (formattedDate) {
+      backendData.due_date = formattedDate;
+    }
   }
 
   return backendData;
 };
 
 /**
- * Format date from YYYY-MM-DD to MM/DD/YY
+ * Get all tasks for a project
+ * Fetches tasks from /api/projects/:projectId/tasks endpoint
+ * @param {number} projectId - Required project ID to fetch tasks for
  */
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const year = String(date.getFullYear()).slice(-2);
-  return `${month}/${day}/${year}`;
-};
-
-/**
- * Parse date from MM/DD/YY to YYYY-MM-DD
- */
-const parseDate = (dateString) => {
-  if (!dateString) return null;
-  // If already in YYYY-MM-DD format, return as is
-  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    return dateString;
-  }
-  // Parse MM/DD/YY format
-  const parts = dateString.split("/");
-  if (parts.length === 3) {
-    const month = parts[0].padStart(2, "0");
-    const day = parts[1].padStart(2, "0");
-    const year = "20" + parts[2];
-    return `${year}-${month}-${day}`;
-  }
-  return null;
-};
-
-/**
- * Get all tasks
- * Fetches all projects from /api/projects endpoint
- */
-export const getAllTasks = async () => {
+export const getAllTasks = async (projectId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/projects`);
+    if (!projectId) {
+      console.warn("getAllTasks: projectId is required");
+      return [];
+    }
+
+    const url = `${API_BASE_URL}/projects/${projectId}/tasks`;
+    const response = await fetch(url);
     if (!response.ok) {
+      // If 500 error, return empty array instead of throwing (table might not exist yet)
+      if (response.status === 500) {
+        console.warn(
+          "Backend returned 500, returning empty array. Tasks table might not exist."
+        );
+        return [];
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const data = await response.json();
+    // Handle case when data is not an array
+    if (!Array.isArray(data)) {
+      return [];
+    }
     return data.map(mapBackendToFrontend);
   } catch (error) {
     console.error("Error fetching tasks:", error);
-    throw error;
+    // Return empty array instead of throwing, so UI doesn't break
+    return [];
   }
 };
 
 /**
  * Get task by ID
+ * @param {number} projectId - Project ID
+ * @param {number} taskId - Task ID
  */
-export const getTaskById = async (id) => {
+export const getTaskById = async (projectId, taskId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`);
+    if (!projectId || !taskId) {
+      throw new Error("projectId and taskId are required");
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -129,17 +182,26 @@ export const getTaskById = async (id) => {
 
 /**
  * Create a new task
+ * @param {number} projectId - Project ID
+ * @param {object} taskData - Task data
  */
-export const createTask = async (taskData) => {
+export const createTask = async (projectId, taskData) => {
   try {
+    if (!projectId) {
+      throw new Error("projectId is required");
+    }
+
     const backendData = mapFrontendToBackend(taskData);
-    const response = await fetch(`${API_BASE_URL}/projects`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(backendData),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/tasks`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(backendData),
+      }
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
@@ -156,17 +218,27 @@ export const createTask = async (taskData) => {
 
 /**
  * Update a task
+ * @param {number} projectId - Project ID
+ * @param {number} taskId - Task ID
+ * @param {object} taskData - Updated task data
  */
-export const updateTask = async (id, taskData) => {
+export const updateTask = async (projectId, taskId, taskData) => {
   try {
+    if (!projectId || !taskId) {
+      throw new Error("projectId and taskId are required");
+    }
+
     const backendData = mapFrontendToBackend(taskData);
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(backendData),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(backendData),
+      }
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
@@ -183,12 +255,21 @@ export const updateTask = async (id, taskData) => {
 
 /**
  * Delete a task
+ * @param {number} projectId - Project ID
+ * @param {number} taskId - Task ID
  */
-export const deleteTask = async (id) => {
+export const deleteTask = async (projectId, taskId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/projects/${id}`, {
-      method: "DELETE",
-    });
+    if (!projectId || !taskId) {
+      throw new Error("projectId and taskId are required");
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
+      {
+        method: "DELETE",
+      }
+    );
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(

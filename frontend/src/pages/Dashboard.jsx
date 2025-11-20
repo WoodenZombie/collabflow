@@ -54,8 +54,6 @@ function Dashboard() {
   };
 
   const handleCreateProject = (newProject) => {
-    // TODO: Add project to backend via API
-    // For now, add to local state
     setProjects((prevProjects) => [...prevProjects, newProject]);
     setIsCreateModalOpen(false);
   };
@@ -71,8 +69,6 @@ function Dashboard() {
   };
 
   const handleUpdateProject = (updatedProject) => {
-    // TODO: Update project on backend via API
-    // For now, update local state
     setProjects((prevProjects) =>
       prevProjects.map((p) => (p.id === updatedProject.id ? updatedProject : p))
     );
@@ -91,8 +87,6 @@ function Dashboard() {
   };
 
   const handleDeleteProject = (projectId) => {
-    // TODO: Delete project on backend via API
-    // For now, remove from local state
     setProjects((prevProjects) =>
       prevProjects.filter((p) => p.id !== projectId)
     );
@@ -104,7 +98,11 @@ function Dashboard() {
     <div className={styles.container}>
       <div className={styles.header}>
         <h1>Projects</h1>
-        <button onClick={handleOpenCreateModal} className={styles.createButton} title="Create Project">
+        <button
+          onClick={handleOpenCreateModal}
+          className={styles.createButton}
+          title="Create Project"
+        >
           +
         </button>
       </div>
@@ -123,12 +121,18 @@ function Dashboard() {
               <div key={project.id}>
                 <ProjectCard project={project} />
                 <div className={styles.projectActions}>
-                  <button className={`${styles.button} ${styles.edit}`} onClick={() => handleOpenEditModal(project)}>
-                  Edit
-                </button>
-                <button className={`${styles.button} ${styles.delete}`} onClick={() => handleOpenDeleteModal(project)}>
-                  Delete
-                </button>
+                  <button
+                    className={`${styles.button} ${styles.edit}`}
+                    onClick={() => handleOpenEditModal(project)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className={`${styles.button} ${styles.delete}`}
+                    onClick={() => handleOpenDeleteModal(project)}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             );
