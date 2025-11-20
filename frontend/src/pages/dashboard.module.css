@@ -1,0 +1,80 @@
+.container {
+  padding: 20px;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 2rem;
+  margin: 0;
+  color: #333;
+}
+
+.createButton {
+  font-size: 1.5rem;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.createButton:hover {
+  background-color: #45a049;
+}
+
+.button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-size: 0.85rem;
+}
+
+.button.edit {
+  background-color: #3b5174;
+  color: white;
+}
+
+.button.edit:hover {
+  opacity: 0.8;
+}
+
+.button.delete {
+  background-color: #ef4444;
+  color: white;
+}
+
+.projectCardContainer {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.projectCardContainer > div {
+  background-color: #ffffff;
+  border-radius: 16px; 
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  gap: 16px; 
+}
+.projectActions {
+    display: flex;
+    justify-content: space-evenly;
+    margin-top: 20px;
+}
