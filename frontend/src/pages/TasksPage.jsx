@@ -13,6 +13,7 @@ import {
   updateTask,
   deleteTask,
 } from "../services/taskApi";
+import { getProjectById } from "../services/projectApi";
 import styles from "./tasksPage.module.css";
 
 /**
@@ -33,10 +34,7 @@ function TasksPage() {
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Get project name - for now using a placeholder since we don't have project API yet
-  // TODO: Fetch project name from project API when available
-  const projectName = projectId ? `Project ${projectId}` : "";
+  const [projectName, setProjectName] = useState("");
 
   /**
    * Load all tasks from backend
@@ -73,11 +71,30 @@ function TasksPage() {
   }, [searchParams, setSearchParams]);
 
   /**
+   * Load project name from API when projectId changes
+   */
+  const loadProjectName = useCallback(async () => {
+    if (!projectId) {
+      setProjectName("");
+      return;
+    }
+    try {
+      const projectIdNum = parseInt(projectId);
+      const project = await getProjectById(projectIdNum);
+      setProjectName(project.name || project.title || `Project ${projectId}`);
+    } catch (err) {
+      console.error("Failed to load project name:", err);
+      setProjectName(`Project ${projectId}`); // Fallback to placeholder
+    }
+  }, [projectId]);
+
+  /**
    * Load tasks from API on component mount or when projectId changes
    */
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
+    loadProjectName();
+  }, [loadTasks, loadProjectName]);
 
   /**
    * Filter tasks by projectId when tasks or projectId changes
