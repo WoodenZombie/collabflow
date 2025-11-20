@@ -177,32 +177,35 @@ function EditProjectForm({ project, onClose, onUpdate }) {
       return;
     }
 
-    // Format dates to match existing format (MM/DD/YY)
+    // Format dates to YYYY-MM-DD format for backend
     const formatDate = (dateString) => {
+      // If it's already in YYYY-MM-DD format, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+      // Otherwise parse and format
       const date = new Date(dateString);
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       const year = String(date.getFullYear()).slice(-2);
-      return `${month}/${day}/${year}`;
+      return `${year}-${month}-${day}`;
     };
 
-    // Create updated project object
+    // Create updated project object with original project ID
     const updatedProject = {
-      ...project,
+      ...project, // Keep all original fields including id
       title: formData.title.trim(),
       description: formData.description.trim(),
       startingDate: formatDate(formData.startingDate),
       endingDate: formatDate(formData.endingDate),
       teams: formData.teams,
       users: formData.users,
-      participants: formData.users.map((u) => u.name),
     };
 
-    // Call onUpdate callback
+    // Call onUpdate callback - parent will handle closing modal after success
     onUpdate(updatedProject);
-
-    // Close modal
-    onClose();
+    
+    // Don't close modal here - let parent handle it after successful API call
   };
 
   if (!project) {

@@ -144,33 +144,36 @@ function CreateProjectForm({ onClose, onCreate }) {
       return;
     }
 
-    // Format dates to match existing format (MM/DD/YY)
+    // Format dates to YYYY-MM-DD format for backend (date input already provides this)
+    // But keep the formatDate function for compatibility
     const formatDate = (dateString) => {
+      // If it's already in YYYY-MM-DD format, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
+      }
+      // Otherwise parse and format
       const date = new Date(dateString);
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       const year = String(date.getFullYear()).slice(-2);
-      return `${month}/${day}/${year}`;
+      return `${year}-${month}-${day}`;
     };
 
     // Create new project object
     const newProject = {
-      id: Date.now(), // Generate unique ID
       title: formData.title.trim(),
       description: formData.description.trim(),
       startingDate: formatDate(formData.startingDate),
       endingDate: formatDate(formData.endingDate),
       teams: formData.teams,
       users: formData.users,
-      participants: formData.users.map((u) => u.name),
-      progress: { waiting: 0, inProgress: 0, done: 0 },
+      // Status will default to 'Planning' in backend
     };
 
-    // Call onCreate callback
+    // Call onCreate callback - parent will handle closing modal after success
     onCreate(newProject);
-
-    // Close modal
-    onClose();
+    
+    // Don't close modal here - let parent handle it after successful API call
   };
 
   return (
