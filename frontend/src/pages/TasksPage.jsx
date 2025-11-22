@@ -16,12 +16,20 @@ import {
 import { getProjectById } from "../services/projectApi";
 import styles from "./tasksPage.module.css";
 
+import TeamCard from "../components/teamCard/TeamCard";
+import TeamForm from "../components/forms/TeamForm";
+import { getTeamsByProject, createTeam, updateTeam, deleteTeam } from "../services/teamApi";
+import { getAllUsers } from "../services/userApi";
+import DeleteTeamForm from "../components/forms/DeleteTeamForm";
+
 /**
  * TasksPage - Main page for displaying tasks grouped by status
  * Handles status cycling: Pending → In Progress → Completed → Pending
  * Can filter tasks by projectId if provided in URL
  */
 function TasksPage() {
+  const [activeTab, setActiveTab] = useState('byTotalTasks');
+
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,6 +43,16 @@ function TasksPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projectName, setProjectName] = useState("");
+
+
+  //TEAM state
+
+  const [teams, setTeams] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [teamToEdit, setTeamToEdit] = useState(null);
+  const [isDeleteTeamModalOpen, setIsDeleteTeamModalOpen] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState(null);
 
   /**
    * Load all tasks from backend
@@ -214,12 +232,12 @@ function TasksPage() {
     }
   };
 
-  /**
-   * Handle opening create modal
-   */
-  const handleOpenCreateModal = () => {
-    setIsCreateModalOpen(true);
-  };
+  // /**
+  //  * Handle opening create modal
+  //  */
+  // const handleOpenCreateModal = () => {
+  //   setIsCreateModalOpen(true);
+  // };
 
   /**
    * Handle closing create modal
@@ -332,11 +350,75 @@ function TasksPage() {
   // Check if there is at least one completed task
   const hasCompleted = filteredTasks.some((t) => t.status === "completed");
 
-  // Show loading state
+
+  // TEAM logic
+
+  const loadTeamsData = useCallback(async () => {
+    if (activeTab === 'teams') {
+      setIsLoading(true);
+      try {
+        const [teamsData, usersData] = await Promise.all([
+          getTeamsByProject(projectId),
+          getAllUsers()
+        ]);
+        setTeams(teamsData);
+        setAllUsers(usersData);
+      } catch (err) {
+        console.error("Error loading teams:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [activeTab, projectId]);
+
+  useEffect(() => {
+    loadTeamsData();
+  }, [loadTeamsData]);
+
+  const handleCreateTeam = async (teamData) => {
+    const newTeam = await createTeam({ ...teamData, projectId });
+    setTeams(prev => [...prev, newTeam]);
+    setIsTeamModalOpen(false);
+  };
+
+  const handleUpdateTeam = async (teamData) => {
+    const updated = await updateTeam(teamToEdit.id, teamData);
+    setTeams(prev => prev.map(t => t.id === updated.id ? updated : t));
+    setIsTeamModalOpen(false);
+    setTeamToEdit(null);
+  };
+
+  const handleHeaderAddClick = () => {
+    if (activeTab === 'teams') {
+      setTeamToEdit(null);
+      setIsTeamModalOpen(true);
+    } else {
+      setIsCreateModalOpen(true);
+    }
+  };
+
+  const handleDeleteTeamClick = (team) => {
+    setTeamToDelete(team);
+    setIsDeleteTeamModalOpen(true);
+  };
+
+  const confirmDeleteTeam = async (id) => {
+  try {
+    await deleteTeam(id, projectId);
+    setTeams(prev => prev.filter(t => t.id !== id));
+    setIsDeleteTeamModalOpen(false);
+    setTeamToDelete(null);
+  } catch (err) {
+    console.error("Failed to delete team", err);
+  }
+};
+
+
+   // Show loading state
   if (isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
-        <p>Loading tasks...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -372,78 +454,103 @@ function TasksPage() {
         <TaskHeader
           projectName={projectName}
           onBack={projectId ? () => navigate("/") : null}
-          onCreateTask={handleOpenCreateModal}
+          onCreateTask={handleHeaderAddClick}
         />
 
-        <FilterTabs />
+        <FilterTabs activeFilter={activeTab} onFilterChange={setActiveTab} />
 
         <main className={styles.main}>
-          {/* Pending Section */}
-          {tasksByStatus.pending.length > 0 && (
-            <section className={styles.section}>
-              <ProgressBar
-                count={totalPending}
-                label="Pending"
-                color="yellow"
-              />
-              {tasksByStatus.pending.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  title={task.title}
-                  description={task.description}
-                  priorityLabel={task.priority}
-                  status={task.status}
-                  taskCount={task.taskCount}
-                  onStatusChange={() => handleStatusChange(task.id)}
-                  onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
-                />
-              ))}
-            </section>
+
+        {(activeTab === 'byTotalTasks' || activeTab === 'appointments') && (
+            <>
+              {/* Pending Section */}
+              {tasksByStatus.pending.length > 0 && (
+                <section className={styles.section}>
+                  <ProgressBar
+                    count={totalPending}
+                    label="Pending"
+                    color="yellow"
+                  />
+                  {tasksByStatus.pending.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      title={task.title}
+                      description={task.description}
+                      priorityLabel={task.priority}
+                      status={task.status}
+                      taskCount={task.taskCount}
+                      onStatusChange={() => handleStatusChange(task.id)}
+                      onEdit={() => handleOpenEditModal(task.id)}
+                      onDelete={() => handleDeleteTaskClick(task.id)}
+                    />
+                  ))}
+                </section>
+              )}
+
+              {/* In Progress Section */}
+              {tasksByStatus.inProgress.length > 0 && (
+                <section className={styles.section}>
+                  <ProgressBar
+                    count={totalInProgress}
+                    label="In Progress"
+                    color="purple"
+                  />
+                  {tasksByStatus.inProgress.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      title={task.title}
+                      description={task.description}
+                      priorityLabel={task.priority}
+                      status={task.status}
+                      taskCount={task.taskCount}
+                      onStatusChange={() => handleStatusChange(task.id)}
+                      onEdit={() => handleOpenEditModal(task.id)}
+                      onDelete={() => handleDeleteTaskClick(task.id)}
+                    />
+                  ))}
+                </section>
+              )}
+
+              {/* Completed Section */}
+              {tasksByStatus.completed.length > 0 && (
+                <section className={styles.section}>
+                  <ProgressBar count={totalDone} label="Completed" color="green" />
+                  {tasksByStatus.completed.map((task) => (
+                    <TaskCard
+                      key={task.id}
+                      title={task.title}
+                      description={task.description}
+                      priorityLabel={task.priority}
+                      status={task.status}
+                      taskCount={task.taskCount}
+                      onStatusChange={() => handleStatusChange(task.id)}
+                      onEdit={() => handleOpenEditModal(task.id)}
+                      onDelete={() => handleDeleteTaskClick(task.id)}
+                    />
+                  ))}
+                </section>
+              )}
+              
+            </>
           )}
 
-          {/* In Progress Section */}
-          {tasksByStatus.inProgress.length > 0 && (
-            <section className={styles.section}>
-              <ProgressBar
-                count={totalInProgress}
-                label="In Progress"
-                color="purple"
-              />
-              {tasksByStatus.inProgress.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  title={task.title}
-                  description={task.description}
-                  priorityLabel={task.priority}
-                  status={task.status}
-                  taskCount={task.taskCount}
-                  onStatusChange={() => handleStatusChange(task.id)}
-                  onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
-                />
-              ))}
-            </section>
-          )}
-
-          {/* Completed Section */}
-          {tasksByStatus.completed.length > 0 && (
-            <section className={styles.section}>
-              <ProgressBar count={totalDone} label="Completed" color="green" />
-              {tasksByStatus.completed.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  title={task.title}
-                  description={task.description}
-                  priorityLabel={task.priority}
-                  status={task.status}
-                  taskCount={task.taskCount}
-                  onStatusChange={() => handleStatusChange(task.id)}
-                  onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
-                />
-              ))}
-            </section>
+          {/* --- TEAM CARD --- */}
+          {activeTab === 'teams' && (
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {teams.length === 0 && !isLoading ? (
+                <p>No teams found for this project.</p>
+              ) : (
+                teams.map(team => (
+                  <TeamCard 
+                    key={team.id} 
+                    team={team} 
+                    allUsers={allUsers}
+                    onEdit={(t) => { setTeamToEdit(t); setIsTeamModalOpen(true); }}
+                    onDelete={() => handleDeleteTeamClick(team)}
+                  />
+                ))
+              )}
+            </div>
           )}
         </main>
       </div>
@@ -481,6 +588,26 @@ function TasksPage() {
           task={selectedTask}
           onClose={handleCloseDeleteModal}
           onDelete={handleDeleteTaskClick}
+        />
+      )}
+
+      {/* Team Modal */}
+      {isTeamModalOpen && (
+        <TeamForm 
+          teamToEdit={teamToEdit}
+          allUsers={allUsers}
+          onClose={() => setIsTeamModalOpen(false)}
+          onSubmit={teamToEdit ? handleUpdateTeam : handleCreateTeam}
+        />
+      )}
+
+      {/* Delete Team Modal */}
+      {isDeleteTeamModalOpen && teamToDelete && (
+        <DeleteTeamForm 
+          team={teamToDelete}
+          allUsers={allUsers}
+          onClose={() => setIsDeleteTeamModalOpen(false)}
+          onDelete={confirmDeleteTeam}
         />
       )}
     </>
