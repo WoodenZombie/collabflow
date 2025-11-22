@@ -1,5 +1,5 @@
 const express = require("express");
-const router = require("./routes/project");
+const router = require("../Project/routes/project");
 const app = express();
 const customError = require("./services/customError");
 const globalErrorHandler = require("./controllers/errorController");

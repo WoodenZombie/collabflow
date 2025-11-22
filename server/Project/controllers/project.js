@@ -1,7 +1,7 @@
 const projectModel = require('../model/project');
 const {projectValidation} = require('../validation/project');
-const asyncErrorHandler = require('./../services/asyncErrorHandler');
-const customError = require('./../services/customError');
+const asyncErrorHandler = require('../../common/middleware/asyncErrorHandler');
+const customError = require('../../common/utils/customError');
 //This controller sents request to DB and return responses
 
 // sents a requests for returning all projects, that exists or error   
