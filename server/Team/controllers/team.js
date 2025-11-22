@@ -18,7 +18,11 @@ exports.getAllTeams = asyncErrorHandler(async (req, res, next)=>{
 
 // sents requests to DB to create a new Team, which data is validated succesfully in router
 exports.postTeam = asyncErrorHandler(async (req, res, next)=>{
-    const createTeam = await teamModel.post(req.body);
+    const data = req.body;
+    //hard coded user, just until when we'll create Auth/Reg entity
+    const userId = req.user?.id || 1;
+    
+    const createTeam = await teamModel.post(data, userId);
     res.status(201).json(createTeam);
 });
 

@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
-const customError = require("./services/customError");
-const globalErrorHandler = require("./controllers/errorController");
+const customError = require("./utils/customError");
+const globalErrorHandler = require("./middleware/errorController");
 const projectRouter = require("../Project/routes/project");
 const teamRouter = require('../Team/routes/team');
 

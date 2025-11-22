@@ -2,7 +2,8 @@ const db = require('../../db/db');
 
 class TeamModel {
     //create team
-    async post(data){
+    async post(data, userId){
+        data.created_by = userId;
         const [id] = await db('teams').insert(data);
         return this.getById(id);
     }
