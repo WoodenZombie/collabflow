@@ -4,7 +4,7 @@ const asyncErrorHandler = require('../../common/middleware/asyncErrorHandler');
 const customError = require('../../common/utils/customError');
 //This controller sents request to DB and return responses
 
-// sents a requests for returning all projects, that exists or error   
+// sents requests for returning all projects, that exists or error   
 exports.getAllProjects = asyncErrorHandler(async (req, res, next) => {
         const allProjects = await projectModel.getAll();
         res.status(200).json(allProjects);
