@@ -1,4 +1,4 @@
-const customError = require('../services/customError');
+const customError = require('../utils/customError');
 //it's for read all information about what happend and what king of error is it. Uses in development mode
 const devErrors = (res, error) => {
     res.status(error.statusCode).json({
