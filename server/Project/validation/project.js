@@ -8,7 +8,7 @@ exports.projectValidation = [
     .notEmpty()
     .withMessage('Write name of your project')
     .isLength({max: 100})
-    .withMessage('Write your name shoroter than this'),
+    .withMessage('Write your name shorter than this'),
 
     //Validate status if there are 'Planning', 'In Progress', 'Completed'. If it's not them it wouldn't be validated  
     body('status')

@@ -1,7 +1,7 @@
 const db = require("../../db/db");
 const taskModel = require("../model/task");
-const asyncErrorHandler = require("../services/asyncErrorHandler");
-const customError = require("../services/customError");
+const asyncErrorHandler = require("../../common/middleware/asyncErrorHandler");
+const customError = require("../../common/utils/customError");
 
 // This controller sends requests to DB and returns responses
 
