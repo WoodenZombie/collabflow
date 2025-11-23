@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "migrate": "npx knex migrate:latest",
-    "dev": "nodemon ./Project/index.js",
+    "dev": "nodemon ./common/index.js",
     "test": "jest"
   },
   "dependencies": {
