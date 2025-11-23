@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true }); 
-const appointmentController = require("../controllers/task");
-const { appointmentValidation } = require("../validation/task");
+const appointmentController = require("../controllers/appointment");
+const { appointmentValidation } = require("../validation/appointment");
 
 router
   .route("/")
