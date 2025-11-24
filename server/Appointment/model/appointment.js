@@ -3,7 +3,6 @@ const db = require("../../db/db");
 const appointmentModel = {
   async createAppointment(data, userId) {
     data.created_by = userId;
-    data.status_id = 1;
 
     const [id] = await db("appointments").insert(data);
     return this.getById(id);

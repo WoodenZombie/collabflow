@@ -49,7 +49,7 @@ exports.putAppointment = asyncErrorHandler(async (req, res, next) => {
 
 // deletes a card by ID and returns it with status 200 or an error 404
 exports.deleteAppointment = asyncErrorHandler(async (req, res, next) => {
-  const deletedAppointment = await appointmentModel.deleteAppoitnment(req.params.id);
+  const deletedAppointment = await appointmentModel.deleteAppointment(req.params.id);
 
   if (!deletedAppointment) {
     const error = new customError("Appointment with this ID is not found", 404);
