@@ -11,7 +11,7 @@ exports.getAllAppointment = asyncErrorHandler(async (req, res, next) => {
   if(!projectId) return next(new customError('projectId query parameter is required', 400));
 
   const appointments = await appointmentModel.getAppointmentsByProject(projectId);
-  res.status(200).json(tasks);
+  res.status(200).json(appointments);
 });
 
 // returns a card by its ID with status 200 or an error 404
@@ -20,7 +20,7 @@ exports.getAppointmentById = asyncErrorHandler(async (req, res, next) => {
 
   if (!appointment) return next(new customError("Appoitnment with this ID is not found", 404));
 
-  res.status(200).json(task);
+  res.status(200).json(appointment);
 });
 
 // creates a new card, validates input and returns it with status 201 or error
@@ -48,7 +48,7 @@ exports.putAppointment = asyncErrorHandler(async (req, res, next) => {
   })
 
 // deletes a card by ID and returns it with status 200 or an error 404
-exports.deleteAppoitnment = asyncErrorHandler(async (req, res, next) => {
+exports.deleteAppointment = asyncErrorHandler(async (req, res, next) => {
   const deletedAppointment = await appointmentModel.deleteAppoitnment(req.params.id);
 
   if (!deletedAppointment) {
