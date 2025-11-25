@@ -10,8 +10,7 @@ const appointmentModel = {
 
   async getAppointmentsByProject(projectId) {
     return await db("appointments")
-      .where({ project_id: projectId })
-      .orderBy("created_at", "desc");
+      .where({ project_id: projectId });
   },
 
   async getById(id) {
@@ -19,8 +18,6 @@ const appointmentModel = {
   },
 
   async updateAppointment(id, data) {
-    data.updated_at = new Date();
-
     await db("appointments").where({ id }).update(data);
     return this.getById(id);
   },

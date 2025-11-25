@@ -5,16 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ef7a755e-0b04-40d2-a62f-88f8b68b3f0c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/TaskHeader/TaskHeader.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/TaskHeader/TaskHeader.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/createProject/CreateProject.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/createProject/CreateProject.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/deleteProject/DeleteProject.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/deleteProject/DeleteProject.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/editProject/EditProject.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/editProject/EditProject.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/filterTabs/FilterTabs.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/filterTabs/FilterTabs.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/projectCard/ProjectCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/projectCard/ProjectCard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/taskCard/TaskCard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/taskCard/TaskCard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Dashboard.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Dashboard.jsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/TasksPage.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/TasksPage.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Appointment/model/appointment.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/Appointment/model/appointment.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/common/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/server/common/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -86,7 +77,7 @@
       <workItem from="1763969312607" duration="116000" />
       <workItem from="1763983607563" duration="5095000" />
       <workItem from="1764008446757" duration="5000" />
-      <workItem from="1764072429930" duration="3488000" />
+      <workItem from="1764072429930" duration="4088000" />
     </task>
     <servers />
   </component>
