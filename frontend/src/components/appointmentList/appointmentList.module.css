@@ -1,0 +1,70 @@
+.appointmentList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.appointmentItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.appointmentInfo {
+  flex: 1;
+}
+
+.appointmentDate {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.appointmentTime {
+  font-size: 16px;
+  font-weight: 700;
+  color: #007AFF;
+  margin-bottom: 8px;
+}
+
+.appointmentTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2C2C2C;
+  margin-bottom: 4px;
+}
+
+.appointmentDescription {
+  font-size: 14px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.deleteButton {
+  padding: 8px 16px;
+  background-color: #dc143c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deleteButton:hover {
+  background-color: #b01030;
+}
+
+.emptyState {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}

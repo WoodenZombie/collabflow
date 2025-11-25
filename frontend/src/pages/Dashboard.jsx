@@ -116,7 +116,7 @@ function Dashboard() {
       setProjects((prevProjects) => [...prevProjects, projectWithProgress]);
       
       // Close modal after successful creation
-      setIsCreateModalOpen(false);
+    setIsCreateModalOpen(false);
       setError(null);
       
       console.log("Project creation completed successfully");
@@ -160,15 +160,15 @@ function Dashboard() {
       };
       
       // Update the project in local state
-      setProjects((prevProjects) =>
+    setProjects((prevProjects) =>
         prevProjects.map((p) =>
           p.id === savedProject.id.toString() ? projectWithProgress : p
         )
-      );
+    );
       
       // Close modal after successful update
-      setIsEditModalOpen(false);
-      setProjectToEdit(null);
+    setIsEditModalOpen(false);
+    setProjectToEdit(null);
       setError(null);
       
       console.log("Project update completed successfully");
@@ -198,13 +198,13 @@ function Dashboard() {
       await deleteProject(projectId);
       
       // Remove the project from local state immediately (optimistic update)
-      setProjects((prevProjects) =>
+    setProjects((prevProjects) =>
         prevProjects.filter((p) => p.id !== projectId.toString())
-      );
+    );
       
       // Close modal and clear selected project
-      setIsDeleteModalOpen(false);
-      setProjectToDelete(null);
+    setIsDeleteModalOpen(false);
+    setProjectToDelete(null);
       
       console.log("Project deleted successfully");
     } catch (err) {

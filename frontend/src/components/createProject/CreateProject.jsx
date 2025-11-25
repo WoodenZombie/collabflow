@@ -172,7 +172,7 @@ function CreateProjectForm({ onClose, onCreate }) {
 
     // Call onCreate callback - parent will handle closing modal after success
     onCreate(newProject);
-    
+
     // Don't close modal here - let parent handle it after successful API call
   };
 

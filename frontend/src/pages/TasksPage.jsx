@@ -7,12 +7,19 @@ import ProgressBar from "../components/progressBar/ProgressBar";
 import DeleteTaskForm from "../components/forms/DeleteTaskForm";
 import CreateTaskForm from "../components/createTask/CreateTask";
 import EditTaskForm from "../components/forms/EditTaskForm";
+import CreateAppointmentForm from "../components/createAppointment/CreateAppointment";
+import AppointmentList from "../components/appointmentList/AppointmentList";
 import {
   getAllTasks,
   createTask,
   updateTask,
   deleteTask,
 } from "../services/taskApi";
+import {
+  getAppointmentsByProject,
+  createAppointment,
+  deleteAppointment,
+} from "../services/appointmentApi";
 import styles from "./tasksPage.module.css";
 
 /**
@@ -26,13 +33,18 @@ function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateAppointmentModalOpen, setIsCreateAppointmentModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('byTotalTasks'); // Add this line
 
   // Get project name - for now using a placeholder since we don't have project API yet
   // TODO: Fetch project name from project API when available
@@ -62,6 +74,32 @@ function TasksPage() {
     }
   }, [projectId]);
 
+  /**
+   * Load appointments for the project
+   */
+  const loadAppointments = useCallback(async () => {
+    if (!projectId) {
+      setAppointments([]);
+      return;
+    }
+
+    try {
+      setIsLoadingAppointments(true);
+      setError(null);
+      const projectIdNum = parseInt(projectId);
+      const data = await getAppointmentsByProject(projectIdNum);
+      setAppointments(data);
+    } catch (err) {
+      console.error("Failed to load appointments:", err);
+      // Only set error if we're on appointments tab
+      if (activeFilter === 'appointments') {
+        setError("Failed to load appointments. Please try again.");
+      }
+    } finally {
+      setIsLoadingAppointments(false);
+    }
+  }, [projectId, activeFilter]);
+
   // Check if createTask param is in URL and open modal
   useEffect(() => {
     if (searchParams.get("createTask") === "true") {
@@ -73,11 +111,12 @@ function TasksPage() {
   }, [searchParams, setSearchParams]);
 
   /**
-   * Load tasks from API on component mount or when projectId changes
+   * Load tasks and appointments from API on component mount or when projectId changes
    */
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
+    loadAppointments();
+  }, [loadTasks, loadAppointments]);
 
   /**
    * Filter tasks by projectId when tasks or projectId changes
@@ -102,6 +141,16 @@ function TasksPage() {
       setFilteredTasks(tasks);
     }
   }, [tasks, projectId]);
+
+  // Auto-hide success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   /**
    * Cycle through status: Pending → In-Progress → Complete → Pending
@@ -227,7 +276,7 @@ function TasksPage() {
       // Add to local state
       setTasks((prevTasks) => [...prevTasks, savedTask]);
       // Add to filtered tasks (should always match since we're creating for this project)
-      setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
+        setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
       // Close modal
       setIsCreateModalOpen(false);
     } catch (err) {
@@ -283,6 +332,78 @@ function TasksPage() {
     } catch (err) {
       console.error("Failed to update task:", err);
       setError("Failed to update task. Please try again.");
+    }
+  };
+
+  /**
+   * Handle opening create appointment modal
+   */
+  const handleOpenCreateAppointmentModal = () => {
+    setIsCreateAppointmentModalOpen(true);
+  };
+
+  /**
+   * Handle closing create appointment modal
+   */
+  const handleCloseCreateAppointmentModal = () => {
+    setIsCreateAppointmentModalOpen(false);
+  };
+
+  /**
+   * Handle appointment creation
+   */
+  const handleCreateAppointment = async (newAppointment) => {
+    try {
+      if (!projectId) {
+        setError("Cannot create appointment: No project selected.");
+        return;
+      }
+
+      // Create appointment on backend
+      const savedAppointment = await createAppointment(newAppointment);
+      
+      // Refresh appointments list to get the latest data
+      await loadAppointments();
+      
+      // Show success message
+      setSuccessMessage("Appointment created successfully!");
+      // Close modal
+      setIsCreateAppointmentModalOpen(false);
+      // Clear any previous errors
+      setError(null);
+    } catch (err) {
+      console.error("Failed to create appointment:", err);
+      setError("Failed to create appointment. Please try again.");
+      throw err; // Re-throw so CreateAppointmentForm can handle it
+    }
+  };
+
+  /**
+   * Handle appointment deletion with confirmation
+   */
+  const handleDeleteAppointment = async (appointmentId) => {
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this appointment?"
+    );
+
+    if (!confirmed) {
+      return; // User cancelled deletion
+    }
+
+    try {
+      await deleteAppointment(appointmentId);
+      
+      // Refresh appointments list to get the latest data
+      await loadAppointments();
+      
+      // Show success message
+      setSuccessMessage("Appointment deleted successfully!");
+      // Clear any previous errors
+      setError(null);
+    } catch (err) {
+      console.error("Failed to delete appointment:", err);
+      setError("Failed to delete appointment. Please try again.");
     }
   };
 
@@ -351,15 +472,47 @@ function TasksPage() {
           </button>
         </div>
       )}
+      {successMessage && (
+        <div
+          style={{
+            padding: "10px",
+            backgroundColor: "#e8f5e9",
+            color: "#2e7d32",
+            textAlign: "center",
+          }}
+        >
+          {successMessage}
+          <button
+            onClick={() => setSuccessMessage(null)}
+            style={{ marginLeft: "10px" }}
+          >
+            ×
+          </button>
+        </div>
+        )}
       <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
         <TaskHeader
           projectName={projectName}
           onBack={projectId ? () => navigate("/") : null}
           onCreateTask={handleOpenCreateModal}
+          onCreateAppointment={handleOpenCreateAppointmentModal}
         />
 
-        <FilterTabs />
+        <FilterTabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />
 
+        {/* Appointments Section - Only show when Appointments tab is active */}
+        {activeFilter === 'appointments' && (
+          <div style={{ marginBottom: "30px" }}>
+            <AppointmentList
+              appointments={appointments}
+              onDelete={handleDeleteAppointment}
+              isLoading={isLoadingAppointments}
+            />
+          </div>
+        )}
+
+        {/* Tasks Section - Only show when By Total Tasks tab is active */}
+        {activeFilter === 'byTotalTasks' && (
         <main className={styles.main}>
           {/* Pending Section */}
           {tasksByStatus.pending.length > 0 && (
@@ -379,7 +532,7 @@ function TasksPage() {
                   taskCount={task.taskCount}
                   onStatusChange={() => handleStatusChange(task.id)}
                   onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
+                    onDelete={() => handleDeleteTaskClick(task.id)}
                 />
               ))}
             </section>
@@ -403,7 +556,7 @@ function TasksPage() {
                   taskCount={task.taskCount}
                   onStatusChange={() => handleStatusChange(task.id)}
                   onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
+                    onDelete={() => handleDeleteTaskClick(task.id)}
                 />
               ))}
             </section>
@@ -423,16 +576,24 @@ function TasksPage() {
                   taskCount={task.taskCount}
                   onStatusChange={() => handleStatusChange(task.id)}
                   onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
+                    onDelete={() => handleDeleteTaskClick(task.id)}
                 />
               ))}
             </section>
           )}
         </main>
+        )}
+
+        {/* Teams Section - Only show when Teams tab is active */}
+        {activeFilter === 'teams' && (
+          <div style={{ padding: "20px", textAlign: "center" }}>
+            <p>Teams view coming soon...</p>
+          </div>
+        )}
       </div>
 
       {/* Delete Button - Fixed at bottom, only visible if there is at least one completed task */}
-      {hasCompleted && (
+      {hasCompleted && activeFilter === 'byTotalTasks' && (
         <button
           className={styles.deleteButtonStyle}
           onClick={handleOpenDeleteModal}
@@ -464,6 +625,15 @@ function TasksPage() {
           task={selectedTask}
           onClose={handleCloseDeleteModal}
           onDelete={handleDeleteTaskClick}
+        />
+      )}
+
+      {/* Create Appointment Modal */}
+      {isCreateAppointmentModalOpen && (
+        <CreateAppointmentForm
+          onClose={handleCloseCreateAppointmentModal}
+          onCreate={handleCreateAppointment}
+          projectId={projectId}
         />
       )}
     </>

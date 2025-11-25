@@ -6,10 +6,11 @@
  * - projectName: string (name of the project to display)
  * - onBack: function (callback when back arrow is clicked)
  * - onCreateTask: function (callback when "+" button is clicked)
+ * - onCreateAppointment: function (callback when appointment button is clicked)
  */
 import styles from "./taskHeader.module.css";
 
-function TaskHeader({ projectName, onBack, onCreateTask }) {
+function TaskHeader({ projectName, onBack, onCreateTask, onCreateAppointment }) {
   return (
     <div className={styles.headerStyle}>
       <h1 className={styles.titleStyle}>
@@ -26,6 +27,16 @@ function TaskHeader({ projectName, onBack, onCreateTask }) {
       </h1>
 
       <div className={styles.iconsContainerStyle}>
+        {/* Appointment icon - Create Appointment */}
+        {onCreateAppointment && (
+          <button
+            className={styles.iconButtonStyle}
+            title="Create Appointment"
+            onClick={onCreateAppointment}
+          >
+            📅
+          </button>
+        )}
         {/* Plus icon - Create Task */}
         <button
           className={styles.iconButtonStyle}
