@@ -74,15 +74,14 @@ function TaskCard({
           </button>
         )}
       </div>
-
-      {/* Priority Tag */}
+      {/* Priority Tag
       {priorityLabel && (
         <div>
           <span className={`${styles.priorityStyle} ${priorityClass}`}>
             {priorityLabel}
           </span>
         </div>
-      )}
+      )} */}
 
       {/* Task Title */}
       <h3 className={styles.title}>{title}</h3>

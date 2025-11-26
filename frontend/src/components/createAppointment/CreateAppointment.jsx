@@ -14,6 +14,7 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
     title: "",
     description: "",
     date: "",
+    time: "", // Add time field
     duration: 60, // Default 60 minutes
     location: "",
   });
@@ -49,6 +50,10 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
 
     if (!formData.date.trim()) {
       newErrors.date = "Date is required";
+    }
+
+    if (!formData.time.trim()) {
+      newErrors.time = "Time is required";
     }
 
     if (!formData.location.trim()) {
@@ -89,10 +94,11 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
 
     // Create new appointment object matching backend format
     const newAppointment = {
-      projectId: parseInt (projectId),
+      projectId: parseInt(projectId),
       title: formData.title.trim(),
       description: formData.description.trim(),
       date: formData.date.trim(),
+      time: formData.time.trim(), // Add time field
       duration: parseInt(formData.duration) || 60,
       location: formData.location.trim(),
     };
@@ -173,6 +179,20 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
             />
             {errors.date && (
               <div className={styles.errorStyle}>{errors.date}</div>
+            )}
+          </div>
+
+          {/* Time Field */}
+          <div className={styles.fieldContainerStyle}>
+            <label className={styles.labelStyle}>Time *</label>
+            <input
+              type="time"
+              className={styles.inputStyle}
+              value={formData.time}
+              onChange={(e) => handleChange("time", e.target.value)}
+            />
+            {errors.time && (
+              <div className={styles.errorStyle}>{errors.time}</div>
             )}
           </div>
 

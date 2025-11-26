@@ -34,6 +34,7 @@ import {
 import { getAllUsers } from "../services/userApi";
 import DeleteTeamForm from "../components/forms/DeleteTeamForm";
 import DeleteAppointmentModal from "../components/DeleteAppoinment/DeleteAppoinmentModal";
+import DeleteTaskModal from "../components/deleteTaskModule/deleteTaskModule";
 
 /**
  * TasksPage - Main page for displaying tasks grouped by status
@@ -72,6 +73,10 @@ function TasksPage() {
   // Add state for delete appointment modal
   const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+
+  // Add state for delete task modal
+  const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   /**
    * Load all tasks from backend
@@ -258,33 +263,51 @@ function TasksPage() {
   };
 
   /**
-   * Handle task deletion with confirmation
+   * Handle task deletion with confirmation modal
    */
   const handleDeleteTaskClick = async (taskId) => {
-    // Show confirmation dialog
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this task?"
-    );
+    // Find the task to show in modal
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      setTaskToDelete(task);
+      setIsDeleteTaskModalOpen(true);
+    }
+  };
 
-    if (!confirmed || !projectId) {
-      return; // User cancelled deletion or no projectId
+  /**
+   * Confirm and execute task deletion
+   */
+  const confirmDeleteTask = async (taskId) => {
+    if (!projectId) {
+      setError("Cannot delete task: No project selected.");
+      setIsDeleteTaskModalOpen(false);
+      setTaskToDelete(null);
+      return;
     }
 
     try {
       const projectIdNum = parseInt(projectId);
       const taskIdNum = parseInt(taskId);
       await deleteTask(projectIdNum, taskIdNum);
+      
       // Remove from local state
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
       // Remove from filtered tasks
-      setFilteredTasks((prevTasks) =>
-        prevTasks.filter((task) => task.id !== taskId)
-      );
+      setFilteredTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+      
+      // Show success message
+      setSuccessMessage("Task deleted successfully!");
       // Clear any previous errors
       setError(null);
+      
+      // Close modal
+      setIsDeleteTaskModalOpen(false);
+      setTaskToDelete(null);
     } catch (err) {
       console.error("Failed to delete task:", err);
       setError("Failed to delete task. Please try again.");
+      setIsDeleteTaskModalOpen(false);
+      setTaskToDelete(null);
     }
   };
 
@@ -763,11 +786,14 @@ function TasksPage() {
       )}
 
       {/* Delete Task Modal */}
-      {isDeleteModalOpen && selectedTask && (
-        <DeleteTaskForm
-          task={selectedTask}
-          onClose={handleCloseDeleteModal}
-          onDelete={handleDeleteTaskClick}
+      {isDeleteTaskModalOpen && taskToDelete && (
+        <DeleteTaskModal
+          task={taskToDelete}
+          onClose={() => {
+            setIsDeleteTaskModalOpen(false);
+            setTaskToDelete(null);
+          }}
+          onDelete={confirmDeleteTask}
         />
       )}
 
