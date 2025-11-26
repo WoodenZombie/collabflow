@@ -33,6 +33,7 @@ import {
 } from "../services/teamApi";
 import { getAllUsers } from "../services/userApi";
 import DeleteTeamForm from "../components/forms/DeleteTeamForm";
+import DeleteAppointmentModal from "../components/DeleteAppoinment/DeleteAppoinmentModal";
 
 /**
  * TasksPage - Main page for displaying tasks grouped by status
@@ -67,6 +68,10 @@ function TasksPage() {
   const [teamToEdit, setTeamToEdit] = useState(null);
   const [isDeleteTeamModalOpen, setIsDeleteTeamModalOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState(null);
+
+  // Add state for delete appointment modal
+  const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState(null);
 
   /**
    * Load all tasks from backend
@@ -416,20 +421,31 @@ function TasksPage() {
   };
 
   /**
-   * Handle appointment deletion with confirmation
+   * Handle appointment deletion with confirmation modal
    */
   const handleDeleteAppointment = async (appointmentId) => {
-    // Show confirmation dialog
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this appointment?"
-    );
+    // Find the appointment to show in modal
+    const appointment = appointments.find(a => a.id === appointmentId);
+    if (appointment) {
+      setAppointmentToDelete(appointment);
+      setIsDeleteAppointmentModalOpen(true);
+    }
+  };
 
-    if (!confirmed) {
-      return; // User cancelled deletion
+  /**
+   * Confirm and execute appointment deletion
+   */
+  const confirmDeleteAppointment = async (appointmentId) => {
+    if (!projectId) {
+      setError("Cannot delete appointment: No project selected.");
+      setIsDeleteAppointmentModalOpen(false);
+      setAppointmentToDelete(null);
+      return;
     }
 
     try {
-      await deleteAppointment(appointmentId);
+      const projectIdNum = parseInt(projectId);
+      await deleteAppointment(appointmentId, projectIdNum);
       
       // Refresh appointments list to get the latest data
       await loadAppointments();
@@ -438,9 +454,15 @@ function TasksPage() {
       setSuccessMessage("Appointment deleted successfully!");
       // Clear any previous errors
       setError(null);
+      
+      // Close modal
+      setIsDeleteAppointmentModalOpen(false);
+      setAppointmentToDelete(null);
     } catch (err) {
       console.error("Failed to delete appointment:", err);
       setError("Failed to delete appointment. Please try again.");
+      setIsDeleteAppointmentModalOpen(false);
+      setAppointmentToDelete(null);
     }
   };
 
@@ -775,6 +797,18 @@ function TasksPage() {
           allUsers={allUsers}
           onClose={() => setIsDeleteTeamModalOpen(false)}
           onDelete={confirmDeleteTeam}
+        />
+      )}
+
+      {/* Delete Appointment Modal */}
+      {isDeleteAppointmentModalOpen && appointmentToDelete && (
+        <DeleteAppointmentModal
+          appointment={appointmentToDelete}
+          onClose={() => {
+            setIsDeleteAppointmentModalOpen(false);
+            setAppointmentToDelete(null);
+          }}
+          onDelete={confirmDeleteAppointment}
         />
       )}
     </>
