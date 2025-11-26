@@ -4,6 +4,7 @@ const projectController = require("../controllers/project");
 const {projectValidation} = require('../validation/project');
 const taskRouter = require("./task");
 const appointmentRouter = require('../../Appointment/routes/appointment');
+const teamRouter = require("../../Team/routes/team");
 
 //routs which are used in index.js and sents requests or take responses from controller
 router.get("/projects", projectController.getAllProjects);
@@ -16,5 +17,8 @@ router.delete("/projects/:id", projectController.deleteProject);
 
 router.use("/projects/:id/tasks", taskRouter);
 router.use("/projects/:id/appointments", appointmentRouter);
+
+// Team routes
+router.use(teamRouter);
 
 module.exports = router;
