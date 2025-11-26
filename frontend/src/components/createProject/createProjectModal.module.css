@@ -109,10 +109,24 @@
   display: flex;
   gap: 16px;
   width: 100%;
+  flex-direction: row; /* Default: horizontal */
+}
+
+/* For screens smaller than 425px, stack vertically */
+@media (max-width: 424px) {
+  .durationContainer {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .dateField {
+    width: 100%;
+  }
 }
 
 .dateField {
   flex: 1;
+  min-width: 0; /* Prevent overflow */
 }
 
 .dateField .label {

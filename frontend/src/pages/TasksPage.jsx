@@ -7,13 +7,34 @@ import ProgressBar from "../components/progressBar/ProgressBar";
 import DeleteTaskForm from "../components/forms/DeleteTaskForm";
 import CreateTaskForm from "../components/createTask/CreateTask";
 import EditTaskForm from "../components/forms/EditTaskForm";
+import CreateAppointmentForm from "../components/createAppointment/CreateAppointment";
+import AppointmentList from "../components/appointmentList/AppointmentList";
 import {
   getAllTasks,
   createTask,
   updateTask,
   deleteTask,
 } from "../services/taskApi";
+import {
+  getAppointmentsByProject,
+  createAppointment,
+  deleteAppointment,
+} from "../services/appointmentApi";
+import { getProjectById } from "../services/projectApi";
 import styles from "./tasksPage.module.css";
+
+import TeamCard from "../components/teamCard/TeamCard";
+import TeamForm from "../components/forms/TeamForm";
+import {
+  getTeamsByProject,
+  createTeam,
+  updateTeam,
+  deleteTeam,
+} from "../services/teamApi";
+import { getAllUsers } from "../services/userApi";
+import DeleteTeamForm from "../components/forms/DeleteTeamForm";
+import DeleteAppointmentModal from "../components/DeleteAppoinment/DeleteAppoinmentModal";
+import DeleteTaskModal from "../components/deleteTaskModule/deleteTaskModule";
 
 /**
  * TasksPage - Main page for displaying tasks grouped by status
@@ -26,17 +47,36 @@ function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateAppointmentModalOpen, setIsCreateAppointmentModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [activeFilter, setActiveFilter] = useState('byTotalTasks');
+  const [projectName, setProjectName] = useState("");
 
-  // Get project name - for now using a placeholder since we don't have project API yet
-  // TODO: Fetch project name from project API when available
-  const projectName = projectId ? `Project ${projectId}` : "";
+  //TEAM state
+
+  const [teams, setTeams] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [teamToEdit, setTeamToEdit] = useState(null);
+  const [isDeleteTeamModalOpen, setIsDeleteTeamModalOpen] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState(null);
+
+  // Add state for delete appointment modal
+  const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] = useState(false);
+  const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+
+  // Add state for delete task modal
+  const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   /**
    * Load all tasks from backend
@@ -62,6 +102,32 @@ function TasksPage() {
     }
   }, [projectId]);
 
+  /**
+   * Load appointments for the project
+   */
+  const loadAppointments = useCallback(async () => {
+    if (!projectId) {
+      setAppointments([]);
+      return;
+    }
+
+    try {
+      setIsLoadingAppointments(true);
+      setError(null);
+      const projectIdNum = parseInt(projectId);
+      const data = await getAppointmentsByProject(projectIdNum);
+      setAppointments(data);
+    } catch (err) {
+      console.error("Failed to load appointments:", err);
+      // Only set error if we're on appointments tab
+      if (activeFilter === 'appointments') {
+        setError("Failed to load appointments. Please try again.");
+      }
+    } finally {
+      setIsLoadingAppointments(false);
+    }
+  }, [projectId, activeFilter]);
+
   // Check if createTask param is in URL and open modal
   useEffect(() => {
     if (searchParams.get("createTask") === "true") {
@@ -73,11 +139,31 @@ function TasksPage() {
   }, [searchParams, setSearchParams]);
 
   /**
-   * Load tasks from API on component mount or when projectId changes
+   * Load project name from API when projectId changes
+   */
+  const loadProjectName = useCallback(async () => {
+    if (!projectId) {
+      setProjectName("");
+      return;
+    }
+    try {
+      const projectIdNum = parseInt(projectId);
+      const project = await getProjectById(projectIdNum);
+      setProjectName(project.name || project.title || `Project ${projectId}`);
+    } catch (err) {
+      console.error("Failed to load project name:", err);
+      setProjectName(`Project ${projectId}`); // Fallback to placeholder
+    }
+  }, [projectId]);
+
+  /**
+   * Load tasks, appointments and project name from API on component mount or when projectId changes
    */
   useEffect(() => {
     loadTasks();
-  }, [loadTasks]);
+    loadAppointments();
+    loadProjectName();
+  }, [loadTasks, loadAppointments, loadProjectName]);
 
   /**
    * Filter tasks by projectId when tasks or projectId changes
@@ -102,6 +188,16 @@ function TasksPage() {
       setFilteredTasks(tasks);
     }
   }, [tasks, projectId]);
+
+  // Auto-hide success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   /**
    * Cycle through status: Pending → In-Progress → Complete → Pending
@@ -167,42 +263,60 @@ function TasksPage() {
   };
 
   /**
-   * Handle task deletion with confirmation
+   * Handle task deletion with confirmation modal
    */
   const handleDeleteTaskClick = async (taskId) => {
-    // Show confirmation dialog
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this task?"
-    );
+    // Find the task to show in modal
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      setTaskToDelete(task);
+      setIsDeleteTaskModalOpen(true);
+    }
+  };
 
-    if (!confirmed || !projectId) {
-      return; // User cancelled deletion or no projectId
+  /**
+   * Confirm and execute task deletion
+   */
+  const confirmDeleteTask = async (taskId) => {
+    if (!projectId) {
+      setError("Cannot delete task: No project selected.");
+      setIsDeleteTaskModalOpen(false);
+      setTaskToDelete(null);
+      return;
     }
 
     try {
       const projectIdNum = parseInt(projectId);
       const taskIdNum = parseInt(taskId);
       await deleteTask(projectIdNum, taskIdNum);
+      
       // Remove from local state
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
       // Remove from filtered tasks
-      setFilteredTasks((prevTasks) =>
-        prevTasks.filter((task) => task.id !== taskId)
-      );
+      setFilteredTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+      
+      // Show success message
+      setSuccessMessage("Task deleted successfully!");
       // Clear any previous errors
       setError(null);
+      
+      // Close modal
+      setIsDeleteTaskModalOpen(false);
+      setTaskToDelete(null);
     } catch (err) {
       console.error("Failed to delete task:", err);
       setError("Failed to delete task. Please try again.");
+      setIsDeleteTaskModalOpen(false);
+      setTaskToDelete(null);
     }
   };
 
-  /**
-   * Handle opening create modal
-   */
-  const handleOpenCreateModal = () => {
-    setIsCreateModalOpen(true);
-  };
+  // /**
+  //  * Handle opening create modal
+  //  */
+  // const handleOpenCreateModal = () => {
+  //   setIsCreateModalOpen(true);
+  // };
 
   /**
    * Handle closing create modal
@@ -227,7 +341,7 @@ function TasksPage() {
       // Add to local state
       setTasks((prevTasks) => [...prevTasks, savedTask]);
       // Add to filtered tasks (should always match since we're creating for this project)
-      setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
+        setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
       // Close modal
       setIsCreateModalOpen(false);
     } catch (err) {
@@ -287,6 +401,95 @@ function TasksPage() {
   };
 
   /**
+   * Handle opening create appointment modal
+   */
+  const handleOpenCreateAppointmentModal = () => {
+    setIsCreateAppointmentModalOpen(true);
+  };
+
+  /**
+   * Handle closing create appointment modal
+   */
+  const handleCloseCreateAppointmentModal = () => {
+    setIsCreateAppointmentModalOpen(false);
+  };
+
+  /**
+   * Handle appointment creation
+   */
+  const handleCreateAppointment = async (newAppointment) => {
+    try {
+      if (!projectId) {
+        setError("Cannot create appointment: No project selected.");
+        return;
+      }
+
+      // Create appointment on backend
+      const savedAppointment = await createAppointment(newAppointment);
+      
+      // Refresh appointments list to get the latest data
+      await loadAppointments();
+      
+      // Show success message
+      setSuccessMessage("Appointment created successfully!");
+      // Close modal
+      setIsCreateAppointmentModalOpen(false);
+      // Clear any previous errors
+      setError(null);
+    } catch (err) {
+      console.error("Failed to create appointment:", err);
+      setError("Failed to create appointment. Please try again.");
+      throw err; // Re-throw so CreateAppointmentForm can handle it
+    }
+  };
+
+  /**
+   * Handle appointment deletion with confirmation modal
+   */
+  const handleDeleteAppointment = async (appointmentId) => {
+    // Find the appointment to show in modal
+    const appointment = appointments.find(a => a.id === appointmentId);
+    if (appointment) {
+      setAppointmentToDelete(appointment);
+      setIsDeleteAppointmentModalOpen(true);
+    }
+  };
+
+  /**
+   * Confirm and execute appointment deletion
+   */
+  const confirmDeleteAppointment = async (appointmentId) => {
+    if (!projectId) {
+      setError("Cannot delete appointment: No project selected.");
+      setIsDeleteAppointmentModalOpen(false);
+      setAppointmentToDelete(null);
+      return;
+    }
+
+    try {
+      const projectIdNum = parseInt(projectId);
+      await deleteAppointment(appointmentId, projectIdNum);
+      
+      // Refresh appointments list to get the latest data
+      await loadAppointments();
+      
+      // Show success message
+      setSuccessMessage("Appointment deleted successfully!");
+      // Clear any previous errors
+      setError(null);
+      
+      // Close modal
+      setIsDeleteAppointmentModalOpen(false);
+      setAppointmentToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete appointment:", err);
+      setError("Failed to delete appointment. Please try again.");
+      setIsDeleteAppointmentModalOpen(false);
+      setAppointmentToDelete(null);
+    }
+  };
+
+  /**
    * Group tasks by status
    */
   const getTasksByStatus = () => {
@@ -315,11 +518,73 @@ function TasksPage() {
   // Check if there is at least one completed task
   const hasCompleted = filteredTasks.some((t) => t.status === "completed");
 
+  // TEAM logic
+
+  const loadTeamsData = useCallback(async () => {
+    if (activeFilter === "teams") {
+      setIsLoading(true);
+      try {
+        const [teamsData, usersData] = await Promise.all([
+          getTeamsByProject(projectId),
+          getAllUsers(),
+        ]);
+        setTeams(teamsData);
+        setAllUsers(usersData);
+      } catch (err) {
+        console.error("Error loading teams:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  }, [activeFilter, projectId]);
+
+  useEffect(() => {
+    loadTeamsData();
+  }, [loadTeamsData]);
+
+  const handleCreateTeam = async (teamData) => {
+    const newTeam = await createTeam({ ...teamData, projectId });
+    setTeams((prev) => [...prev, newTeam]);
+    setIsTeamModalOpen(false);
+  };
+
+  const handleUpdateTeam = async (teamData) => {
+    const updated = await updateTeam(teamToEdit.id, teamData);
+    setTeams((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    setIsTeamModalOpen(false);
+    setTeamToEdit(null);
+  };
+
+  const handleHeaderAddClick = () => {
+    if (activeFilter === "teams") {
+      setTeamToEdit(null);
+      setIsTeamModalOpen(true);
+    } else {
+      setIsCreateModalOpen(true);
+    }
+  };
+
+  const handleDeleteTeamClick = (team) => {
+    setTeamToDelete(team);
+    setIsDeleteTeamModalOpen(true);
+  };
+
+  const confirmDeleteTeam = async (id) => {
+    try {
+      await deleteTeam(id, projectId);
+      setTeams((prev) => prev.filter((t) => t.id !== id));
+      setIsDeleteTeamModalOpen(false);
+      setTeamToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete team", err);
+    }
+  };
+
   // Show loading state
   if (isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
-        <p>Loading tasks...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -351,15 +616,47 @@ function TasksPage() {
           </button>
         </div>
       )}
+      {successMessage && (
+        <div
+          style={{
+            padding: "10px",
+            backgroundColor: "#e8f5e9",
+            color: "#2e7d32",
+            textAlign: "center",
+          }}
+        >
+          {successMessage}
+          <button
+            onClick={() => setSuccessMessage(null)}
+            style={{ marginLeft: "10px" }}
+          >
+            ×
+          </button>
+        </div>
+        )}
       <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
         <TaskHeader
           projectName={projectName}
           onBack={projectId ? () => navigate("/") : null}
-          onCreateTask={handleOpenCreateModal}
+          onCreateTask={handleHeaderAddClick}
+          onCreateAppointment={handleOpenCreateAppointmentModal}
         />
 
-        <FilterTabs />
+        <FilterTabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />
 
+        {/* Appointments Section - Only show when Appointments tab is active */}
+        {activeFilter === 'appointments' && (
+          <div style={{ marginBottom: "30px" }}>
+            <AppointmentList
+              appointments={appointments}
+              onDelete={handleDeleteAppointment}
+              isLoading={isLoadingAppointments}
+            />
+          </div>
+        )}
+
+        {/* Tasks Section - Only show when By Total Tasks tab is active */}
+        {activeFilter === 'byTotalTasks' && (
         <main className={styles.main}>
           {/* Pending Section */}
           {tasksByStatus.pending.length > 0 && (
@@ -429,10 +726,40 @@ function TasksPage() {
             </section>
           )}
         </main>
+        )}
+
+        {/* Teams Section - Only show when Teams tab is active */}
+        {activeFilter === 'teams' && (
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              gap: "15px",
+            }}
+          >
+            {teams.length === 0 && !isLoading ? (
+              <p>No teams found for this project.</p>
+            ) : (
+              teams.map((team) => (
+                <TeamCard
+                  key={team.id}
+                  team={team}
+                  allUsers={allUsers}
+                  onEdit={(t) => {
+                    setTeamToEdit(t);
+                    setIsTeamModalOpen(true);
+                  }}
+                  onDelete={() => handleDeleteTeamClick(team)}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Delete Button - Fixed at bottom, only visible if there is at least one completed task */}
-      {hasCompleted && (
+      {hasCompleted && activeFilter === 'byTotalTasks' && (
         <button
           className={styles.deleteButtonStyle}
           onClick={handleOpenDeleteModal}
@@ -459,11 +786,55 @@ function TasksPage() {
       )}
 
       {/* Delete Task Modal */}
-      {isDeleteModalOpen && selectedTask && (
-        <DeleteTaskForm
-          task={selectedTask}
-          onClose={handleCloseDeleteModal}
-          onDelete={handleDeleteTaskClick}
+      {isDeleteTaskModalOpen && taskToDelete && (
+        <DeleteTaskModal
+          task={taskToDelete}
+          onClose={() => {
+            setIsDeleteTaskModalOpen(false);
+            setTaskToDelete(null);
+          }}
+          onDelete={confirmDeleteTask}
+        />
+      )}
+
+      {/* Create Appointment Modal */}
+      {isCreateAppointmentModalOpen && (
+        <CreateAppointmentForm
+          onClose={handleCloseCreateAppointmentModal}
+          onCreate={handleCreateAppointment}
+          projectId={projectId}
+        />
+      )}
+
+      {/* Team Modal */}
+      {isTeamModalOpen && (
+        <TeamForm
+          teamToEdit={teamToEdit}
+          allUsers={allUsers}
+          onClose={() => setIsTeamModalOpen(false)}
+          onSubmit={teamToEdit ? handleUpdateTeam : handleCreateTeam}
+        />
+      )}
+
+      {/* Delete Team Modal */}
+      {isDeleteTeamModalOpen && teamToDelete && (
+        <DeleteTeamForm
+          team={teamToDelete}
+          allUsers={allUsers}
+          onClose={() => setIsDeleteTeamModalOpen(false)}
+          onDelete={confirmDeleteTeam}
+        />
+      )}
+
+      {/* Delete Appointment Modal */}
+      {isDeleteAppointmentModalOpen && appointmentToDelete && (
+        <DeleteAppointmentModal
+          appointment={appointmentToDelete}
+          onClose={() => {
+            setIsDeleteAppointmentModalOpen(false);
+            setAppointmentToDelete(null);
+          }}
+          onDelete={confirmDeleteAppointment}
         />
       )}
     </>

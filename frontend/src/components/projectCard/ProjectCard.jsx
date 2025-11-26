@@ -29,7 +29,7 @@ function ProjectCard({ project }) {
     }
   };
 
-  return (
+return (
     <div className={styles.card} onClick={handleClick}>
       <div className={styles.header}>
         <div className={styles.title}>{project.title || "Untitled Project"}</div>

@@ -44,10 +44,13 @@
   border: none;
   background-color: #f5f5f5;
   color: #666;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .closeButtonStyle:hover {
@@ -67,9 +70,7 @@
   display: block;
 }
 
-.inputStyle,
-.textareaStyle,
-.teamSelectStyle {
+.inputStyle {
   width: 100%;
   padding: 14px 20px;
   font-size: 14px;
@@ -80,16 +81,9 @@
   box-sizing: border-box;
 }
 
-.inputStyle:focus,
-.textareaStyle:focus,
-.teamSelectStyle:focus {
+.inputStyle:focus {
   outline: none;
-}
-
-.textareaStyle {
-  min-height: 80px;
-  resize: vertical;
-  font-family: inherit;
+  background-color: #e8e8ed;
 }
 
 .errorStyle {
@@ -98,38 +92,6 @@
   margin-top: 4px;
   margin-left: 4px;
   text-align: start;
-}
-
-.teamTagsContainerStyle {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.teamTagStyle {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  background-color: #e3f2fd;
-  border-radius: 4px;
-  font-size: 12px;
-  gap: 6px;
-}
-
-.removeTeamButtonStyle {
-  background: none;
-  border: none;
-  color: #1976d2;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: bold;
-  padding: 0;
-  margin-left: 4px;
-}
-
-.removeTeamButtonStyle .cross::after {
-    margin-bottom: 0;
 }
 
 .submitButtonStyle {
@@ -148,4 +110,11 @@
 
 .submitButtonStyle:hover {
   background-color: #333333;
+}
+
+/* Ensure textarea uses same styles as input */
+.inputStyle[type="textarea"],
+textarea.inputStyle {
+  resize: vertical;
+  min-height: 60px;
 }

@@ -66,17 +66,19 @@
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 500;
-  color: #ffffff;
 }
 
 .waiting {
-  background-color: #0AAAF4;
+  background-color: #DBE7FF;
+  color: #3B5BDB;
 }
 
 .inProgress {
-  background-color: #F8BD1C;
+  background-color: #FFEBD1;
+  color: #E67E00;
 }
 
 .done {
-  background-color: #22C55E;
+  background-color: #DEF7EC;
+  color: #00693E;
 }

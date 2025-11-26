@@ -21,14 +21,14 @@
   padding: 8px 16px;
   border: none;
   border-radius: 8px;
-  background-color: #4caf50;
+  background-color: #1a1a1a;
   color: white;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
 .createButton:hover {
-  background-color: #45a049;
+  background-color: #333333;
 }
 
 .button {
@@ -36,22 +36,25 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background-color 0.2s;
   font-size: 0.85rem;
+  color: #FFFFFF;
 }
 
 .button.edit {
-  background-color: #3b5174;
-  color: white;
+  background-color: #6366F1;
 }
 
 .button.edit:hover {
-  opacity: 0.8;
+  background-color: #4F46E5;
 }
 
 .button.delete {
-  background-color: #ef4444;
-  color: white;
+  background-color: #EF4444;
+}
+
+.button.delete:hover {
+  background-color: #DC2626;
 }
 
 .projectCardContainer {

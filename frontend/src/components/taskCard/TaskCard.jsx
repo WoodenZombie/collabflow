@@ -60,12 +60,12 @@ function TaskCard({
     <div onClick={handleCardClick} className={styles.cardStyle}>
       {/* Action Buttons Container */}
       <div className={styles.actionsContainer}>
-        {/* Edit Button */}
-        {onEdit && (
-          <button className={styles.editButtonStyle} onClick={handleEditClick}>
-            Edit
-          </button>
-        )}
+      {/* Edit Button */}
+      {onEdit && (
+        <button className={styles.editButtonStyle} onClick={handleEditClick}>
+          Edit
+        </button>
+      )}
 
         {/* Delete Button */}
         {onDelete && (
@@ -74,15 +74,14 @@ function TaskCard({
           </button>
         )}
       </div>
-
-      {/* Priority Tag */}
+      {/* Priority Tag
       {priorityLabel && (
         <div>
           <span className={`${styles.priorityStyle} ${priorityClass}`}>
             {priorityLabel}
           </span>
         </div>
-      )}
+      )} */}
 
       {/* Task Title */}
       <h3 className={styles.title}>{title}</h3>

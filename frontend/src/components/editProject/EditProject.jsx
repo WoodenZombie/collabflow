@@ -204,7 +204,7 @@ function EditProjectForm({ project, onClose, onUpdate }) {
 
     // Call onUpdate callback - parent will handle closing modal after success
     onUpdate(updatedProject);
-    
+
     // Don't close modal here - let parent handle it after successful API call
   };
 
