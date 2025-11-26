@@ -18,7 +18,12 @@ import styles from "./tasksPage.module.css";
 
 import TeamCard from "../components/teamCard/TeamCard";
 import TeamForm from "../components/forms/TeamForm";
-import { getTeamsByProject, createTeam, updateTeam, deleteTeam } from "../services/teamApi";
+import {
+  getTeamsByProject,
+  createTeam,
+  updateTeam,
+  deleteTeam,
+} from "../services/teamApi";
 import { getAllUsers } from "../services/userApi";
 import DeleteTeamForm from "../components/forms/DeleteTeamForm";
 
@@ -28,7 +33,7 @@ import DeleteTeamForm from "../components/forms/DeleteTeamForm";
  * Can filter tasks by projectId if provided in URL
  */
 function TasksPage() {
-  const [activeTab, setActiveTab] = useState('byTotalTasks');
+  const [activeTab, setActiveTab] = useState("byTotalTasks");
 
   const { projectId } = useParams();
   const navigate = useNavigate();
@@ -43,7 +48,6 @@ function TasksPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projectName, setProjectName] = useState("");
-
 
   //TEAM state
 
@@ -350,16 +354,15 @@ function TasksPage() {
   // Check if there is at least one completed task
   const hasCompleted = filteredTasks.some((t) => t.status === "completed");
 
-
   // TEAM logic
 
   const loadTeamsData = useCallback(async () => {
-    if (activeTab === 'teams') {
+    if (activeTab === "teams") {
       setIsLoading(true);
       try {
         const [teamsData, usersData] = await Promise.all([
           getTeamsByProject(projectId),
-          getAllUsers()
+          getAllUsers(),
         ]);
         setTeams(teamsData);
         setAllUsers(usersData);
@@ -377,19 +380,19 @@ function TasksPage() {
 
   const handleCreateTeam = async (teamData) => {
     const newTeam = await createTeam({ ...teamData, projectId });
-    setTeams(prev => [...prev, newTeam]);
+    setTeams((prev) => [...prev, newTeam]);
     setIsTeamModalOpen(false);
   };
 
   const handleUpdateTeam = async (teamData) => {
     const updated = await updateTeam(teamToEdit.id, teamData);
-    setTeams(prev => prev.map(t => t.id === updated.id ? updated : t));
+    setTeams((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
     setIsTeamModalOpen(false);
     setTeamToEdit(null);
   };
 
   const handleHeaderAddClick = () => {
-    if (activeTab === 'teams') {
+    if (activeTab === "teams") {
       setTeamToEdit(null);
       setIsTeamModalOpen(true);
     } else {
@@ -403,18 +406,17 @@ function TasksPage() {
   };
 
   const confirmDeleteTeam = async (id) => {
-  try {
-    await deleteTeam(id, projectId);
-    setTeams(prev => prev.filter(t => t.id !== id));
-    setIsDeleteTeamModalOpen(false);
-    setTeamToDelete(null);
-  } catch (err) {
-    console.error("Failed to delete team", err);
-  }
-};
+    try {
+      await deleteTeam(id, projectId);
+      setTeams((prev) => prev.filter((t) => t.id !== id));
+      setIsDeleteTeamModalOpen(false);
+      setTeamToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete team", err);
+    }
+  };
 
-
-   // Show loading state
+  // Show loading state
   if (isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
@@ -460,8 +462,7 @@ function TasksPage() {
         <FilterTabs activeFilter={activeTab} onFilterChange={setActiveTab} />
 
         <main className={styles.main}>
-
-        {(activeTab === 'byTotalTasks' || activeTab === 'appointments') && (
+          {(activeTab === "byTotalTasks" || activeTab === "appointments") && (
             <>
               {/* Pending Section */}
               {tasksByStatus.pending.length > 0 && (
@@ -514,7 +515,11 @@ function TasksPage() {
               {/* Completed Section */}
               {tasksByStatus.completed.length > 0 && (
                 <section className={styles.section}>
-                  <ProgressBar count={totalDone} label="Completed" color="green" />
+                  <ProgressBar
+                    count={totalDone}
+                    label="Completed"
+                    color="green"
+                  />
                   {tasksByStatus.completed.map((task) => (
                     <TaskCard
                       key={task.id}
@@ -530,22 +535,31 @@ function TasksPage() {
                   ))}
                 </section>
               )}
-              
             </>
           )}
 
           {/* --- TEAM CARD --- */}
-          {activeTab === 'teams' && (
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          {activeTab === "teams" && (
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                gap: "15px",
+              }}
+            >
               {teams.length === 0 && !isLoading ? (
                 <p>No teams found for this project.</p>
               ) : (
-                teams.map(team => (
-                  <TeamCard 
-                    key={team.id} 
-                    team={team} 
+                teams.map((team) => (
+                  <TeamCard
+                    key={team.id}
+                    team={team}
                     allUsers={allUsers}
-                    onEdit={(t) => { setTeamToEdit(t); setIsTeamModalOpen(true); }}
+                    onEdit={(t) => {
+                      setTeamToEdit(t);
+                      setIsTeamModalOpen(true);
+                    }}
                     onDelete={() => handleDeleteTeamClick(team)}
                   />
                 ))
@@ -593,7 +607,7 @@ function TasksPage() {
 
       {/* Team Modal */}
       {isTeamModalOpen && (
-        <TeamForm 
+        <TeamForm
           teamToEdit={teamToEdit}
           allUsers={allUsers}
           onClose={() => setIsTeamModalOpen(false)}
@@ -603,7 +617,7 @@ function TasksPage() {
 
       {/* Delete Team Modal */}
       {isDeleteTeamModalOpen && teamToDelete && (
-        <DeleteTeamForm 
+        <DeleteTeamForm
           team={teamToDelete}
           allUsers={allUsers}
           onClose={() => setIsDeleteTeamModalOpen(false)}
