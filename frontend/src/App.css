@@ -1,0 +1,14 @@
+#root {
+  /* max-width: 1280px; */
+  margin: 0 auto;
+  /* padding: 2rem; */
+  text-align: center;
+}
+
+.cross:after{
+  display: inline-block;
+  content: "\00d7"; 
+  margin-bottom: 5px;
+  font-size: 25px;
+}
+

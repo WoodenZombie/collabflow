@@ -1,0 +1,48 @@
+.progressBar {
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+/* Pending/Waiting - Light blue background with blue text */
+.purple {
+  background-color: #DBE7FF;
+  color: #3B5BDB;
+}
+
+/* In Progress - Light orange background with orange text */
+.yellow {
+  background-color: #FFEBD1;
+  color: #E67E00;
+}
+
+/* Completed/Done - Light green background with green text */
+.green {
+  background-color: #DEF7EC;
+  color: #00693E;
+}
+
+.labelText {
+  font-size: 1rem;
+  color: inherit; /* Use inherited color from parent */
+}
+
+.countCircle {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+  background-color: #fff;
+  color: inherit; /* Use inherited color from parent */
+  transition: transform 0.3s ease;
+}
