@@ -29,6 +29,10 @@ const appointmentModel = {
     await db("appointments").where({ id }).del();
     return task;
   },
+
+  async deleteAppointmentsByProjectId(projectId){
+    await db("appointments").where({project_id: projectId}).del();
+  }
 };
 
 module.exports = appointmentModel;

@@ -2,7 +2,6 @@ exports.up = function(knex) {
   return knex.schema.createTable('appointments', table =>{
     table.increments('id');
     table.integer('project_id');
-    table.integer('task_id');
     table.string('title', 255).notNullable();
     table.text('description');
     table.date('start_time');
@@ -11,10 +10,9 @@ exports.up = function(knex) {
     table.integer('created_by');
     table.timestamp('created_at');
 
-    //data from foreign tables PROJECTS, TASKS, and USERS
+    //data from foreign tables PROJECTS and USERS
     table.foreign('created_by').references('id').inTable('users').onDelete('SET NULL');
     table.foreign('project_id').references('id').inTable('projects').onDelete('SET NULL');
-    table.foreign('tasks_id').references('id').inTable('tasks').onDelete('SET NULL');   
  })
 };
 

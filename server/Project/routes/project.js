@@ -15,10 +15,9 @@ router.get("/projects/:id", projectController.getByIdProject);
 router.put("/projects/:id", projectValidation, projectController.putProject);
 router.delete("/projects/:id", projectController.deleteProject);
 
+// souvisejici routy pro porojects
 router.use("/projects/:id/tasks", taskRouter);
 router.use("/projects/:id/appointments", appointmentRouter);
-
-// Team routes
-router.use(teamRouter);
+router.use('/projects/:id/teams', teamRouter);
 
 module.exports = router;

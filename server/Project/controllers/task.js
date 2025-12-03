@@ -1,4 +1,3 @@
-const db = require("../../db/db");
 const taskModel = require("../model/task");
 const asyncErrorHandler = require("../../common/middleware/asyncErrorHandler");
 const customError = require("../../common/utils/customError");

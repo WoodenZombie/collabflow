@@ -1,4 +1,8 @@
 const db = require('../../db/db')
+//requests to others entity tables
+const taskModel = require("../model/task");
+const teamModel = require("../../Team/model/team");
+const appointmentModel = require("../../Appointment/model/appointment");
 
 //This class sents requests from controller and return response back 
 class ProjectModel {
@@ -24,7 +28,13 @@ class ProjectModel {
     async delete(id){
         const project = await this.getById(id);
         if(!project) return null;
-        await db('projects').where({id}).del();
+
+        await db.transaction(async(trx) =>{
+            await taskModel.deleteTasksByProjectId(id);
+            await appointmentModel.deleteAppointmentsByProjectId(id);
+            await teamModel.deleteTeamsByProjectId(id);
+            await db('projects').transacting(trx).where({id}).del();
+        });
         return project;
     }
 }

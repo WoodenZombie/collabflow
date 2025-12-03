@@ -27,6 +27,9 @@ class TeamModel {
         await db('teams').where({id}).del();
         return team;
     }
+    async deleteTeamsByProjectId(projectId){
+        await db("teams").where({project_id: projectId}).del();
+    }
 }
 
 module.exports = new TeamModel();

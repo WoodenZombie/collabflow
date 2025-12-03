@@ -9,11 +9,9 @@ exports.up = function(knex) {
     table.enu('status', ['Planning', 'In Progress', 'Completed'])
     .notNullable()
     .defaultTo('Planning');
-    table.integer('team_id').unsigned();
     table.integer('created_by').unsigned();
     table.timestamp('created_at').defaultTo(knex.fn.now());
-//brings data from foreign table TEAMS and USERS tables
-    table.foreign('team_id').references('id').inTable('teams').onDelete('SET NULL');
+//brings data from foreign table USERS tables
     table.foreign('created_by').references('id').inTable('users').onDelete('SET NULL');
   })
 };

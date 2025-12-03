@@ -33,6 +33,10 @@ const taskModel = {
     await db("tasks").where({ id }).del();
     return task;
   },
+
+  async deleteTasksByProjectId(projectId){
+    await db("tasks").where({project_id: projectId}).del();
+  }
 };
 
 module.exports = taskModel;

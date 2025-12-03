@@ -1,4 +1,3 @@
-const db = require("../../db/db");
 const appointmentModel = require("../model/appointment");
 const asyncErrorHandler = require("../../common/middleware/asyncErrorHandler");
 const customError = require("../../common/utils/customError");
