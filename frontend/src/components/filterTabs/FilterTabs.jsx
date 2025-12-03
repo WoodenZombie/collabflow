@@ -37,7 +37,7 @@ function FilterTabs({ activeFilter = "byTotalTasks", onFilterChange }) {
           activeFilter === "byTotalTasks" ? styles.active : ""
         }`}
       >
-        By Total Tasks
+        Tasks
       </button>
 
       <button

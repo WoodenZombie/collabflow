@@ -20,7 +20,7 @@ import {
   createAppointment,
   deleteAppointment,
 } from "../services/appointmentApi";
-import { getProjectById } from "../services/projectApi";
+import { getProjectById, updateProject as updateProjectApi, deleteProject as deleteProjectApi } from "../services/projectApi";
 import styles from "./tasksPage.module.css";
 
 import TeamCard from "../components/teamCard/TeamCard";
@@ -35,6 +35,9 @@ import { getAllUsers } from "../services/userApi";
 import DeleteTeamForm from "../components/forms/DeleteTeamForm";
 import DeleteAppointmentModal from "../components/DeleteAppoinment/DeleteAppoinmentModal";
 import DeleteTaskModal from "../components/deleteTaskModule/deleteTaskModule";
+import EditProjectForm from "../components/editProject/EditProject";
+import DeleteProjectForm from "../components/deleteProject/DeleteProject";
+// Using native HTML5 Drag and Drop instead of external library
 
 /**
  * TasksPage - Main page for displaying tasks grouped by status
@@ -54,12 +57,18 @@ function TasksPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateAppointmentModalOpen, setIsCreateAppointmentModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
+  const [isTaskActionsModalOpen, setIsTaskActionsModalOpen] = useState(false);
+  const [taskForActions, setTaskForActions] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [activeFilter, setActiveFilter] = useState('byTotalTasks');
   const [projectName, setProjectName] = useState("");
+  const [project, setProject] = useState(null);
+  const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
+  const [isDeleteProjectOpen, setIsDeleteProjectOpen] = useState(false);
+  const [draggedTaskId, setDraggedTaskId] = useState(null);
 
   //TEAM state
 
@@ -144,12 +153,14 @@ function TasksPage() {
   const loadProjectName = useCallback(async () => {
     if (!projectId) {
       setProjectName("");
+      setProject(null);
       return;
     }
     try {
       const projectIdNum = parseInt(projectId);
-      const project = await getProjectById(projectIdNum);
-      setProjectName(project.name || project.title || `Project ${projectId}`);
+      const pr = await getProjectById(projectIdNum);
+      setProject(pr);
+      setProjectName(pr.name || pr.title || `Project ${projectId}`);
     } catch (err) {
       console.error("Failed to load project name:", err);
       setProjectName(`Project ${projectId}`); // Fallback to placeholder
@@ -271,6 +282,8 @@ function TasksPage() {
     if (task) {
       setTaskToDelete(task);
       setIsDeleteTaskModalOpen(true);
+      setIsTaskActionsModalOpen(false);
+      setTaskForActions(null);
     }
   };
 
@@ -358,6 +371,8 @@ function TasksPage() {
     if (task) {
       setTaskToEdit(task);
       setIsEditModalOpen(true);
+      setIsTaskActionsModalOpen(false);
+      setTaskForActions(null);
     }
   };
 
@@ -564,6 +579,79 @@ function TasksPage() {
     }
   };
 
+  const handleCreateTeamClick = () => {
+    setTeamToEdit(null);
+    setIsTeamModalOpen(true);
+  };
+
+  // HTML5 Drag & Drop handlers
+  const handleDragStart = (taskId) => {
+    setDraggedTaskId(taskId);
+  };
+
+  const allowDrop = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDropToStatus = async (status) => {
+    if (!draggedTaskId) return;
+    const taskId = draggedTaskId;
+    const task = filteredTasks.find((t) => t.id === taskId);
+    if (!task || task.status === status) {
+      setDraggedTaskId(null);
+      return;
+    }
+    const updatedTask = { ...task, status };
+    try {
+      const projectIdNum = parseInt(projectId);
+      const savedTask = await updateTask(projectIdNum, taskId, updatedTask);
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? savedTask : t)));
+      setFilteredTasks((prev) => prev.map((t) => (t.id === taskId ? savedTask : t)));
+    } catch (err) {
+      console.error("Failed to move task:", err);
+      setError("Failed to move task. Please try again.");
+    } finally {
+      setDraggedTaskId(null);
+    }
+  };
+
+  // Open actions modal when clicking a task card
+  const openTaskActions = (task) => {
+    setTaskForActions(task);
+    setIsTaskActionsModalOpen(true);
+  };
+
+  // Project edit/delete handlers
+  const openEditProject = () => setIsEditProjectOpen(true);
+  const closeEditProject = () => setIsEditProjectOpen(false);
+  const openDeleteProject = () => setIsDeleteProjectOpen(true);
+  const closeDeleteProject = () => setIsDeleteProjectOpen(false);
+
+  const handleUpdateProject = async (updatedProject) => {
+    try {
+      const saved = await updateProjectApi(projectId, updatedProject);
+      setProject(saved);
+      setProjectName(saved.name || saved.title || projectName);
+      setSuccessMessage("Project updated successfully!");
+      closeEditProject();
+    } catch (err) {
+      console.error("Failed to update project:", err);
+      setError("Failed to update project. Please try again.");
+    }
+  };
+
+  const handleDeleteProject = async (id) => {
+    try {
+      await deleteProjectApi(id);
+      setSuccessMessage("Project deleted successfully!");
+      closeDeleteProject();
+      navigate("/");
+    } catch (err) {
+      console.error("Failed to delete project:", err);
+      setError("Failed to delete project. Please try again.");
+    }
+  };
+
   const handleDeleteTeamClick = (team) => {
     setTeamToDelete(team);
     setIsDeleteTeamModalOpen(true);
@@ -634,12 +722,15 @@ function TasksPage() {
           </button>
         </div>
         )}
-      <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+  <div className={styles.pageContainer} style={{ fontFamily: "Arial, sans-serif" }}>
         <TaskHeader
           projectName={projectName}
           onBack={projectId ? () => navigate("/") : null}
           onCreateTask={handleHeaderAddClick}
           onCreateAppointment={handleOpenCreateAppointmentModal}
+          onCreateTeam={handleCreateTeamClick}
+          onEditProject={openEditProject}
+          onDeleteProject={openDeleteProject}
         />
 
         <FilterTabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />
@@ -657,75 +748,100 @@ function TasksPage() {
 
         {/* Tasks Section - Only show when By Total Tasks tab is active */}
         {activeFilter === 'byTotalTasks' && (
-        <main className={styles.main}>
-          {/* Pending Section */}
-          {tasksByStatus.pending.length > 0 && (
-            <section className={styles.section}>
-              <ProgressBar
-                count={totalPending}
-                label="Pending"
-                color="yellow"
-              />
+          <main className={styles.main}>
+            {/* Pending Section (static) */}
+            <section
+              className={styles.section}
+              onDragOver={allowDrop}
+              onDrop={() => handleDropToStatus('pending')}
+            >
+              <ProgressBar count={totalPending} label="Pending" color="yellow" />
+              {tasksByStatus.pending.length === 0 && (
+                <p style={{ color: '#777', fontStyle: 'italic' }}>No tasks</p>
+              )}
               {tasksByStatus.pending.map((task) => (
-                <TaskCard
+                <div
                   key={task.id}
-                  title={task.title}
-                  description={task.description}
-                  priorityLabel={task.priority}
-                  status={task.status}
-                  taskCount={task.taskCount}
-                  onStatusChange={() => handleStatusChange(task.id)}
-                  onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
-                />
+                  draggable
+                  onDragStart={() => handleDragStart(task.id)}
+                  style={{ cursor: 'grab' }}
+                >
+                  <TaskCard
+                    title={task.title}
+                    description={task.description}
+                    priorityLabel={task.priority}
+                    status={task.status}
+                    taskCount={task.taskCount}
+                    responsiblePerson={task.responsiblePerson || task.assigned_to || task.assignee || (task.user && task.user.name)}
+                    endDate={task.endDate || task.due_date || task.deadline || task.endingDate}
+                    onClick={() => openTaskActions(task)}
+                  />
+                </div>
               ))}
             </section>
-          )}
 
-          {/* In Progress Section */}
-          {tasksByStatus.inProgress.length > 0 && (
-            <section className={styles.section}>
-              <ProgressBar
-                count={totalInProgress}
-                label="In Progress"
-                color="purple"
-              />
+            {/* In Progress Section (static) */}
+            <section
+              className={styles.section}
+              onDragOver={allowDrop}
+              onDrop={() => handleDropToStatus('inProgress')}
+            >
+              <ProgressBar count={totalInProgress} label="In Progress" color="purple" />
+              {tasksByStatus.inProgress.length === 0 && (
+                <p style={{ color: '#777', fontStyle: 'italic' }}>No tasks</p>
+              )}
               {tasksByStatus.inProgress.map((task) => (
-                <TaskCard
+                <div
                   key={task.id}
-                  title={task.title}
-                  description={task.description}
-                  priorityLabel={task.priority}
-                  status={task.status}
-                  taskCount={task.taskCount}
-                  onStatusChange={() => handleStatusChange(task.id)}
-                  onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
-                />
+                  draggable
+                  onDragStart={() => handleDragStart(task.id)}
+                  style={{ cursor: 'grab' }}
+                >
+                  <TaskCard
+                    title={task.title}
+                    description={task.description}
+                    priorityLabel={task.priority}
+                    status={task.status}
+                    taskCount={task.taskCount}
+                    responsiblePerson={task.responsiblePerson || task.assigned_to || task.assignee || (task.user && task.user.name)}
+                    endDate={task.endDate || task.due_date || task.deadline || task.endingDate}
+                    onClick={() => openTaskActions(task)}
+                  />
+                </div>
               ))}
             </section>
-          )}
 
-          {/* Completed Section */}
-          {tasksByStatus.completed.length > 0 && (
-            <section className={styles.section}>
+            {/* Completed Section (static) */}
+            <section
+              className={styles.section}
+              onDragOver={allowDrop}
+              onDrop={() => handleDropToStatus('completed')}
+            >
               <ProgressBar count={totalDone} label="Completed" color="green" />
+              {tasksByStatus.completed.length === 0 && (
+                <p style={{ color: '#777', fontStyle: 'italic' }}>No tasks</p>
+              )}
               {tasksByStatus.completed.map((task) => (
-                <TaskCard
+                <div
                   key={task.id}
-                  title={task.title}
-                  description={task.description}
-                  priorityLabel={task.priority}
-                  status={task.status}
-                  taskCount={task.taskCount}
-                  onStatusChange={() => handleStatusChange(task.id)}
-                  onEdit={() => handleOpenEditModal(task.id)}
-                  onDelete={() => handleDeleteTaskClick(task.id)}
-                />
+                  draggable
+                  onDragStart={() => handleDragStart(task.id)}
+                  style={{ cursor: 'grab' }}
+                >
+                  <TaskCard
+                    title={task.title}
+                    description={task.description}
+                    priorityLabel={task.priority}
+                    status={task.status}
+                    taskCount={task.taskCount}
+                    responsiblePerson={task.responsiblePerson || task.assigned_to || task.assignee || (task.user && task.user.name)}
+                    endDate={task.endDate || task.due_date || task.deadline || task.endingDate}
+                    onClick={() => openTaskActions(task)}
+                  />
+                </div>
               ))}
             </section>
-          )}
-        </main>
+          </main>
         )}
 
         {/* Teams Section - Only show when Teams tab is active */}
@@ -758,15 +874,7 @@ function TasksPage() {
         )}
       </div>
 
-      {/* Delete Button - Fixed at bottom, only visible if there is at least one completed task */}
-      {hasCompleted && activeFilter === 'byTotalTasks' && (
-        <button
-          className={styles.deleteButtonStyle}
-          onClick={handleOpenDeleteModal}
-        >
-          Delete
-        </button>
-      )}
+      {/* Bottom Delete button removed */}
 
       {/* Create Task Modal */}
       {isCreateModalOpen && (
@@ -816,6 +924,24 @@ function TasksPage() {
         />
       )}
 
+      {/* Edit Project Modal */}
+      {isEditProjectOpen && project && (
+        <EditProjectForm
+          project={project}
+          onClose={closeEditProject}
+          onUpdate={handleUpdateProject}
+        />
+      )}
+
+      {/* Delete Project Modal */}
+      {isDeleteProjectOpen && project && (
+        <DeleteProjectForm
+          project={project}
+          onClose={closeDeleteProject}
+          onDelete={handleDeleteProject}
+        />
+      )}
+
       {/* Delete Team Modal */}
       {isDeleteTeamModalOpen && teamToDelete && (
         <DeleteTeamForm
@@ -836,6 +962,30 @@ function TasksPage() {
           }}
           onDelete={confirmDeleteAppointment}
         />
+      )}
+
+      {/* Task Actions Modal */}
+      {isTaskActionsModalOpen && taskForActions && (
+        <div onClick={() => {setIsTaskActionsModalOpen(false); setTaskForActions(null);}} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background:'#fff', borderRadius:12, padding:20, width:'min(420px, 90vw)', boxShadow:'0 10px 30px rgba(0,0,0,0.2)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <h3 style={{ margin:0 }}>{taskForActions.title || 'Task'}</h3>
+              <button onClick={() => {setIsTaskActionsModalOpen(false); setTaskForActions(null);}} style={{ border:'none', background:'transparent', fontSize:20, lineHeight:1, cursor:'pointer' }}>×</button>
+            </div>
+            <p style={{ color:'#555', marginTop:8 }}>{taskForActions.description || 'Description: Not provided'}</p>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px 16px', marginTop:12 }}>
+              <div><strong>Priority:</strong> {taskForActions.priority || 'Not provided'}</div>
+              <div><strong>Status:</strong> {taskForActions.status || 'Not provided'}</div>
+              <div><strong>Subtasks:</strong> {typeof taskForActions.taskCount === 'number' ? taskForActions.taskCount : 'Not provided'}</div>
+              <div><strong>Responsible:</strong> {taskForActions.responsiblePerson || taskForActions.assigned_to || taskForActions.assignee || (taskForActions.user && taskForActions.user.name) || 'Not provided'}</div>
+              <div><strong>End date:</strong> {(() => { const raw = taskForActions.endDate || taskForActions.due_date || taskForActions.deadline || taskForActions.endingDate; if (!raw) return 'Not provided'; const d = new Date(raw); if (isNaN(d.getTime())) return 'Not provided'; const dd = String(d.getDate()).padStart(2, '0'); const mm = String(d.getMonth()+1).padStart(2, '0'); const yyyy = d.getFullYear(); const hh = String(d.getHours()).padStart(2, '0'); const min = String(d.getMinutes()).padStart(2, '0'); return `${dd}.${mm}.${yyyy} ${hh}:${min}`; })()}</div>
+            </div>
+            <div style={{ display:'flex', gap:12, marginTop:16 }}>
+              <button onClick={() => handleOpenEditModal(taskForActions.id)} style={{ padding:'10px 16px', borderRadius:8, border:'1px solid #888' }}>Edit</button>
+              <button onClick={() => handleDeleteTaskClick(taskForActions.id)} style={{ padding:'10px 16px', borderRadius:8, background:'#e53935', color:'#fff', border:'none' }}>Delete</button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -1,9 +1,19 @@
+/* Page container with static width based on viewport */
+.pageContainer {
+  width: 100%;
+  max-width: 1200px; /* cap width on large screens */
+  margin: 0 auto; /* center on screen */
+  padding: 20px; /* match previous inline padding */
+  box-sizing: border-box;
+}
+
 main {
   display: flex;
   /* flex-direction: row; */
   gap: 2rem;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* keep columns in one line */
+  overflow-x: auto; /* allow horizontal scroll if needed */
 }
 .deleteButtonStyle {
   position: fixed;
@@ -29,13 +39,11 @@ section {
   background: #f1f5f9;
   padding: 32px 16px;
   border-radius: 32px;
+  flex: 0 0 360px; /* fixed column width to stay in line */
+  max-width: 360px;
 }
 
 .deleteButtonStyle:hover {
   background-color: #cc0000;
 }
-@media screen and (max-width: 900px) {
-  main {
-    flex-direction: column;
-  }
-}
+/* Keep columns inline across screen sizes as requested */

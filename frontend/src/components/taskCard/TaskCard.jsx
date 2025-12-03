@@ -8,9 +8,9 @@
  * - priorityLabel: string (priority label like "High Priority", "Important", etc.)
  * - status: 'pending' | 'inProgress' | 'completed'
  * - taskCount: number (number of tasks)
- * - onStatusChange: function (callback when card is clicked for status change)
- * - onEdit: function (callback when edit button is clicked)
- * - onDelete: function (callback when delete button is clicked)
+ * - responsiblePerson: string (optional)
+ * - endDate: string (optional)
+ * - onClick: function (callback when card is clicked to open actions)
  */
 
 import styles from "./taskCard.module.css";
@@ -20,33 +20,13 @@ function TaskCard({
   description,
   priorityLabel,
   status,
-  onStatusChange,
-  onEdit,
-  onDelete,
+  taskCount,
+  responsiblePerson,
+  endDate,
+  onClick,
 }) {
   const handleCardClick = (e) => {
-    // Don't trigger status change if button is clicked
-    if (e.target.closest("button")) {
-      return;
-    }
-    // Call onStatusChange for status cycling
-    if (onStatusChange) {
-      onStatusChange();
-    }
-  };
-
-  const handleEditClick = (e) => {
-    e.stopPropagation();
-    if (onEdit) {
-      onEdit();
-    }
-  };
-
-  const handleDeleteClick = (e) => {
-    e.stopPropagation();
-    if (onDelete) {
-      onDelete();
-    }
+    if (onClick) onClick();
   };
 
   const priorityClass =
@@ -56,38 +36,43 @@ function TaskCard({
       ? styles.important
       : styles.normal;
 
+  // Format end date to DD.MM.YYYY HH:mm
+  const formatEndDate = (dateStr) => {
+    if (!dateStr) return null;
+    try {
+      // Handle ISO or YYYY-MM-DD and similar
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return null;
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      const hh = String(d.getHours()).padStart(2, "0");
+      const min = String(d.getMinutes()).padStart(2, "0");
+      return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <div onClick={handleCardClick} className={styles.cardStyle}>
-      {/* Action Buttons Container */}
-      <div className={styles.actionsContainer}>
-      {/* Edit Button */}
-      {onEdit && (
-        <button className={styles.editButtonStyle} onClick={handleEditClick}>
-          Edit
-        </button>
-      )}
+      {/* Name */}
+      <h3 className={styles.title}>{title || "Title: Not provided"}</h3>
 
-        {/* Delete Button */}
-        {onDelete && (
-          <button className={styles.deleteButtonStyle} onClick={handleDeleteClick}>
-            Delete
-          </button>
-        )}
+      {/* Description right after name */}
+      <p className={styles.description}>{description || "Description: Not provided"}</p>
+
+      {/* End date (formatted) */}
+      <div className={styles.metaRow}>
+        <strong>End date:</strong>&nbsp;
+        <span>{formatEndDate(endDate) || "Not provided"}</span>
       </div>
-      {/* Priority Tag
-      {priorityLabel && (
-        <div>
-          <span className={`${styles.priorityStyle} ${priorityClass}`}>
-            {priorityLabel}
-          </span>
-        </div>
-      )} */}
 
-      {/* Task Title */}
-      <h3 className={styles.title}>{title}</h3>
-
-      {/* Task Description */}
-      <p className={styles.description}>{description}</p>
+      {/* Responsible person */}
+      <div className={styles.metaRow}>
+        <strong>Responsible:</strong>&nbsp;
+        <span>{responsiblePerson || "Not provided"}</span>
+      </div>
     </div>
   );
 }
