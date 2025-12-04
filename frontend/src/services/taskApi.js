@@ -13,13 +13,12 @@ const API_BASE_URL = "http://localhost:3000/api";
  * Default mapping: 1 = pending, 2 = inProgress, 3 = review, 4 = completed
  */
 const mapStatusIdToStatus = (statusId) => {
-  const statusMap = {
-    1: "pending", // To Do
-    2: "inProgress", // In Progress
-    3: "pending", // Review (treating as pending)
-    4: "completed", // Done
+    const map = {
+    "Pending": "pending",
+    "In Progress": "inProgress",
+    "Completed": "completed",
   };
-  return statusMap[statusId] || "pending";
+  return map[statusId] || "pending";
 };
 
 /**
@@ -100,11 +99,11 @@ const mapFrontendToBackend = (frontendTask) => {
   // Map frontend status to status_id if provided
   if (frontendTask.status) {
     const statusToIdMap = {
-      pending: 1,
-      inProgress: 2,
-      completed: 4,
+      pending: "Pending",
+      inProgress: "In Progress",
+      completed: "Completed",
     };
-    backendData.status_id = statusToIdMap[frontendTask.status] || 1;
+    backendData.status_id = statusToIdMap[frontendTask.status];
   }
 
   // Add due_date if endingDate is provided, convert to DATE format (YYYY-MM-DD)
