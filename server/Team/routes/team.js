@@ -5,7 +5,7 @@ const {teamValidation } = require('../validation/team');
 
 //address methods by url /teams to controller to create or get all teams
 router.route("/")
-.get(teamController.getAllTeams)
+.get(teamController.getTeamsByProject)
 .post(teamValidation, teamController.postTeam); // here validates data to create a new team  
 
 //adress methods by url /teams/:id to controllers, which need the id of the team to update/delete or get this tam by id

@@ -7,7 +7,7 @@ exports.up = function(knex) {
     table.enu('priority', ['High', 'Medium', 'Low'])
     .notNullable()
     .defaultTo('Medium');
-    table.integer('status').unsigned();
+    table.integer('status_id').unsigned();
     table.integer('project_id').unsigned();
     table.date('due_date');
     table.integer('created_by').unsigned();

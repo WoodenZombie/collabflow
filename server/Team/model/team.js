@@ -11,9 +11,23 @@ class TeamModel {
     async getById(id){
         return await db('teams').where({id}).first();
     }
-    //return all teams
-    async getAll(){
-        return await db('teams').select('*');
+    //return all teams for project
+    async getTeamsByProject(projectId) {
+    const hasSnake = await db.schema.hasColumn('teams', 'project_id');
+    if (hasSnake) {
+        return await db('teams')
+            .where({ project_id: projectId })
+            .select('*');
+    }
+
+    const hasCamel = await db.schema.hasColumn('teams', 'projectId');
+    if (hasCamel) {
+        return await db('teams')
+            .where({ projectId: projectId })
+            .select('*');
+    }
+
+    return [];
     }
     //update a specific team, depending by its id 
     async update(id, data){

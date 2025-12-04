@@ -3,7 +3,6 @@ const db = require("../../db/db");
 const taskModel = {
   async createTask(data, userId) {
     data.created_by = userId;
-    data.status_id = 1;
 
     const [id] = await db("tasks").insert(data);
     return this.getById(id);
@@ -15,7 +14,7 @@ const taskModel = {
     if (hasSnake) {
       return await db('tasks')
         .leftJoin('projects', 'tasks.project_id', 'projects.id')
-        .leftJoin('teams', 'projects.team_id', 'teams.id')
+        .leftJoin('teams', 'tasks.team_id', 'teams.id')
         .select(
           'tasks.*',
           'teams.name as team_name'
@@ -31,7 +30,7 @@ const taskModel = {
     if (hasCamel) {
       return await db('tasks')
         .leftJoin('projects', 'tasks.projectId', 'projects.id')
-        .leftJoin('teams', 'projects.team_id', 'teams.id')
+        .leftJoin('teams', 'tasks.team_id', 'teams.id')
         .select(
           'tasks.*',
           'teams.name as team_name'
@@ -51,7 +50,7 @@ const taskModel = {
     // Get task with associated team information through project
     const task = await db("tasks")
       .leftJoin('projects', 'tasks.project_id', 'projects.id')
-      .leftJoin('teams', 'projects.team_id', 'teams.id')
+      .leftJoin('teams', 'tasks.team_id', 'teams.id')
       .select(
         'tasks.*',
         'teams.id as team_id',
@@ -59,8 +58,7 @@ const taskModel = {
         'teams.description as team_description'
       )
       .where({ 'tasks.id': id })
-      .first();
-
+      .first(); 
     if (!task) return null;
 
     // Format the response to include team information in the expected format

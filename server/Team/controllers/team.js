@@ -11,10 +11,13 @@ exports.getByIdTeam = asyncErrorHandler(async (req, res, next) => {
   res.status(200).json(teamById);
 });
 
-//sents requests for getting all teams or an error, if smth went wrong
-exports.getAllTeams = asyncErrorHandler(async (req, res, next) => {
-  const allTeams = await teamModel.getAll();
-  res.status(200).json(allTeams);
+//sents requests for getting all teams under a specific project or an error, if smth went wrong
+exports.getTeamsByProject = asyncErrorHandler(async (req, res, next) => {
+    const projectId = req.params.id;
+    if (!projectId) return next(new customError("projectId is required", 400));
+
+    const teams = await teamModel.getTeamsByProject(projectId);
+    res.status(200).json(teams);
 });
 
 // sents requests to DB to create a new Team, which data is validated succesfully in router
@@ -22,7 +25,9 @@ exports.postTeam = asyncErrorHandler(async (req, res, next) => {
   const data = req.body;
   //hard coded user, just until when we'll create Auth/Reg entity
   const userId = req.user?.id || 1;
-
+  const projectId = req.params.id;
+  
+  data.project_id = projectId;
   const createTeam = await teamModel.post(data, userId);
   res.status(201).json(createTeam);
 });
