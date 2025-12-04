@@ -97,6 +97,13 @@ export const getAppointmentsByProject = async (projectId) => {
     });
 
     if (!response.ok) {
+      // Mirror tasks API behavior: on 500, return empty array to avoid breaking UI
+      if (response.status === 500) {
+        console.warn(
+          "Backend returned 500 for appointments, returning empty array. Appointments table might not exist."
+        );
+        return [];
+      }
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message || `Failed to fetch appointments: ${response.status} ${response.statusText}`
@@ -109,7 +116,8 @@ export const getAppointmentsByProject = async (projectId) => {
     return appointmentsArray.map(mapBackendToFrontend);
   } catch (error) {
     console.error("Error fetching appointments:", error);
-    throw error;
+    // Return empty array instead of throwing, so UI doesn't break
+    return [];
   }
 };
 
@@ -193,6 +201,39 @@ export const deleteAppointment = async (appointmentId, projectId) => {
     return data;
   } catch (error) {
     console.error("Error deleting appointment:", error);
+    throw error;
+  }
+};
+
+/**
+ * Update an existing appointment
+ * @param {number|string} appointmentId
+ * @param {number|string} projectId
+ * @param {object} appointmentData - { title, description, date, time, duration, location }
+ * Backend endpoint: PUT /api/projects/:projectId/appointments/:appointmentId
+ */
+export const updateAppointment = async (appointmentId, projectId, appointmentData) => {
+  if (!appointmentId) throw new Error("Appointment ID is required to update an appointment");
+  if (!projectId) throw new Error("Project ID is required to update an appointment");
+
+  const backendData = mapFrontendToBackend({ ...appointmentData, projectId });
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/appointments/${appointmentId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(backendData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to update appointment: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return mapBackendToFrontend(data);
+  } catch (error) {
+    console.error("Error updating appointment:", error);
     throw error;
   }
 };

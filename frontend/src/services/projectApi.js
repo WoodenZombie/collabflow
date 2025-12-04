@@ -140,6 +140,14 @@ const mapFrontendToBackend = (frontendProject) => {
   // Note: teams and users arrays are not stored in projects table
   // They would need separate tables/endpoints if needed
 
+  // Allow setting team_id when linking a team to a project
+  if (frontendProject.team_id) {
+    const teamIdNum = typeof frontendProject.team_id === "string" ? parseInt(frontendProject.team_id) : frontendProject.team_id;
+    if (!isNaN(teamIdNum)) {
+      backendData.team_id = teamIdNum;
+    }
+  }
+
   return backendData;
 };
 

@@ -36,7 +36,7 @@ function TaskCard({
       ? styles.important
       : styles.normal;
 
-  // Format end date to DD.MM.YYYY HH:mm
+  // Format end date to DD.MM.YYYY (no time)
   const formatEndDate = (dateStr) => {
     if (!dateStr) return null;
     try {
@@ -46,9 +46,7 @@ function TaskCard({
       const dd = String(d.getDate()).padStart(2, "0");
       const mm = String(d.getMonth() + 1).padStart(2, "0");
       const yyyy = d.getFullYear();
-      const hh = String(d.getHours()).padStart(2, "0");
-      const min = String(d.getMinutes()).padStart(2, "0");
-      return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+      return `${dd}.${mm}.${yyyy}`;
     } catch {
       return null;
     }

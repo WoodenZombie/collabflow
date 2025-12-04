@@ -219,3 +219,35 @@
 .submitButton:hover {
   background-color: #1976d2;
 }
+
+/* Row layout for action buttons (used by TeamForm) */
+.buttonsRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.primaryButton {
+  flex: 1;
+  padding: 16px;
+  background-color: #4F46E5; /* indigo-600 */
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.primaryButton:hover { background-color: #4338CA; }
+
+.cancelButton {
+  flex: 1;
+  padding: 16px;
+  background-color: #F2F2F7;
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}

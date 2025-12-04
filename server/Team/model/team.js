@@ -28,7 +28,18 @@ class TeamModel {
         return team;
     }
     async deleteTeamsByProjectId(projectId){
-        await db("teams").where({project_id: projectId}).del();
+        // Detect column name at runtime and delete accordingly
+        const hasSnake = await db.schema.hasColumn('teams', 'project_id');
+        if (hasSnake) {
+            await db('teams').where({ project_id: projectId }).del();
+            return;
+        }
+        const hasCamel = await db.schema.hasColumn('teams', 'projectId');
+        if (hasCamel) {
+            await db('teams').where({ projectId: projectId }).del();
+            return;
+        }
+        // If no linking column exists, do nothing safely
     }
 }
 

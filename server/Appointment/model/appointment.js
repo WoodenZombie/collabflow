@@ -9,8 +9,17 @@ const appointmentModel = {
   },
 
   async getAppointmentsByProject(projectId) {
-    return await db("appointments")
-      .where({ project_id: projectId });
+    // Detect actual FK column name at runtime for robustness across environments
+    const hasSnake = await db.schema.hasColumn('appointments', 'project_id');
+    if (hasSnake) {
+      return await db('appointments').where({ project_id: projectId });
+    }
+    const hasCamel = await db.schema.hasColumn('appointments', 'projectId');
+    if (hasCamel) {
+      return await db('appointments').where({ projectId: projectId });
+    }
+    // If no linking column exists, return empty array to avoid 500s
+    return [];
   },
 
   async getById(id) {

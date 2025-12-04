@@ -214,17 +214,49 @@ function Dashboard() {
     }
   };
 
+  // Derived quick stats
+  const username = "User"; // placeholder
+  const totalProjects = projects.length;
+  const totalPendingTasks = projects.reduce((sum, p) => sum + ((p.progress?.waiting || 0) + (p.progress?.inProgress || 0)), 0);
+  const totalCompletedTasks = projects.reduce((sum, p) => sum + (p.progress?.done || 0), 0);
+
+  const formatDate = (date) => {
+    return new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric" }).format(date);
+  };
+
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Projects</h1>
-        <button
-          onClick={handleOpenCreateModal}
-          className={styles.createButton}
-          title="Create Project"
-        >
-          +
-        </button>
+      {/* Command Center Header */}
+      <div className={styles.ccHeader}>
+        <div>
+          <h1 className={styles.ccTitle}>Hello, {username}</h1>
+          <div className={styles.ccSubtitle}>{formatDate(new Date())}</div>
+        </div>
+        <div>
+          <button
+            onClick={handleOpenCreateModal}
+            className={styles.primaryButton}
+            title="Create Project"
+          >
+            Create Project
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className={styles.quickStatsRow}>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Active Projects</div>
+          <div className={styles.statValue}>{totalProjects}</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Pending Tasks</div>
+          <div className={styles.statValue}>{totalPendingTasks}</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Completed Tasks</div>
+          <div className={styles.statValue}>{totalCompletedTasks}</div>
+        </div>
       </div>
 
       {/* Error Display */}
@@ -244,30 +276,19 @@ function Dashboard() {
           <p>No projects available</p>
         </div>
       ) : (
-        <div className={styles.projectCardContainer}>
+        <div className={styles.projectGrid}>
           {projects.map((project) => {
             // Validate project has required fields
             if (!project || !project.id) {
               return null;
             }
             return (
-              <div key={project.id}>
-                <ProjectCard project={project} />
-                <div className={styles.projectActions}>
-                  <button
-                    className={`${styles.button} ${styles.edit}`}
-                    onClick={() => handleOpenEditModal(project)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className={`${styles.button} ${styles.delete}`}
-                    onClick={() => handleOpenDeleteModal(project)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onEdit={() => handleOpenEditModal(project)}
+                onDelete={() => handleOpenDeleteModal(project)}
+              />
             );
           })}
         </div>

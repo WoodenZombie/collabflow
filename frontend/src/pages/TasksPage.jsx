@@ -9,6 +9,7 @@ import CreateTaskForm from "../components/createTask/CreateTask";
 import EditTaskForm from "../components/forms/EditTaskForm";
 import CreateAppointmentForm from "../components/createAppointment/CreateAppointment";
 import AppointmentList from "../components/appointmentList/AppointmentList";
+import AppointmentsCalendar from "../components/appointmentCalendar/AppointmentsCalendar";
 import {
   getAllTasks,
   createTask,
@@ -19,12 +20,14 @@ import {
   getAppointmentsByProject,
   createAppointment,
   deleteAppointment,
+  updateAppointment,
 } from "../services/appointmentApi";
 import { getProjectById, updateProject as updateProjectApi, deleteProject as deleteProjectApi } from "../services/projectApi";
 import styles from "./tasksPage.module.css";
 
 import TeamCard from "../components/teamCard/TeamCard";
 import TeamForm from "../components/forms/TeamForm";
+import TeamDetails from "../components/teamDetails/TeamDetails";
 import {
   getTeamsByProject,
   createTeam,
@@ -34,10 +37,12 @@ import {
 import { getAllUsers } from "../services/userApi";
 import DeleteTeamForm from "../components/forms/DeleteTeamForm";
 import DeleteAppointmentModal from "../components/DeleteAppoinment/DeleteAppoinmentModal";
+import EditAppointmentForm from "../components/forms/EditAppointmentForm";
 import DeleteTaskModal from "../components/deleteTaskModule/deleteTaskModule";
 import EditProjectForm from "../components/editProject/EditProject";
 import DeleteProjectForm from "../components/deleteProject/DeleteProject";
 // Using native HTML5 Drag and Drop instead of external library
+import TaskDetailsModal from "../components/forms/TaskDetailsModal";
 
 /**
  * TasksPage - Main page for displaying tasks grouped by status
@@ -78,10 +83,13 @@ function TasksPage() {
   const [teamToEdit, setTeamToEdit] = useState(null);
   const [isDeleteTeamModalOpen, setIsDeleteTeamModalOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState(null);
+  const [teamToView, setTeamToView] = useState(null);
 
   // Add state for delete appointment modal
   const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+  const [isEditAppointmentModalOpen, setIsEditAppointmentModalOpen] = useState(false);
+  const [appointmentToEdit, setAppointmentToEdit] = useState(null);
 
   // Add state for delete task modal
   const [isDeleteTaskModalOpen, setIsDeleteTaskModalOpen] = useState(false);
@@ -102,6 +110,7 @@ function TasksPage() {
       }
       const projectIdNum = parseInt(projectId);
       const data = await getAllTasks(projectIdNum);
+      console.debug("TasksPage: fetched tasks count", data.length, "for project", projectIdNum);
       setTasks(data);
     } catch (err) {
       console.error("Failed to load tasks:", err);
@@ -125,6 +134,7 @@ function TasksPage() {
       setError(null);
       const projectIdNum = parseInt(projectId);
       const data = await getAppointmentsByProject(projectIdNum);
+      console.debug("TasksPage: fetched appointments count", data.length, "for project", projectIdNum);
       setAppointments(data);
     } catch (err) {
       console.error("Failed to load appointments:", err);
@@ -180,25 +190,10 @@ function TasksPage() {
    * Filter tasks by projectId when tasks or projectId changes
    */
   useEffect(() => {
-    if (projectId) {
-      // Filter tasks by projectId
-      // Since API returns projects as tasks, we filter by matching id
-      // Also check for project_id in case real tasks are returned
-      const filtered = tasks.filter((task) => {
-        const taskId = task.id?.toString();
-        const taskProjectId = task.project_id?.toString();
-        const projectIdStr = projectId.toString();
-
-        // Match if task.id equals projectId (when API returns projects as tasks)
-        // OR if task.project_id equals projectId (when API returns actual tasks)
-        return taskId === projectIdStr || taskProjectId === projectIdStr;
-      });
-      setFilteredTasks(filtered);
-    } else {
-      // If no projectId, show all tasks
-      setFilteredTasks(tasks);
-    }
-  }, [tasks, projectId]);
+    // Tasks API already returns tasks scoped to projectId when provided,
+    // so we can use the list directly. If no projectId, show all tasks.
+    setFilteredTasks(tasks);
+  }, [tasks]);
 
   // Auto-hide success message after 3 seconds
   useEffect(() => {
@@ -372,7 +367,8 @@ function TasksPage() {
       setTaskToEdit(task);
       setIsEditModalOpen(true);
       setIsTaskActionsModalOpen(false);
-      setTaskForActions(null);
+      // Keep the selected task so we can reopen details on cancel
+      setTaskForActions(task);
     }
   };
 
@@ -470,6 +466,13 @@ function TasksPage() {
     }
   };
 
+  const handleOpenEditAppointment = (appointment) => {
+    setAppointmentToEdit(appointment);
+    setIsEditAppointmentModalOpen(true);
+    setIsDeleteAppointmentModalOpen(false);
+    setAppointmentToDelete(null);
+  };
+
   /**
    * Confirm and execute appointment deletion
    */
@@ -504,6 +507,26 @@ function TasksPage() {
     }
   };
 
+  const handleUpdateAppointment = async (updatedAppointment) => {
+    if (!projectId) {
+      setError("Cannot update appointment: No project selected.");
+      setIsEditAppointmentModalOpen(false);
+      setAppointmentToEdit(null);
+      return;
+    }
+    try {
+      const projectIdNum = parseInt(projectId);
+      const saved = await updateAppointment(updatedAppointment.id, projectIdNum, updatedAppointment);
+      await loadAppointments();
+      setSuccessMessage("Appointment updated successfully!");
+      setIsEditAppointmentModalOpen(false);
+      setAppointmentToEdit(null);
+    } catch (err) {
+      console.error("Failed to update appointment:", err);
+      setError("Failed to update appointment. Please try again.");
+    }
+  };
+
   /**
    * Group tasks by status
    */
@@ -535,6 +558,16 @@ function TasksPage() {
 
   // TEAM logic
 
+  // Load teams for the project (used for Create Task and Teams tab)
+  const loadProjectTeams = useCallback(async () => {
+    try {
+      const teamsData = await getTeamsByProject(projectId);
+      setTeams(teamsData);
+    } catch (err) {
+      console.error("Error loading project teams:", err);
+    }
+  }, [projectId]);
+
   const loadTeamsData = useCallback(async () => {
     if (activeFilter === "teams") {
       setIsLoading(true);
@@ -557,9 +590,25 @@ function TasksPage() {
     loadTeamsData();
   }, [loadTeamsData]);
 
+  // Load project teams when component mounts or projectId changes
+  useEffect(() => {
+    if (projectId) {
+      loadProjectTeams();
+    }
+  }, [loadProjectTeams, projectId]);
+
   const handleCreateTeam = async (teamData) => {
     const newTeam = await createTeam({ ...teamData, projectId });
     setTeams((prev) => [...prev, newTeam]);
+    // Link team to project by updating project.team_id
+    try {
+      if (projectId && newTeam?.id) {
+        const updated = await updateProjectApi(projectId, { team_id: newTeam.id, title: projectName, description: project?.description, status: project?.status });
+        setProject(updated);
+      }
+    } catch (e) {
+      console.warn("Failed to link team to project:", e);
+    }
     setIsTeamModalOpen(false);
   };
 
@@ -657,6 +706,19 @@ function TasksPage() {
     setIsDeleteTeamModalOpen(true);
   };
 
+  const openTeamDetails = (team) => {
+    if (projectId && team?.id) {
+      navigate(`/projects/${projectId}/teams/${team.id}`);
+      return;
+    }
+    // Fallback: inline view if routing info missing
+    setTeamToView(team);
+  };
+
+  const closeTeamDetails = () => {
+    setTeamToView(null);
+  };
+
   const confirmDeleteTeam = async (id) => {
     try {
       await deleteTeam(id, projectId);
@@ -738,7 +800,7 @@ function TasksPage() {
         {/* Appointments Section - Only show when Appointments tab is active */}
         {activeFilter === 'appointments' && (
           <div style={{ marginBottom: "30px" }}>
-            <AppointmentList
+            <AppointmentsCalendar
               appointments={appointments}
               onDelete={handleDeleteAppointment}
               isLoading={isLoadingAppointments}
@@ -846,29 +908,37 @@ function TasksPage() {
 
         {/* Teams Section - Only show when Teams tab is active */}
         {activeFilter === 'teams' && (
-          <div
-            style={{
-              width: "100%",
-              display: "flex",
-              flexDirection: "column",
-              gap: "15px",
-            }}
-          >
-            {teams.length === 0 && !isLoading ? (
-              <p>No teams found for this project.</p>
+          <div className={styles.teamsGrid}>
+            {teamToView ? (
+              <TeamDetails
+                team={teamToView}
+                tasks={filteredTasks.filter(t => t.team_id === teamToView.id)}
+                onEditTeam={(t) => { setTeamToEdit(t); setIsTeamModalOpen(true); }}
+                onDeleteTeam={(id) => handleDeleteTeamClick({ id })}
+                onRemoveMember={(teamId, userId) => {
+                  // Placeholder: implement backend removal if available
+                  console.warn('Remove member not implemented', teamId, userId);
+                }}
+                onAddMemberByEmail={(teamId, email) => {
+                  // Placeholder: implement backend add via email if available
+                  console.warn('Add member by email not implemented', teamId, email);
+                }}
+              />
             ) : (
-              teams.map((team) => (
-                <TeamCard
-                  key={team.id}
-                  team={team}
-                  allUsers={allUsers}
-                  onEdit={(t) => {
-                    setTeamToEdit(t);
-                    setIsTeamModalOpen(true);
-                  }}
-                  onDelete={() => handleDeleteTeamClick(team)}
-                />
-              ))
+              <>
+                {teams.length === 0 && !isLoading ? (
+                  <p>No teams found for this project.</p>
+                ) : (
+                  teams.map((team) => (
+                    <TeamCard
+                      key={team.id}
+                      team={team}
+                      allUsers={allUsers}
+                      onOpenDetails={openTeamDetails}
+                    />
+                  ))
+                )}
+              </>
             )}
           </div>
         )}
@@ -881,6 +951,7 @@ function TasksPage() {
         <CreateTaskForm
           onClose={handleCloseCreateModal}
           onCreate={handleCreateTask}
+          availableTeams={teams}
         />
       )}
 
@@ -890,6 +961,12 @@ function TasksPage() {
           task={taskToEdit}
           onClose={handleCloseEditModal}
           onUpdate={handleUpdateTask}
+          onCancel={() => {
+            setIsEditModalOpen(false);
+            // Reopen details modal for the same task
+            setTaskForActions(taskToEdit);
+            setIsTaskActionsModalOpen(true);
+          }}
         />
       )}
 
@@ -961,31 +1038,36 @@ function TasksPage() {
             setAppointmentToDelete(null);
           }}
           onDelete={confirmDeleteAppointment}
+          onEdit={handleOpenEditAppointment}
         />
       )}
 
-      {/* Task Actions Modal */}
+      {/* Edit Appointment Modal */}
+      {isEditAppointmentModalOpen && appointmentToEdit && (
+        <EditAppointmentForm
+          appointment={appointmentToEdit}
+          onClose={() => {
+            setIsEditAppointmentModalOpen(false);
+            setAppointmentToEdit(null);
+          }}
+          onUpdate={handleUpdateAppointment}
+          onCancel={(appt) => {
+            setIsEditAppointmentModalOpen(false);
+            setAppointmentToEdit(null);
+            setAppointmentToDelete(appt || appointmentToEdit);
+            setIsDeleteAppointmentModalOpen(true);
+          }}
+        />
+      )}
+
+      {/* Task Details Modal (read-only styled like edit form) */}
       {isTaskActionsModalOpen && taskForActions && (
-        <div onClick={() => {setIsTaskActionsModalOpen(false); setTaskForActions(null);}} style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.35)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background:'#fff', borderRadius:12, padding:20, width:'min(420px, 90vw)', boxShadow:'0 10px 30px rgba(0,0,0,0.2)' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-              <h3 style={{ margin:0 }}>{taskForActions.title || 'Task'}</h3>
-              <button onClick={() => {setIsTaskActionsModalOpen(false); setTaskForActions(null);}} style={{ border:'none', background:'transparent', fontSize:20, lineHeight:1, cursor:'pointer' }}>×</button>
-            </div>
-            <p style={{ color:'#555', marginTop:8 }}>{taskForActions.description || 'Description: Not provided'}</p>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px 16px', marginTop:12 }}>
-              <div><strong>Priority:</strong> {taskForActions.priority || 'Not provided'}</div>
-              <div><strong>Status:</strong> {taskForActions.status || 'Not provided'}</div>
-              <div><strong>Subtasks:</strong> {typeof taskForActions.taskCount === 'number' ? taskForActions.taskCount : 'Not provided'}</div>
-              <div><strong>Responsible:</strong> {taskForActions.responsiblePerson || taskForActions.assigned_to || taskForActions.assignee || (taskForActions.user && taskForActions.user.name) || 'Not provided'}</div>
-              <div><strong>End date:</strong> {(() => { const raw = taskForActions.endDate || taskForActions.due_date || taskForActions.deadline || taskForActions.endingDate; if (!raw) return 'Not provided'; const d = new Date(raw); if (isNaN(d.getTime())) return 'Not provided'; const dd = String(d.getDate()).padStart(2, '0'); const mm = String(d.getMonth()+1).padStart(2, '0'); const yyyy = d.getFullYear(); const hh = String(d.getHours()).padStart(2, '0'); const min = String(d.getMinutes()).padStart(2, '0'); return `${dd}.${mm}.${yyyy} ${hh}:${min}`; })()}</div>
-            </div>
-            <div style={{ display:'flex', gap:12, marginTop:16 }}>
-              <button onClick={() => handleOpenEditModal(taskForActions.id)} style={{ padding:'10px 16px', borderRadius:8, border:'1px solid #888' }}>Edit</button>
-              <button onClick={() => handleDeleteTaskClick(taskForActions.id)} style={{ padding:'10px 16px', borderRadius:8, background:'#e53935', color:'#fff', border:'none' }}>Delete</button>
-            </div>
-          </div>
-        </div>
+        <TaskDetailsModal
+          task={taskForActions}
+          onClose={() => { setIsTaskActionsModalOpen(false); setTaskForActions(null); }}
+          onEdit={() => handleOpenEditModal(taskForActions.id)}
+          onDelete={() => handleDeleteTaskClick(taskForActions.id)}
+        />
       )}
     </>
   );

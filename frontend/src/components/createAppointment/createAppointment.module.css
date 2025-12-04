@@ -118,3 +118,38 @@ textarea.inputStyle {
   resize: vertical;
   min-height: 60px;
 }
+
+/* Actions row for edit appointment modal */
+.actionsRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.primaryButtonStyle {
+  flex: 1;
+  padding: 16px;
+  background-color: #4F46E5; /* indigo-600 */
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.primaryButtonStyle:hover {
+  background-color: #4338CA; /* indigo-700 */
+}
+
+.cancelButtonStyle {
+  flex: 1;
+  padding: 16px;
+  background-color: #F2F2F7;
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}

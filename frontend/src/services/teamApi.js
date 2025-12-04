@@ -134,8 +134,8 @@ export const getTeamsByProject = async (projectId) => {
       throw new TeamApiError("Project ID is required", 400);
     }
 
-    const url = `${API_BASE_URL}/teams?projectId=${projectId}`;
-    const response = await fetch(url);
+  const url = `${API_BASE_URL}/projects/${projectId}/teams`;
+  const response = await fetch(url);
 
     if (response.ok) {
       const data = await response.json();
@@ -144,7 +144,7 @@ export const getTeamsByProject = async (projectId) => {
       }
     }
 
-    // Fallback: Get project to find team_id, then get team
+  // Fallback: Get project to find team_id, then get team
     try {
       const projectResponse = await fetch(
         `${API_BASE_URL}/projects/${projectId}`
@@ -261,27 +261,33 @@ export const getAllTeams = async () => {
 /**
  * Get team by ID
  */
-export const getTeamById = async (teamId) => {
+export const getTeamById = async (teamId, projectId) => {
   try {
     if (!teamId) {
       throw new TeamApiError("Team ID is required", 400);
     }
+    
+    // If projectId is provided, use the correct nested route
+    if (projectId) {
+        const teamIdNum = typeof teamId === "string" ? parseInt(teamId) : teamId;
+        const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
 
-    const teamIdNum = typeof teamId === "string" ? parseInt(teamId) : teamId;
+        const response = await fetch(`${API_BASE_URL}/projects/${projectIdNum}/teams/${teamIdNum}`);
 
-    if (isNaN(teamIdNum)) {
-      throw new TeamApiError("Invalid team ID format", 400);
+        if (!response.ok) {
+            const errorData = await parseErrorResponse(response);
+            throw new TeamApiError(
+                getErrorMessage(response.status, "fetch team", errorData.message),
+                response.status
+            );
+        }
+
+        const data = await response.json();
+        return mapBackendToFrontend(data);
     }
 
-    const response = await fetch(`${API_BASE_URL}/teams/${teamIdNum}`);
-
-    if (!response.ok) {
-      const errorData = await parseErrorResponse(response);
-      throw new TeamApiError(
-        getErrorMessage(response.status, "fetch team", errorData.message),
-        response.status
-      );
-    }
+    // Fallback or error if no projectId (since backend requires it for the route)
+    throw new TeamApiError("Project ID is required to fetch a team", 400);
 
     const data = await response.json();
     return mapBackendToFrontend(data);
@@ -315,7 +321,7 @@ export const createTeam = async (teamData) => {
 
     console.log("Mapped backendData:", backendData);
 
-    const response = await fetch(`${API_BASE_URL}/teams`, {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/teams`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -409,7 +415,9 @@ export const updateTeam = async (teamId, teamData) => {
 
     console.log("Mapped backendData:", backendData);
 
-    const response = await fetch(`${API_BASE_URL}/teams/${teamIdNum}`, {
+    const projectId = teamData.projectId;
+    const base = projectId ? `${API_BASE_URL}/projects/${projectId}/teams/${teamIdNum}` : `${API_BASE_URL}/teams/${teamIdNum}`;
+    const response = await fetch(base, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -483,14 +491,12 @@ export const deleteTeam = async (teamId, projectId) => {
     let url = `${API_BASE_URL}/teams/${teamIdNum}`;
 
     if (projectId) {
-      const projectIdNum =
-        typeof projectId === "string" ? parseInt(projectId) : projectId;
-
+      const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
       if (isNaN(projectIdNum)) {
         throw new TeamApiError("Invalid project ID format", 400);
       }
-
-      url += `?projectId=${projectIdNum}`;
+      // Prefer nested route
+      url = `${API_BASE_URL}/projects/${projectIdNum}/teams/${teamIdNum}`;
     }
 
     const response = await fetch(url, {

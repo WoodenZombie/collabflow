@@ -9,7 +9,7 @@
  */
 import styles from "../deleteProject/deleteProjectModal.module.css";
 
-function DeleteAppointmentModal({ appointment, onClose, onDelete }) {
+function DeleteAppointmentModal({ appointment, onClose, onDelete, onEdit }) {
   if (!appointment) {
     return null;
   }
@@ -84,10 +84,20 @@ function DeleteAppointmentModal({ appointment, onClose, onDelete }) {
           </div>
         </div>
 
-        {/* Delete Button */}
-        <button className={styles.deleteButton} onClick={handleDelete}>
-          Delete
-        </button>
+        {/* Actions */}
+        <div className={styles.buttonsRow}>
+          <button
+            type="button"
+            className={styles.editButton}
+            onClick={() => onEdit && onEdit(appointment)}
+            title="Edit appointment"
+          >
+            Edit Appointment
+          </button>
+          <button type="button" className={styles.deleteButton} onClick={handleDelete}>
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   );

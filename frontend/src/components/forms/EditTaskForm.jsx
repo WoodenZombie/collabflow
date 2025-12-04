@@ -9,7 +9,7 @@ import styles from './editTask.module.css';
  * - onClose: function (callback to close modal)
  * - onUpdate: function (callback when form is submitted with updated task data)
  */
-function EditTaskForm({ task, onClose, onUpdate }) {
+function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -348,10 +348,17 @@ function EditTaskForm({ task, onClose, onUpdate }) {
             )}
           </div>
 
-          {/* Submit Button */}
-          <button type="submit" className={styles.submitButtonStyle}>
-            Edit
-          </button>
+          {/* Bottom actions */}
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+            <button type="button" className={styles.submitButtonStyle} style={{ background: '#64748B' }} onClick={() => {
+              if (onCancel) onCancel();
+            }}>
+              Cancel
+            </button>
+            <button type="submit" className={styles.submitButtonStyle}>
+              Confirm
+            </button>
+          </div>
         </form>
       </div>
     </div>

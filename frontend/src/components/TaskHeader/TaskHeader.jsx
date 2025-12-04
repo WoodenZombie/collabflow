@@ -20,10 +20,10 @@ function TaskHeader({ projectName, onBack, onCreateTask, onCreateAppointment, on
             className={styles.backButtonStyle}
             title="Back to Dashboard"
           >
-            <img src="../arrow-left-svgrepo-com.svg" alt="arrow back to dashboard" width={30} />
+            <img src="/arrow-left-svgrepo-com.svg" alt="arrow back to dashboard" width={30} />
           </button>
         )}
-        {projectName || "Project name"}
+  {projectName ?? ""}
         {/* Edit/Delete buttons near project name */}
         <span style={{ marginLeft: 12, display: 'inline-flex', gap: 8 }}>
           {onEditProject && (
@@ -72,13 +72,15 @@ function TaskHeader({ projectName, onBack, onCreateTask, onCreateAppointment, on
           </button>
         )}
         {/* Plus icon - Create Task */}
-        <button
-          className={styles.iconButtonStyle}
-          title="Create Task"
-          onClick={onCreateTask}
-        >
-          <img src="/add-btn-icon.svg" alt="add icon" width={40} />
-        </button>
+        {onCreateTask && (
+          <button
+            className={styles.iconButtonStyle}
+            title="Create Task"
+            onClick={onCreateTask}
+          >
+            <img src="/add-btn-icon.svg" alt="add icon" width={40} />
+          </button>
+        )}
       </div>
     </div>
   );

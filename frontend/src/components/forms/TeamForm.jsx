@@ -20,13 +20,14 @@ function TeamForm({ teamToEdit, allUsers, onClose, onSubmit }) {
   }, [teamToEdit]);
 
   const toggleUser = (userId) => {
+    const idNum = typeof userId === 'string' ? parseInt(userId, 10) : userId;
     setFormData(prev => {
-      const isSelected = prev.members.includes(userId);
+      const isSelected = prev.members.includes(idNum);
       return {
         ...prev,
         members: isSelected 
-          ? prev.members.filter(id => id !== userId)
-          : [...prev.members, userId]
+          ? prev.members.filter(id => id !== idNum)
+          : [...prev.members, idNum]
       };
     });
   };
@@ -86,7 +87,7 @@ function TeamForm({ teamToEdit, allUsers, onClose, onSubmit }) {
                  <button type="button" className={styles.addUserButton} style={{color: '#8b8b8bff'}}>+</button>
                  <select 
                     style={{position: 'absolute', left:0, top:0, width:'100%', height:'100%', opacity:0, cursor:'pointer'}}
-                    onChange={(e) => toggleUser(e.target.value)}
+                    onChange={(e) => { toggleUser(e.target.value); e.target.value = ""; }}
                     value=""
                  >
                     <option value="" disabled>Add user</option>
@@ -98,9 +99,22 @@ function TeamForm({ teamToEdit, allUsers, onClose, onSubmit }) {
             </div>
           </div>
 
-          <button type="submit" className={styles.submitButton}>
-            {teamToEdit ? 'Edit Team' : 'Form a Team'}
-          </button>
+          <div className={styles.buttonsRow}>
+            <button
+              type="submit"
+              className={styles.primaryButton}
+              disabled={!formData.name.trim()}
+            >
+              {teamToEdit ? 'Edit Team' : 'Form a Team'}
+            </button>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+          </div>
         </form>
       </div>
     </div>

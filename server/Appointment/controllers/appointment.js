@@ -10,6 +10,7 @@ exports.getAllAppointment = asyncErrorHandler(async (req, res, next) => {
   if(!projectId) return next(new customError('projectId query parameter is required', 400));
 
   const appointments = await appointmentModel.getAppointmentsByProject(projectId);
+  console.log(`[appointments] GET /api/projects/${projectId}/appointments -> ${Array.isArray(appointments) ? appointments.length : 0} items`);
   res.status(200).json(appointments);
 });
 
