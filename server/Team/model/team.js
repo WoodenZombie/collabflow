@@ -1,6 +1,6 @@
 const db = require('../../db/db');
 const teamMembershipModel = require('./teamMembership');
-const projectMembershipModel = require('../projectMembership');
+const projectMembershipModel = require('../../Project/model/projectMembership');
 class TeamModel {
     //create team
     async post(data, userId){

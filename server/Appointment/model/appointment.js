@@ -1,5 +1,5 @@
 const db = require("../../db/db");
-const appointmentParticipantModel = require('./appointmentParticipant');
+const appointmentParticipantModel = require('./appointmentMembership');
 
 const appointmentModel = {
   async createAppointment(data, userId) {

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router({ mergeParams: true });
 const teamController = require('../controllers/team');
 const {teamValidation } = require('../validation/team');
-const verifyRole = require('../../middleware/verifyRole');
+const verifyRole = require('../../common/middleware/verifyRole');
 
 //roles
 const MANAGER = 'Project Manager';

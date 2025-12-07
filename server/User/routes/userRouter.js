@@ -14,5 +14,5 @@ router
 .get('/refresh', refreshTokenController.handleRefreshToken)
 .post('/register', userRegValidation, registerController.handleNewUser);
 
-module.exports = userRouter;
+module.exports = router;
 

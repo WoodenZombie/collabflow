@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router({ mergeParams: true }); 
 const taskController = require("../controllers/task");
 const { taskValidation } = require("../validation/task");
-const verifyRole = require('../../middleware/verifyRole');
-const verifyTaskUpdate = require('../../middleware/verifyTaskUpdate');
+const verifyRole = require('../../common/middleware/verifyRole');
+const verifyTaskUpdate = require('../../common/middleware/verifyTaskUpdate');
 
 //roles
 const MANAGER = 'Project Manager';

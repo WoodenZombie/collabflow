@@ -1,7 +1,7 @@
 // middleware/verifyTaskUpdate.js
-const projectMembershipModel = require('../Project/model/projectMembership');
-const taskAssigneeModel = require('../Task/model/taskAssignee');
-const customError = require('../common/utils/customError');
+const projectMembershipModel = require('../../Project/model/projectMembership');
+const taskAssigneeModel = require('../../Project/model/taskAssignee');
+const customError = require('../utils/customError');
 
 const verifyTaskUpdate = () => {
     return async (req, res, next) => {
