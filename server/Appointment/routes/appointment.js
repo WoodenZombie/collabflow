@@ -2,16 +2,39 @@ const express = require("express");
 const router = express.Router({ mergeParams: true }); 
 const appointmentController = require("../controllers/appointment");
 const { appointmentValidation } = require("../validation/appointment");
+const verifyRole = require('../../middleware/verifyRole');
+
+//roles
+const MANAGER = 'Project Manager';
+const MEMBER = 'Team Member';
+const PROJECT_ROLES = [MANAGER, MEMBER];
+
 
 router
   .route("/")
-  .get(appointmentController.getAllAppointment)
-  .post(appointmentValidation, appointmentController.postAppointment);
-
+  .get(
+      verifyRole(PROJECT_ROLES, 'project', 'id', 'role'),
+      appointmentController.getAllAppointment
+  )
+  .post(
+      verifyRole([MANAGER], 'project', 'id', 'role'),
+      appointmentValidation, 
+      appointmentController.postAppointment
+  );
 router
   .route("/:id")                   
-  .get(appointmentController.getAppointmentById)
-  .put(appointmentValidation, appointmentController.putAppointment)
-  .delete(appointmentController.deleteAppointment);
+  .get(
+      verifyRole(PROJECT_ROLES, 'project', 'id', 'role'),
+      appointmentController.getAppointmentById
+  )
+  .put(
+      verifyRole([MANAGER], 'project', 'id', 'role'),
+      appointmentValidation, 
+      appointmentController.putAppointment
+  )
+  .delete(
+      verifyRole([MANAGER], 'project', 'id', 'role'),
+      appointmentController.deleteAppointment
+  );
 
 module.exports = router;

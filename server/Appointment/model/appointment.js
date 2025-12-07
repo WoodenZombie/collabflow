@@ -1,11 +1,21 @@
 const db = require("../../db/db");
+const appointmentParticipantModel = require('./appointmentParticipant');
 
 const appointmentModel = {
   async createAppointment(data, userId) {
     data.created_by = userId;
-
-    const [id] = await db("appointments").insert(data);
-    return this.getById(id);
+    
+    const [appointmentId] = await db.transaction(async(trx) => {
+      //creates meeting
+      const [id] = await trx("appointments").insert(data);
+      //add creator to members
+      await trx('appointment_participants').insert({
+            appointment_id: id,
+            user_id: userId
+        });
+      return [id];
+      });
+    return this.getById(appointmentId);
   },
 
   async getAppointmentsByProject(projectId) {

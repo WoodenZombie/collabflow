@@ -1,11 +1,29 @@
 const db = require('../../db/db');
-
+const teamMembershipModel = require('./teamMembership');
+const projectMembershipModel = require('../projectMembership');
 class TeamModel {
     //create team
     async post(data, userId){
         data.created_by = userId;
-        const [id] = await db('teams').insert(data);
-        return this.getById(id);
+        const projectId = data.project_id;
+        
+        // We define the creator's role in the project to establish their role in the team
+        const projectMembership = await projectMembershipModel.getMembership(projectId, userId);
+        const userRole = projectMembership?.role || 'Team Member';
+        const [teamId] = await db.transaction(async (trx) => {
+            // create team
+            const [id] = await trx('teams').insert(data);
+            
+            // adding the creator like team member 
+            await trx('team_memberships').insert({
+                team_id: id,
+                user_id: userId,
+                role: userRole
+            });
+            return [id];
+        });
+
+        return this.getById(teamId);
     }
     //return specific team, which is chosen by id 
     async getById(id){

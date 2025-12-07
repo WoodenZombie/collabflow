@@ -7,22 +7,48 @@ const appointmentModel = require("../../Appointment/model/appointment");
 //This class sents requests from controller and return response back 
 class ProjectModel {
     //create a project
-    async post(data) {
-        const [id] = await db('projects').insert(data);
-        return this.getById(id);
+    async post(data, userId) {
+        const [projectId] = await db.transaction(async(trx) => {
+            const [id] = await trx('projects').insert(data);
+            
+            // Making creator of project to Project Manager
+            await trx('project_memberships').insert({
+                project_id: id,
+                user_id: userId,
+                role: 'Project Manager'
+            });
+            return [id];
+        });
+        return this.getById(projectId);
     }
-//return all projects that exists
-    async getAll(){
-        return await db('projects').select('*');
+//return all projects that exists for its creator
+    async getAll(userId){
+        return await db('projects')
+            .join('project_memberships as pm', 'projects.id', 'pm.project_id')
+            .where('pm.user_id', userId)
+            .select('projects.*', 'pm.role');
     }
-//return a project by its ID
-    async getById(id) {
-        return await db('projects').where({id}).first();
+//return a project by user id
+    async getById(projectId, userId) {
+        return await db('projects')
+            .join('project_memberships as pm', 'projects.id', 'pm.project_id')
+            .where('projects.id', projectId)
+            .andWhere('pm.user_id', userId)
+            .select('projects.*')
+            .first();
     }
 // update a project by its ID
+
+
     async update(id, data){
         await db('projects').where({id}).update(data);
-        return this.getById(id);
+        // To return the updated object, let's create a simple getByIdWithoutCheck method.
+        return this.getByIdWithoutCheck(id);
+    }
+
+    // A new method for use within the model that does not require membership verification
+    async getByIdWithoutCheck(id) {
+        return await db('projects').where({id}).first();
     }
 //delete a project by its ID
     async delete(id){

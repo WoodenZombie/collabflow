@@ -10,7 +10,7 @@ exports.getAllAppointment = asyncErrorHandler(async (req, res, next) => {
   if(!projectId) return next(new customError('projectId query parameter is required', 400));
 
   const appointments = await appointmentModel.getAppointmentsByProject(projectId);
-  console.log(`[appointments] GET /api/projects/${projectId}/appointments -> ${Array.isArray(appointments) ? appointments.length : 0} items`);
+  // console.log(`[appointments] GET /api/projects/${projectId}/appointments -> ${Array.isArray(appointments) ? appointments.length : 0} items`); I dpn't know if it's needed 
   res.status(200).json(appointments);
 });
 
@@ -28,7 +28,7 @@ exports.getAppointmentById = asyncErrorHandler(async (req, res, next) => {
 exports.postAppointment = asyncErrorHandler(async (req, res, next) => {
     const data = req.body;
     //hard coded user, just until when we'll create Auth/Reg entity
-    const userId = req.user?.id || 1;
+    const userId = req.user.id;
     const projectId = req.params.id;
 
     if (!projectId) return next(new customError("Project ID is required", 400));

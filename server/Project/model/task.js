@@ -1,4 +1,6 @@
 const db = require("../../db/db");
+const projectMembershipModel = require('../../Project/model/projectMembership');
+const taskAssigneeModel = require('./taskAssignee');
 
 const taskModel = {
   async createTask(data, userId) {
@@ -74,6 +76,73 @@ const taskModel = {
 
     return result;
   },
+  async getTasksByProjectFiltered(projectId, userId) {
+        // Checking user role
+        const membership = await projectMembershipModel.getMembership(projectId, userId);
+        const isProjectManager = membership?.role === 'Project Manager';
+
+        let query = db('tasks')
+            .leftJoin('teams', 'tasks.team_id', 'teams.id')
+            .where({ 'tasks.project_id': projectId })
+            .select(
+                'tasks.*',
+                'teams.name as team_name'
+            )
+            .orderBy('tasks.created_at', 'desc');
+
+        // if user isn't Project Manager, adding filter by default
+        if (!isProjectManager) {
+            // if not PM, join to tables task_assignees and filtering by user_id
+            query = query
+                .join('task_assignees as ta', 'tasks.id', 'ta.task_id')
+                .andWhere('ta.user_id', userId);
+        }
+
+        const tasks = await query;
+        
+        return tasks.map(task => ({
+            ...task,
+            teams: task.team_name ? [task.team_name] : []
+        }));
+    },
+
+    async getTasksByUserId(userId) {
+         return await db('tasks')
+            .join('task_assignees as ta', 'tasks.id', 'ta.task_id')
+            .leftJoin('teams', 'tasks.team_id', 'teams.id')
+            .where('ta.user_id', userId)
+            .select(
+                'tasks.*',
+                'teams.name as team_name'
+            )
+            .orderBy('tasks.created_at', 'desc')
+            .then(tasks => tasks.map(task => ({
+                ...task,
+                teams: task.team_name ? [task.team_name] : []
+            })));
+    },
+  
+    async getTasksByTeamId(teamId) {
+        return await db('tasks')
+            .leftJoin('teams', 'tasks.team_id', 'teams.id')
+            .where('tasks.team_id', teamId)
+            .select(
+                'tasks.*',
+                'teams.name as team_name'
+            )
+            .orderBy('tasks.created_at', 'desc')
+            .then(tasks => tasks.map(task => ({
+                ...task,
+                teams: task.team_name ? [task.team_name] : []
+            })));
+    },
+
+    async getByIdWithoutAssociations(id) {
+        return await db("tasks")
+            .where({ id })
+            .select('id', 'project_id', 'team_id', 'created_by') 
+            .first(); 
+    },
 
   async updateTask(id, data) {
     data.updated_at = new Date();

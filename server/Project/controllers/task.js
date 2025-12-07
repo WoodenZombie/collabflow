@@ -7,9 +7,11 @@ const customError = require("../../common/utils/customError");
 // returns all cards that exist
 exports.getAllTask = asyncErrorHandler(async (req, res, next) => {
   const projectId = req.params.id;
+  const userId = req.user.id;
+
   if(!projectId) return next(new customError('projectId query parameter is required', 400));
 
-  const tasks = await taskModel.getTasksByProject(projectId);
+  const tasks = await taskModel.getTasksByProject(projectId, userId);
   res.status(200).json(tasks);
 });
 
@@ -22,12 +24,27 @@ exports.getTaskById = asyncErrorHandler(async (req, res, next) => {
   res.status(200).json(task);
 });
 
-// creates a new card, validates input and returns it with status 201 or error
+//getting tasks by user id
+exports.getTasksByUserId = asyncErrorHandler(async (req, res, next) => {
+    const userId = req.params.userId;
+    
+    const tasks = await taskModel.getTasksByUserId(userId);
+    res.status(200).json(tasks);
+});
 
+exports.getTasksByTeamId = asyncErrorHandler(async (req, res, next) => {
+    const teamId = req.params.teamId; // getting team ID from URL
+    
+    if(!teamId) return next(new customError('Team ID is required in URL parameters', 400));
+
+    const tasks = await taskModel.getTasksByTeamId(teamId);
+    res.status(200).json(tasks);
+});
+
+// creates a new card, validates input and returns it with status 201 or error
 exports.postTask = asyncErrorHandler(async (req, res, next) => {
     const data = req.body;
-    //hard coded user, just until when we'll create Auth/Reg entity
-    const userId = req.user?.id || 1;
+    const userId = req.user.id;
     const projectId = req.params.id;
 
     if (!projectId) return next(new customError("Project ID is required", 400));

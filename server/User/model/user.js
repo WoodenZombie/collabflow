@@ -17,6 +17,13 @@ class UserModel {
         await db('users').where({id}).update({refresh_token: refreshToken});
         return this.findById(id);
     }
+
+    async findOneByEmail(email) {
+        return await db('users')
+            .where({ email: email })
+            .select('id', 'email', 'name')
+            .first();
+    }
 }
 
 module.exports = new UserModel();

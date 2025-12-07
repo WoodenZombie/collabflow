@@ -4,7 +4,10 @@ const app = express();
 const customError = require("./utils/customError");
 const globalErrorHandler = require("./middleware/errorController");
 const projectRouter = require("../Project/routes/project");
-const dashboardRoutes = require('./../Dashboard/routes/dashboard')
+const dashboardRoutes = require('./../Dashboard/routes/dashboard');
+const verifyJWT = require('../common/middleware/verifyJWT');
+const cookieParser = require('cookie-parser');
+const userRouter = require('../User/routes/userRouter');
 
 const ports = process.env.PORT || 3000;
 
@@ -22,8 +25,17 @@ app.use((req, res, next) => {
   next();
 });
 
+//middleware for cookies. jwt is saved in cookies
+app.use(cookieParser());
+
 //it parsed req.body to a readable JSON format
 app.use(express.json());
+
+//user router
+app.use(userRouter);
+
+//verifying jwt
+app.use(verifyJWT);
 
 //to reach router projects, and others you need write /api/projects. It's need for connecting with frontend
 app.use("/api", projectRouter);
