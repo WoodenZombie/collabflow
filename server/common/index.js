@@ -8,7 +8,6 @@ const dashboardRoutes = require('./../Dashboard/routes/dashboard');
 const verifyJWT = require('../common/middleware/verifyJWT');
 const cookieParser = require('cookie-parser');
 const userRouter = require('../User/routes/userRouter');
-
 const ports = process.env.PORT || 3000;
 
 // Enable CORS for frontend communication
@@ -32,7 +31,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 //user router
-app.use(userRouter);
+app.use("/api", userRouter);
 
 //verifying jwt
 app.use(verifyJWT);
