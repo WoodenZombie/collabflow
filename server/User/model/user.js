@@ -1,11 +1,14 @@
 const db = require('../../db/db');
 class UserModel {
-    async findOneByEmail(email) {
-        return await db('users').where('email', email).first();
-    }
-
     async findOneByRefreshToken(refreshToken){
         return await db('users').where({refresh_token: refreshToken}).first();
+    }
+
+    async findById(id) {
+        return await db('users')
+            .where({ id: id })
+            .select('id', 'email', 'name')
+            .first();
     }
 
     async create(userData){
@@ -21,7 +24,7 @@ class UserModel {
     async findOneByEmail(email) {
         return await db('users')
             .where({ email: email })
-            .select('id', 'email', 'name')
+            .select('id', 'email', 'name', 'password_hash')
             .first();
     }
 }

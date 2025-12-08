@@ -52,7 +52,7 @@ class ProjectModel {
     }
 //delete a project by its ID
     async delete(id){
-        const project = await this.getById(id);
+        const project = await this.getByIdWithoutCheck(id);
         if(!project) return null;
 
         await db.transaction(async(trx) =>{

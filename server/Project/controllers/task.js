@@ -11,7 +11,7 @@ exports.getAllTask = asyncErrorHandler(async (req, res, next) => {
 
   if(!projectId) return next(new customError('projectId query parameter is required', 400));
 
-  const tasks = await taskModel.getTasksByProject(projectId, userId);
+  const tasks = await taskModel.getTasksByProjectFiltered(projectId, userId);
   res.status(200).json(tasks);
 });
 

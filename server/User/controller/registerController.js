@@ -2,24 +2,24 @@ const User = require('../../User/model/user');
 const bcrypt = require('bcrypt');
 
 const handleNewUser = async (req, res) =>{
-    const {data} = req.body;
+    const {email, password, name} = req.body;
 
-    if(!data.email || !data.password) return res.sendStatus(400).json({'message': 'Email and password are required.'}); 
+    if(!email || !password) return res.status(400).json({'message': 'Email and password are required.'}); 
 
-    const duplicate = await User.findOneByEmail(data.email);
-    if(duplicate) return req.sendStatus(409); // Conflict
+    const duplicate = await User.findOneByEmail(email);
+    if(duplicate) return res.sendStatus(409); // Conflict
     
     try {
         //encrypt and salt the password
-        const hashedPwd = await bcrypt.hash(data.password, 10);
+        const hashedPwd = await bcrypt.hash(password, 10);
         // create and store the new user
         await User.create({
-            "email": data.email,
-            "name": data.name,
+            "email": email,
+            "name": name,
             "password_hash": hashedPwd
         });
 
-        res.status(201).json({'success': `New user ${data.email} created!`})
+        res.status(201).json({'success': `New user ${email} created!`})
     } catch (err) {
         res.status(500).json({'message': err.message});
     }

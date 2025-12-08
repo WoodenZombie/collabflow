@@ -11,17 +11,19 @@ class ProjectMembershipModel {
 
     //checking if the user has required role in a project 
     async checkRole(projectId, userId, requiredRole) {
-        const membership = await this.getMembership(projectId, userId);
-        if (!membership) return false;
-        
-        const userRole = membership.role;
+    const membership = await this.getMembership(projectId, userId);
+    if (!membership) return false;
+    const userRole = membership.role;
 
-        if (requiredRole === 'Team Member' && userRole === 'Project Manager') {
-            return true;
-        }
-
-        return userRole === requiredRole;
+    if (requiredRole === 'Project Manager') {
+        return userRole === 'Project Manager';} 
+    
+    if (requiredRole === 'Team Member') {
+        return userRole === 'Project Manager' || userRole === 'Team Member';
     }
+
+    return userRole === requiredRole; 
+}
 
     //adding user to project
     async addMember(projectId, userId, role = 'Team Member') {
