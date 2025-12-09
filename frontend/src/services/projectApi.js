@@ -4,6 +4,8 @@
  * Uses routes: /api/projects
  */
 
+import { getAuthHeaders } from "./authApi";
+
 const API_BASE_URL = "http://localhost:3000/api";
 
 /**
@@ -157,8 +159,18 @@ const mapFrontendToBackend = (frontendProject) => {
  */
 export const getAllProjects = async () => {
   try {
-    const url = `${API_BASE_URL}/projects`;
-    const response = await fetch(url);
+    const response = await fetch(`${API_BASE_URL}/projects`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       if (response.status === 500) {
         console.warn(
@@ -191,7 +203,18 @@ export const getProjectById = async (projectId) => {
       throw new Error("projectId is required");
     }
 
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}`);
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -216,8 +239,16 @@ export const deleteProject = async (projectId) => {
     const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
     const response = await fetch(`${API_BASE_URL}/projects/${projectIdNum}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     });
     
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
@@ -246,11 +277,16 @@ export const createProject = async (projectData) => {
 
     const response = await fetch(`${API_BASE_URL}/projects`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(backendData),
     });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -283,11 +319,16 @@ export const updateProject = async (projectId, projectData) => {
 
     const response = await fetch(`${API_BASE_URL}/projects/${projectIdNum}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(backendData),
     });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
