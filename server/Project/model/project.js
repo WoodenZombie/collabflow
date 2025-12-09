@@ -19,7 +19,9 @@ class ProjectModel {
             });
             return [id];
         });
-        return this.getById(projectId);
+        return this.getByIdWithoutCheck(projectId);
+        // return this.getById(projectId, userId);
+        // return this.getById(projectId);
     }
 //return all projects that exists for its creator
     async getAll(userId){

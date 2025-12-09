@@ -275,11 +275,37 @@ export const createProject = async (projectData) => {
     const backendData = mapFrontendToBackend(projectData);
     console.log("Mapped backendData:", backendData);
 
+    // Check token before making request
+    const token = localStorage.getItem("token");
+    console.log("Token exists:", !!token);
+    console.log("Token length:", token ? token.length : 0);
+    if (token) {
+      // Try to decode token to check expiration
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        console.log("Token payload:", tokenPayload);
+        const expirationTime = tokenPayload.exp * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
+        console.log("Token expiration:", new Date(expirationTime));
+        console.log("Current time:", new Date(currentTime));
+        console.log("Token expired:", currentTime > expirationTime);
+      } catch (e) {
+        console.error("Error decoding token:", e);
+      }
+    }
+
+    const headers = getAuthHeaders();
+    console.log("Request headers:", { ...headers, Authorization: headers.Authorization ? "Bearer ***" : "none" });
+
     const response = await fetch(`${API_BASE_URL}/projects`, {
       method: "POST",
-      headers: getAuthHeaders(),
+      headers: headers,
+      credentials: "include",
       body: JSON.stringify(backendData),
     });
+
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
 
     if (response.status === 401) {
       localStorage.removeItem("token");
@@ -288,11 +314,35 @@ export const createProject = async (projectData) => {
       throw new Error("Unauthorized");
     }
 
+    if (response.status === 403) {
+      // Token might be expired or invalid
+      console.error("403 Forbidden - Token might be expired or invalid");
+      const errorData = await response.json().catch(() => ({}));
+      console.error("403 Error response:", errorData);
+      
+      // Clear token and redirect to login
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Session expired. Please login again.");
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `HTTP error! status: ${response.status}`
-      );
+      console.error("Error response data:", errorData);
+      
+      // Build detailed error message
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      
+      if (errorData.message) {
+        errorMessage = errorData.message;
+      } else if (errorData.errors && Array.isArray(errorData.errors)) {
+        const validationErrors = errorData.errors.map(e => e.msg || e.message || JSON.stringify(e)).join(", ");
+        errorMessage = validationErrors || errorMessage;
+      }
+      
+      console.error("Throwing error:", errorMessage);
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -300,6 +350,10 @@ export const createProject = async (projectData) => {
     return mapBackendToFrontend(data);
   } catch (error) {
     console.error("Error creating project:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+    });
     throw error;
   }
 };

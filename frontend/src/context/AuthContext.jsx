@@ -37,13 +37,37 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await authApi.login(email, password);
-      // Backend response format: { token, user: { id, name, email, role } }
-      const { token: newToken, user: userData } = response;
+      // Backend returns: { accessToken }
+      const { accessToken } = response;
       
-      setToken(newToken);
-      setUser(userData);
-      localStorage.setItem("token", newToken);
-      localStorage.setItem("user", JSON.stringify(userData));
+      if (!accessToken) {
+        throw new Error("No access token received from server");
+      }
+
+      // Decode token to get user info (basic info from JWT payload)
+      try {
+        const tokenPayload = JSON.parse(atob(accessToken.split('.')[1]));
+        console.log("Decoded token payload:", tokenPayload);
+        
+        const userData = {
+          id: tokenPayload.UserInfo?.id,
+          email: tokenPayload.UserInfo?.email || email,
+          name: tokenPayload.UserInfo?.name || email.split('@')[0], // Fallback
+          role: tokenPayload.UserInfo?.role || 'user', // Default role
+        };
+        
+        console.log("User data from token:", userData);
+        
+        setToken(accessToken);
+        setUser(userData);
+        localStorage.setItem("token", accessToken);
+        localStorage.setItem("user", JSON.stringify(userData));
+      } catch (decodeError) {
+        console.error("Error decoding token:", decodeError);
+        // Still save token even if decode fails
+        setToken(accessToken);
+        localStorage.setItem("token", accessToken);
+      }
       
       return { success: true };
     } catch (error) {
@@ -55,16 +79,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signup = async (name, email, password) => {
+  const signup = async (name, email, password, confirmPassword) => {
     try {
-      const response = await authApi.signup(name, email, password);
-      // Backend response format: { token, user: { id, name, email, role } }
-      const { token: newToken, user: userData } = response;
+      // First register the user
+      await authApi.signup(name, email, password, confirmPassword);
       
-      setToken(newToken);
-      setUser(userData);
-      localStorage.setItem("token", newToken);
-      localStorage.setItem("user", JSON.stringify(userData));
+      // After successful registration, automatically log in
+      const loginResult = await login(email, password);
+      
+      if (!loginResult.success) {
+        return {
+          success: false,
+          error: loginResult.error || "Registration successful, but automatic login failed. Please try logging in manually.",
+        };
+      }
       
       return { success: true };
     } catch (error) {

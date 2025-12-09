@@ -20,6 +20,25 @@ function Signup() {
     }
   }, [isAuthenticated, navigate]);
 
+  const validatePassword = (pwd) => {
+    if (pwd.length < 10) {
+      return "Password must contain atleast 10 characters and a combination of uppercase and lowercase letters, numbers, and special characters.";
+    }
+    if (!/[a-z]/.test(pwd)) {
+      return "Password must contain atleast 10 characters and a combination of uppercase and lowercase letters, numbers, and special characters.";
+    }
+    if (!/[A-Z]/.test(pwd)) {
+      return "Password must contain atleast 10 characters and a combination of uppercase and lowercase letters, numbers, and special characters.";
+    }
+    if (!/[0-9]/.test(pwd)) {
+      return "Password must contain atleast 10 characters and a combination of uppercase and lowercase letters, numbers, and special characters.";
+    }
+    if (!/[^a-zA-Z0-9]/.test(pwd)) {
+      return "Password must contain atleast 10 characters and a combination of uppercase and lowercase letters, numbers, and special characters.";
+    }
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -37,13 +56,14 @@ function Signup() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
       setIsLoading(false);
       return;
     }
 
-    const result = await signup(name, email, password);
+    const result = await signup(name, email, password, confirmPassword);
     setIsLoading(false);
 
     if (result.success) {

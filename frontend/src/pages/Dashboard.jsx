@@ -116,13 +116,18 @@ function Dashboard() {
       setProjects((prevProjects) => [...prevProjects, projectWithProgress]);
       
       // Close modal after successful creation
-    setIsCreateModalOpen(false);
+      setIsCreateModalOpen(false);
       setError(null);
       
       console.log("Project creation completed successfully");
     } catch (err) {
       console.error("Failed to create project:", err);
-      setError("Failed to create project. Please try again.");
+      console.error("Error object:", err);
+      console.error("Error message:", err.message);
+      
+      // Show detailed error message to user
+      const errorMessage = err.message || "Failed to create project. Please try again.";
+      setError(errorMessage);
       // Don't close modal on error so user can try again
     }
   };
@@ -205,7 +210,7 @@ function Dashboard() {
       // Close modal and clear selected project
     setIsDeleteModalOpen(false);
     setProjectToDelete(null);
-      
+       
       console.log("Project deleted successfully");
     } catch (err) {
       console.error("Failed to delete project:", err);

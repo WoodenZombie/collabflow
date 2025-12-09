@@ -35,6 +35,7 @@ function Login() {
     if (result.success) {
       navigate("/");
     } else {
+      // Show detailed error message from backend
       setError(result.error || "Login failed. Please check your credentials.");
     }
   };

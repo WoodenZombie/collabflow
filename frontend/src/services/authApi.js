@@ -18,162 +18,101 @@ export const getAuthHeaders = () => {
 
 /**
  * Login user
- * Tries multiple possible endpoints:
- * - POST /api/auth/login
- * - POST /api/users/login
+ * POST /api/auth
  * Body: { email, password }
+ * Response: { accessToken }
  */
 export const login = async (email, password) => {
-  const endpoints = [
-    `${API_BASE_URL}/auth/login`,
-    `${API_BASE_URL}/users/login`,
-  ];
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Important for cookies
+      body: JSON.stringify({ email, password }),
+    });
 
-  let lastError = null;
-
-  for (const endpoint of endpoints) {
-    try {
-      console.log(`Attempting login at: ${endpoint}`);
-      
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      console.log(`Response from ${endpoint}:`, response.status, response.statusText);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`Success! Login worked at: ${endpoint}`);
-        return data;
-      }
-
-      // If 404, try next endpoint
-      if (response.status === 404) {
-        console.log(`404 from ${endpoint}, trying next...`);
-        continue;
-      }
-
-      // For other errors, get error message
+    if (!response.ok) {
+      // Try to get error message from backend
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Login failed: ${response.status} ${response.statusText}`);
-    } catch (error) {
-      // Network errors
-      if (error.name === "TypeError" && error.message.includes("fetch")) {
-        console.error(`Network error for ${endpoint}:`, error.message);
-        throw new Error("Network error: Could not connect to server. Please check if backend is running.");
+      
+      // Backend might return validation errors in format: { errors: [{ msg: "...", ... }] }
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        const errorMessages = errorData.errors.map(err => err.msg || err.message).join(", ");
+        throw new Error(errorMessages);
       }
       
-      // If it's not a 404, throw immediately
-      if (!error.message.includes("404") && !error.message.includes("Not Found")) {
-        throw error;
+      // Handle specific status codes
+      if (response.status === 401) {
+        throw new Error("Invalid email or password. Please check your credentials.");
       }
       
-      lastError = error;
-      continue;
+      throw new Error(errorData.message || `Login failed: ${response.statusText}`);
     }
-  }
 
-  // If all endpoints failed
-  throw new Error(
-    `Login endpoint not found. Tried: ${endpoints.join(", ")}. ` +
-    `Please check with backend developer which endpoint is correct.`
-  );
+    const data = await response.json();
+    // Backend returns { accessToken }
+    return data;
+  } catch (error) {
+    console.error("Login API error:", error);
+    throw error;
+  }
 };
 
 /**
  * Signup/Register user
- * Tries multiple possible endpoints:
- * - POST /api/auth/register
- * - POST /api/auth/signup
- * - POST /api/users/register
- * - POST /api/users/signup
- * Body: { name, email, password }
+ * POST /api/register
+ * Body: { name, email, password, confirmPassword }
+ * Response: { success: "New user ${email} created!" }
  */
-export const signup = async (name, email, password) => {
-  const endpoints = [
-    `${API_BASE_URL}/auth/register`,
-    `${API_BASE_URL}/auth/signup`,
-    `${API_BASE_URL}/users/register`,
-    `${API_BASE_URL}/users/signup`,
-  ];
+export const signup = async (name, email, password, confirmPassword) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Important for cookies
+      body: JSON.stringify({ name, email, password, confirmPassword }),
+    });
 
-  const attemptedEndpoints = [];
-  let lastError = null;
-
-  for (const endpoint of endpoints) {
-    attemptedEndpoints.push(endpoint);
-    try {
-      console.log(`Attempting signup at: ${endpoint}`);
+    if (!response.ok) {
+      if (response.status === 409) {
+        throw new Error("User with this email already exists");
+      }
       
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      console.log(`Response from ${endpoint}:`, response.status, response.statusText);
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`Success! Signup worked at: ${endpoint}`);
-        return data;
-      }
-
-      // If 404, try next endpoint
-      if (response.status === 404) {
-        console.log(`404 from ${endpoint}, trying next...`);
-        continue;
-      }
-
-      // For other HTTP errors, try to get error message
+      // Try to parse validation errors
       const errorData = await response.json().catch(() => ({}));
-      lastError = new Error(errorData.message || `Signup failed: ${response.status} ${response.statusText}`);
       
-      // If it's a validation error (400, 422), throw immediately
-      if (response.status === 400 || response.status === 422) {
-        throw lastError;
+      // Backend returns validation errors in format: { errors: [{ msg: "...", ... }] }
+      if (errorData.errors && Array.isArray(errorData.errors)) {
+        const errorMessages = errorData.errors.map(err => err.msg || err.message).join(", ");
+        throw new Error(errorMessages);
       }
       
-      // For other errors, continue trying
-      continue;
-    } catch (error) {
-      // Network errors or fetch failures
-      if (error.name === "TypeError" && error.message.includes("fetch")) {
-        console.error(`Network error for ${endpoint}:`, error.message);
-        throw new Error("Network error: Could not connect to server. Please check if backend is running.");
-      }
-      
-      // If it's a validation error, throw immediately
-      if (error.message && !error.message.includes("404") && !error.message.includes("Not Found")) {
-        throw error;
-      }
-      
-      lastError = error;
-      continue;
+      throw new Error(errorData.message || `Signup failed: ${response.statusText}`);
     }
-  }
 
-  // If all endpoints failed with 404
-  const errorMessage = `Signup endpoint not found. Tried endpoints:\n${attemptedEndpoints.map(e => `- ${e}`).join("\n")}\n\nPlease check with backend developer which endpoint is correct.`;
-  console.error(errorMessage);
-  throw new Error(errorMessage);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Signup API error:", error);
+    throw error;
+  }
 };
 
 /**
  * Get current user info
- * GET /api/auth/me
+ * GET /api/auth/me (or similar endpoint)
+ * Note: This endpoint might not exist yet, check with backend
  */
 export const getCurrentUser = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
       method: "GET",
       headers: getAuthHeaders(),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -184,6 +123,30 @@ export const getCurrentUser = async () => {
     return data;
   } catch (error) {
     console.error("Get current user API error:", error);
+    throw error;
+  }
+};
+
+/**
+ * Refresh access token using refresh token from cookies
+ * GET /api/refresh
+ */
+export const refreshAccessToken = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/refresh`, {
+      method: "GET",
+      credentials: "include", // Important for cookies
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to refresh token");
+    }
+
+    const data = await response.json();
+    // Backend should return { accessToken }
+    return data;
+  } catch (error) {
+    console.error("Refresh token API error:", error);
     throw error;
   }
 };
