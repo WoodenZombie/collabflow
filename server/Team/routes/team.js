@@ -22,7 +22,7 @@ router.route("/")
 ); // here validates data to create a new team  
 
 //adress methods by url /teams/:id to controllers, which need the id of the team to update/delete or get this tam by id
-router.route("/:id")
+router.route("/:teamId")
 .get(
     verifyRole(PROJECT_ROLES, 'project', 'id', 'role'),
     teamController.getByIdTeam
@@ -38,13 +38,13 @@ router.route("/:id")
 );
 
 //adding new member team (id = teamId)
-router.post("/:id/members", 
+router.post("/:teamId/members", 
     verifyRole([MANAGER], 'project', 'id', 'role'),
     teamController.addTeamMember
 );
 
 //removing team member
-router.delete("/:id/members/:memberId",
+router.delete("/:teamId/members/:memberId",
     verifyRole([MANAGER], 'project', 'id', 'role'),
     teamController.removeTeamMember
 );

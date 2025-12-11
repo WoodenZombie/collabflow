@@ -1,13 +1,14 @@
 const db = require('../../db/db')
 //requests to others entity tables
 const taskModel = require("../model/task");
-const teamModel = require("../../Team/model/team");
 const appointmentModel = require("../../Appointment/model/appointment");
 
 //This class sents requests from controller and return response back 
 class ProjectModel {
     //create a project
     async post(data, userId) {
+        data.created_by = userId;
+
         const [projectId] = await db.transaction(async(trx) => {
             const [id] = await trx('projects').insert(data);
             
@@ -39,9 +40,7 @@ class ProjectModel {
             .select('projects.*')
             .first();
     }
-// update a project by its ID
-
-
+    // update a project by its ID
     async update(id, data){
         await db('projects').where({id}).update(data);
         // To return the updated object, let's create a simple getByIdWithoutCheck method.
@@ -58,9 +57,29 @@ class ProjectModel {
         if(!project) return null;
 
         await db.transaction(async(trx) =>{
+            // 1. Delete Tasks (Model handles assignees deletion)
             await taskModel.deleteTasksByProjectId(id);
+            
+            // 2. Delete Appointments (Model handles participants deletion)
             await appointmentModel.deleteAppointmentsByProjectId(id);
-            await teamModel.deleteTeamsByProjectId(id);
+            
+            // 3. Delete Teams and their Memberships
+            // First, we need to clean up team_memberships to avoid FK constraint errors
+            // Find all teams in this project
+            const projectTeams = await trx('teams').where({ project_id: id }).select('id');
+            const teamIds = projectTeams.map(t => t.id);
+
+            if (teamIds.length > 0) {
+                // Delete memberships of these teams
+                await trx('team_memberships').whereIn('team_id', teamIds).del();
+                // Now we can safely delete the teams
+                await trx('teams').whereIn('id', teamIds).del();
+            }
+
+            // 4. Delete Project Memberships (cleanup the project itself)
+            await trx('project_memberships').where({ project_id: id }).del();
+
+            // 5. Finally, delete the Project
             await db('projects').transacting(trx).where({id}).del();
         });
         return project;

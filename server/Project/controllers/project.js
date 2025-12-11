@@ -47,26 +47,27 @@ exports.deleteProject = asyncErrorHandler(async(req, res, next) =>{
         res.status(200).json(deleteResponse);
 });
 
+// Add member to project
 exports.addProjectMember = asyncErrorHandler(async(req, res, next)=>{
-        const {email} = req.body;
-        const projectId = req.params.id;
+    const {email} = req.body;
+    const projectId = req.params.id;
 
-        if (!email) {
+    if (!email) {
         return res.status(400).json({ message: 'Email is required.' });
-        }
-        //searcing user id by email  
-        const foundUser = await userModel.findOneByEmail(email);
-        if (!foundUser) return next(new customError(`user with this email "${email}" isn't found.`, 404));
+    }
+    // searching user id by email  
+    const foundUser = await userModel.findOneByEmail(email);
+    if (!foundUser) return next(new customError(`User with this email "${email}" isn't found.`, 404));
 
-        const userIdToAdd = foundUser.id;
-        const existingMembership = await projectMembershipModel.getMembership(projectId, userIdToAdd);
-        if (existingMembership) {
-                return res.status(409).json({ message: `user ${email} is already a member.` });
-        }
+    const userIdToAdd = foundUser.id;
+    const existingMembership = await projectMembershipModel.getMembership(projectId, userIdToAdd);
+    if (existingMembership) {
+        return res.status(409).json({ message: `User ${email} is already a member.` });
+    }
 
-        const membershipId = await projectMembershipModel.addMember(projectId, userIdToAdd, 'Team Member');
-        res.status(201).json({ 
-                message: `User ${email} is added to project ${projectId}`,
-                membershipId: membershipId 
-        });
+    const membershipId = await projectMembershipModel.addMember(projectId, userIdToAdd, 'Team Member');
+    res.status(201).json({ 
+        message: `User ${email} is added to project ${projectId}`,
+        membershipId: membershipId 
+    });
 });

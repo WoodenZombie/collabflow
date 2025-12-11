@@ -14,7 +14,7 @@ const verifyTaskUpdate = () => {
         }
 
         try {
-            const task = await require('../Task/model/task').getByIdWithoutAssociations(taskId);
+            const task = await require('../../Project/model/task').getByIdWithoutAssociations(taskId);
             if (!task) {
                 return next(new customError("Task not found.", 404));
             }

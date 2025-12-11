@@ -22,7 +22,7 @@ router
       appointmentController.postAppointment
   );
 router
-  .route("/:id")                   
+  .route("/:appointmentId")                   
   .get(
       verifyRole(PROJECT_ROLES, 'project', 'id', 'role'),
       appointmentController.getAppointmentById

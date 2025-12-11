@@ -25,6 +25,13 @@ class AppointmentParticipantModel {
             .where({ appointment_id: appointmentId, user_id: userId })
             .del();
     }
+
+    // New: Remove all participants for an appointment (helper for updates/deletes)
+    async removeAllParticipants(appointmentId) {
+        return await db('appointment_participants')
+            .where({ appointment_id: appointmentId })
+            .del();
+    }
 }
 
 module.exports = new AppointmentParticipantModel();

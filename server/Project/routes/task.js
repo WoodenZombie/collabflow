@@ -23,7 +23,7 @@ router
   );
 
 router
-  .route("/:id")                   
+  .route("/:taskId")                   
   .get(
     verifyRole(PROJECT_ROLES, 'project', 'id', 'role'), 
     taskController.getTaskById

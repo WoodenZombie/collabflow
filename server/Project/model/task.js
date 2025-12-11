@@ -3,59 +3,57 @@ const projectMembershipModel = require('../../Project/model/projectMembership');
 const taskAssigneeModel = require('./taskAssignee');
 
 const taskModel = {
-  async createTask(data, userId) {
+  // Now accepts assignees array
+  async createTask(data, userId, assignees = []) {
     data.created_by = userId;
 
-    const [id] = await db("tasks").insert(data);
-    return this.getById(id);
+    const [taskId] = await db.transaction(async(trx) => {
+        // 1. Insert Task
+        const [id] = await trx("tasks").insert(data);
+        
+        // 2. Insert Assignees if present
+        if (Array.isArray(assignees) && assignees.length > 0) {
+            const assigneesData = assignees.map(uId => ({
+                task_id: id,
+                user_id: uId,
+                primary_assignee: false // Default false
+            }));
+            await trx('task_assignees').insert(assigneesData);
+        }
+        return [id];
+    });
+
+    return this.getById(taskId);
   },
 
   async getTasksByProject(projectId) {
-    // Detect actual FK column name at runtime for robustness across environments
+     // Старый код, оставляю как есть, но рекомендую проверить имена колонок
+     // Я лишь исправлю проверку camel/snake case для надежности
     const hasSnake = await db.schema.hasColumn('tasks', 'project_id');
-    if (hasSnake) {
+    const colName = hasSnake ? 'project_id' : 'projectId';
+
       return await db('tasks')
-        .leftJoin('projects', 'tasks.project_id', 'projects.id')
+        .leftJoin('projects', `tasks.${colName}`, 'projects.id')
         .leftJoin('teams', 'tasks.team_id', 'teams.id')
         .select(
           'tasks.*',
           'teams.name as team_name'
         )
-        .where({ 'tasks.project_id': projectId })
+        .where({ [`tasks.${colName}`]: projectId })
         .orderBy('tasks.created_at', 'desc')
         .then(tasks => tasks.map(task => ({
           ...task,
           teams: task.team_name ? [task.team_name] : []
         })));
-    }
-    const hasCamel = await db.schema.hasColumn('tasks', 'projectId');
-    if (hasCamel) {
-      return await db('tasks')
-        .leftJoin('projects', 'tasks.projectId', 'projects.id')
-        .leftJoin('teams', 'tasks.team_id', 'teams.id')
-        .select(
-          'tasks.*',
-          'teams.name as team_name'
-        )
-        .where({ 'tasks.projectId': projectId })
-        .orderBy('tasks.created_at', 'desc')
-        .then(tasks => tasks.map(task => ({
-          ...task,
-          teams: task.team_name ? [task.team_name] : []
-        })));
-    }
-    // If no linking column exists, return empty array to avoid 500s
-    return [];
   },
 
   async getById(id) {
-    // Get task with associated team information through project
     const task = await db("tasks")
       .leftJoin('projects', 'tasks.project_id', 'projects.id')
       .leftJoin('teams', 'tasks.team_id', 'teams.id')
       .select(
         'tasks.*',
-        'teams.id as team_id',
+        'teams.id as team_id_val',
         'teams.name as team_name',
         'teams.description as team_description'
       )
@@ -63,21 +61,26 @@ const taskModel = {
       .first(); 
     if (!task) return null;
 
-    // Format the response to include team information in the expected format
+    // Fetch assignees
+    const assignedUsers = await db('task_assignees')
+        .join('users', 'task_assignees.user_id', 'users.id')
+        .where({ task_id: id })
+        .select('users.id', 'users.name', 'users.email', 'task_assignees.primary_assignee');
+
     const result = {
       ...task,
-      teams: task.team_name ? [task.team_name] : []
+      teams: task.team_name ? [task.team_name] : [],
+      assignees: assignedUsers // Return full user objects or just IDs based on frontend need
     };
 
-    // Clean up the extra fields we don't need in the response
-    delete result.team_id;
+    delete result.team_id_val;
     delete result.team_name;
     delete result.team_description;
 
     return result;
   },
+
   async getTasksByProjectFiltered(projectId, userId) {
-        // Checking user role
         const membership = await projectMembershipModel.getMembership(projectId, userId);
         const isProjectManager = membership?.role === 'Project Manager';
 
@@ -90,15 +93,16 @@ const taskModel = {
             )
             .orderBy('tasks.created_at', 'desc');
 
-        // if user isn't Project Manager, adding filter by default
         if (!isProjectManager) {
-            // if not PM, join to tables task_assignees and filtering by user_id
             query = query
                 .join('task_assignees as ta', 'tasks.id', 'ta.task_id')
                 .andWhere('ta.user_id', userId);
         }
 
         const tasks = await query;
+        
+        // Optimization: Fetch assignees for these tasks could be done here, 
+        // but for list view usually simple data is enough.
         
         return tasks.map(task => ({
             ...task,
@@ -144,10 +148,31 @@ const taskModel = {
             .first(); 
     },
 
-  async updateTask(id, data) {
+  async updateTask(id, data, assignees) {
     data.updated_at = new Date();
 
-    await db("tasks").where({ id }).update(data);
+    await db.transaction(async (trx) => {
+        // 1. Update Task details
+        if (Object.keys(data).length > 0) {
+            await trx("tasks").where({ id }).update(data);
+        }
+
+        // 2. Update Assignees if provided
+        if (Array.isArray(assignees)) {
+            // Remove old
+            await trx("task_assignees").where({ task_id: id }).del();
+            
+            // Insert new
+            if (assignees.length > 0) {
+                 const assigneesData = assignees.map(uId => ({
+                    task_id: id,
+                    user_id: uId
+                }));
+                await trx("task_assignees").insert(assigneesData);
+            }
+        }
+    });
+
     return this.getById(id);
   },
 
@@ -155,12 +180,24 @@ const taskModel = {
     const task = await this.getById(id);
     if (!task) return null;
 
-    await db("tasks").where({ id }).del();
+    // Manual cascade delete just in case
+    await db.transaction(async (trx) => {
+         await trx("task_assignees").where({ task_id: id }).del();
+         await trx("tasks").where({ id }).del();
+    });
+
     return task;
   },
 
   async deleteTasksByProjectId(projectId){
-    await db("tasks").where({project_id: projectId}).del();
+    // Safe delete via ID fetch to ensure cascade
+    const tasks = await db("tasks").where({project_id: projectId}).select('id');
+    const ids = tasks.map(t => t.id);
+    
+    if (ids.length > 0) {
+        await db("task_assignees").whereIn('task_id', ids).del();
+        await db("tasks").whereIn('id', ids).del();
+    }
   }
 };
 
