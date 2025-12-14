@@ -2,6 +2,8 @@
  * Uses routes: /api/teams
  */
 
+import { getAuthHeaders } from "./authApi";
+
 const API_BASE_URL = "http://localhost:3000/api";
 
 /**
@@ -134,8 +136,11 @@ export const getTeamsByProject = async (projectId) => {
       throw new TeamApiError("Project ID is required", 400);
     }
 
-  const url = `${API_BASE_URL}/projects/${projectId}/teams`;
-  const response = await fetch(url);
+    const url = `${API_BASE_URL}/projects/${projectId}/teams`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
 
     if (response.ok) {
       const data = await response.json();
@@ -144,10 +149,14 @@ export const getTeamsByProject = async (projectId) => {
       }
     }
 
-  // Fallback: Get project to find team_id, then get team
+    // Fallback: Get project to find team_id, then get team
     try {
       const projectResponse = await fetch(
-        `${API_BASE_URL}/projects/${projectId}`
+        `${API_BASE_URL}/projects/${projectId}`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
+        }
       );
 
       if (!projectResponse.ok) {
@@ -170,7 +179,11 @@ export const getTeamsByProject = async (projectId) => {
       if (project && project.team_id) {
         // Get the team by team_id
         const teamResponse = await fetch(
-          `${API_BASE_URL}/teams/${project.team_id}`
+          `${API_BASE_URL}/teams/${project.team_id}`,
+          {
+            method: "GET",
+            headers: getAuthHeaders(),
+          }
         );
 
         if (!teamResponse.ok) {
@@ -220,7 +233,10 @@ export const getTeamsByProject = async (projectId) => {
 export const getAllTeams = async () => {
   try {
     const url = `${API_BASE_URL}/teams`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
 
     if (!response.ok) {
       const errorData = await parseErrorResponse(response);
@@ -266,24 +282,31 @@ export const getTeamById = async (teamId, projectId) => {
     if (!teamId) {
       throw new TeamApiError("Team ID is required", 400);
     }
-    
+
     // If projectId is provided, use the correct nested route
     if (projectId) {
-        const teamIdNum = typeof teamId === "string" ? parseInt(teamId) : teamId;
-        const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
+      const teamIdNum = typeof teamId === "string" ? parseInt(teamId) : teamId;
+      const projectIdNum =
+        typeof projectId === "string" ? parseInt(projectId) : projectId;
 
-        const response = await fetch(`${API_BASE_URL}/projects/${projectIdNum}/teams/${teamIdNum}`);
-
-        if (!response.ok) {
-            const errorData = await parseErrorResponse(response);
-            throw new TeamApiError(
-                getErrorMessage(response.status, "fetch team", errorData.message),
-                response.status
-            );
+      const response = await fetch(
+        `${API_BASE_URL}/projects/${projectIdNum}/teams/${teamIdNum}`,
+        {
+          method: "GET",
+          headers: getAuthHeaders(),
         }
+      );
 
-        const data = await response.json();
-        return mapBackendToFrontend(data);
+      if (!response.ok) {
+        const errorData = await parseErrorResponse(response);
+        throw new TeamApiError(
+          getErrorMessage(response.status, "fetch team", errorData.message),
+          response.status
+        );
+      }
+
+      const data = await response.json();
+      return mapBackendToFrontend(data);
     }
 
     // Fallback or error if no projectId (since backend requires it for the route)
@@ -321,13 +344,14 @@ export const createTeam = async (teamData) => {
 
     console.log("Mapped backendData:", backendData);
 
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/teams`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(backendData),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectId}/teams`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(backendData),
+      }
+    );
 
     if (!response.ok) {
       const errorData = await parseErrorResponse(response);
@@ -416,12 +440,12 @@ export const updateTeam = async (teamId, teamData) => {
     console.log("Mapped backendData:", backendData);
 
     const projectId = teamData.projectId;
-    const base = projectId ? `${API_BASE_URL}/projects/${projectId}/teams/${teamIdNum}` : `${API_BASE_URL}/teams/${teamIdNum}`;
+    const base = projectId
+      ? `${API_BASE_URL}/projects/${projectId}/teams/${teamIdNum}`
+      : `${API_BASE_URL}/teams/${teamIdNum}`;
     const response = await fetch(base, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(backendData),
     });
 
@@ -491,7 +515,8 @@ export const deleteTeam = async (teamId, projectId) => {
     let url = `${API_BASE_URL}/teams/${teamIdNum}`;
 
     if (projectId) {
-      const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
+      const projectIdNum =
+        typeof projectId === "string" ? parseInt(projectId) : projectId;
       if (isNaN(projectIdNum)) {
         throw new TeamApiError("Invalid project ID format", 400);
       }
@@ -501,6 +526,7 @@ export const deleteTeam = async (teamId, projectId) => {
 
     const response = await fetch(url, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {

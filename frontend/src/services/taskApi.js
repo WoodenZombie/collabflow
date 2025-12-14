@@ -4,6 +4,8 @@
  * Uses nested routes: /api/projects/:projectId/tasks
  */
 
+import { getAuthHeaders } from "./authApi";
+
 const API_BASE_URL = "http://localhost:3000/api";
 
 /**
@@ -13,10 +15,10 @@ const API_BASE_URL = "http://localhost:3000/api";
  * Default mapping: 1 = pending, 2 = inProgress, 3 = review, 4 = completed
  */
 const mapStatusIdToStatus = (statusId) => {
-    const map = {
-    "Pending": "pending",
+  const map = {
+    Pending: "pending",
     "In Progress": "inProgress",
-    "Completed": "completed",
+    Completed: "completed",
   };
   return map[statusId] || "pending";
 };
@@ -114,6 +116,12 @@ const mapFrontendToBackend = (frontendTask) => {
     }
   }
 
+  // Add team_id only if it's provided and not null
+  // Don't send team_id if it's not available (backend may have default or handle it differently)
+  if (frontendTask.team_id !== undefined && frontendTask.team_id !== null) {
+    backendData.team_id = frontendTask.team_id;
+  }
+
   return backendData;
 };
 
@@ -130,7 +138,10 @@ export const getAllTasks = async (projectId) => {
     }
 
     const url = `${API_BASE_URL}/projects/${projectId}/tasks`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) {
       // If 500 error, return empty array instead of throwing (table might not exist yet)
       if (response.status === 500) {
@@ -166,7 +177,11 @@ export const getTaskById = async (projectId, taskId) => {
     }
 
     const response = await fetch(
-      `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`
+      `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      }
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -195,9 +210,7 @@ export const createTask = async (projectId, taskData) => {
       `${API_BASE_URL}/projects/${projectId}/tasks`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(backendData),
       }
     );
@@ -232,9 +245,7 @@ export const updateTask = async (projectId, taskId, taskData) => {
       `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
       {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(backendData),
       }
     );
@@ -267,6 +278,7 @@ export const deleteTask = async (projectId, taskId) => {
       `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
       {
         method: "DELETE",
+        headers: getAuthHeaders(),
       }
     );
     if (!response.ok) {

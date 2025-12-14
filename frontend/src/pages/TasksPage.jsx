@@ -22,7 +22,11 @@ import {
   deleteAppointment,
   updateAppointment,
 } from "../services/appointmentApi";
-import { getProjectById, updateProject as updateProjectApi, deleteProject as deleteProjectApi } from "../services/projectApi";
+import {
+  getProjectById,
+  updateProject as updateProjectApi,
+  deleteProject as deleteProjectApi,
+} from "../services/projectApi";
 import styles from "./tasksPage.module.css";
 
 import TeamCard from "../components/teamCard/TeamCard";
@@ -60,7 +64,8 @@ function TasksPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isCreateAppointmentModalOpen, setIsCreateAppointmentModalOpen] = useState(false);
+  const [isCreateAppointmentModalOpen, setIsCreateAppointmentModalOpen] =
+    useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [isTaskActionsModalOpen, setIsTaskActionsModalOpen] = useState(false);
   const [taskForActions, setTaskForActions] = useState(null);
@@ -68,7 +73,7 @@ function TasksPage() {
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [activeFilter, setActiveFilter] = useState('byTotalTasks');
+  const [activeFilter, setActiveFilter] = useState("byTotalTasks");
   const [projectName, setProjectName] = useState("");
   const [project, setProject] = useState(null);
   const [isEditProjectOpen, setIsEditProjectOpen] = useState(false);
@@ -86,9 +91,11 @@ function TasksPage() {
   const [teamToView, setTeamToView] = useState(null);
 
   // Add state for delete appointment modal
-  const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] = useState(false);
+  const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] =
+    useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState(null);
-  const [isEditAppointmentModalOpen, setIsEditAppointmentModalOpen] = useState(false);
+  const [isEditAppointmentModalOpen, setIsEditAppointmentModalOpen] =
+    useState(false);
   const [appointmentToEdit, setAppointmentToEdit] = useState(null);
 
   // Add state for delete task modal
@@ -110,7 +117,12 @@ function TasksPage() {
       }
       const projectIdNum = parseInt(projectId);
       const data = await getAllTasks(projectIdNum);
-      console.debug("TasksPage: fetched tasks count", data.length, "for project", projectIdNum);
+      console.debug(
+        "TasksPage: fetched tasks count",
+        data.length,
+        "for project",
+        projectIdNum
+      );
       setTasks(data);
     } catch (err) {
       console.error("Failed to load tasks:", err);
@@ -134,12 +146,17 @@ function TasksPage() {
       setError(null);
       const projectIdNum = parseInt(projectId);
       const data = await getAppointmentsByProject(projectIdNum);
-      console.debug("TasksPage: fetched appointments count", data.length, "for project", projectIdNum);
+      console.debug(
+        "TasksPage: fetched appointments count",
+        data.length,
+        "for project",
+        projectIdNum
+      );
       setAppointments(data);
     } catch (err) {
       console.error("Failed to load appointments:", err);
       // Only set error if we're on appointments tab
-      if (activeFilter === 'appointments') {
+      if (activeFilter === "appointments") {
         setError("Failed to load appointments. Please try again.");
       }
     } finally {
@@ -273,7 +290,7 @@ function TasksPage() {
    */
   const handleDeleteTaskClick = async (taskId) => {
     // Find the task to show in modal
-    const task = tasks.find(t => t.id === taskId);
+    const task = tasks.find((t) => t.id === taskId);
     if (task) {
       setTaskToDelete(task);
       setIsDeleteTaskModalOpen(true);
@@ -297,17 +314,19 @@ function TasksPage() {
       const projectIdNum = parseInt(projectId);
       const taskIdNum = parseInt(taskId);
       await deleteTask(projectIdNum, taskIdNum);
-      
+
       // Remove from local state
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
       // Remove from filtered tasks
-      setFilteredTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-      
+      setFilteredTasks((prevTasks) =>
+        prevTasks.filter((task) => task.id !== taskId)
+      );
+
       // Show success message
       setSuccessMessage("Task deleted successfully!");
       // Clear any previous errors
       setError(null);
-      
+
       // Close modal
       setIsDeleteTaskModalOpen(false);
       setTaskToDelete(null);
@@ -344,12 +363,25 @@ function TasksPage() {
       }
 
       const projectIdNum = parseInt(projectId);
+
+      // Determine team_id: use project's team_id, or first team from teams list, or undefined (don't send)
+      let teamId = project?.team_id;
+      if (!teamId && teams && teams.length > 0) {
+        teamId = parseInt(teams[0].id);
+      }
+
+      // Add team_id to task data only if we have a valid team_id
+      const taskData = {
+        ...newTask,
+        ...(teamId && { team_id: teamId }),
+      };
+
       // Create task on backend
-      const savedTask = await createTask(projectIdNum, newTask);
+      const savedTask = await createTask(projectIdNum, taskData);
       // Add to local state
       setTasks((prevTasks) => [...prevTasks, savedTask]);
       // Add to filtered tasks (should always match since we're creating for this project)
-        setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
+      setFilteredTasks((prevTasks) => [...prevTasks, savedTask]);
       // Close modal
       setIsCreateModalOpen(false);
     } catch (err) {
@@ -437,10 +469,10 @@ function TasksPage() {
 
       // Create appointment on backend
       const savedAppointment = await createAppointment(newAppointment);
-      
+
       // Refresh appointments list to get the latest data
       await loadAppointments();
-      
+
       // Show success message
       setSuccessMessage("Appointment created successfully!");
       // Close modal
@@ -459,7 +491,7 @@ function TasksPage() {
    */
   const handleDeleteAppointment = async (appointmentId) => {
     // Find the appointment to show in modal
-    const appointment = appointments.find(a => a.id === appointmentId);
+    const appointment = appointments.find((a) => a.id === appointmentId);
     if (appointment) {
       setAppointmentToDelete(appointment);
       setIsDeleteAppointmentModalOpen(true);
@@ -487,15 +519,15 @@ function TasksPage() {
     try {
       const projectIdNum = parseInt(projectId);
       await deleteAppointment(appointmentId, projectIdNum);
-      
+
       // Refresh appointments list to get the latest data
       await loadAppointments();
-      
+
       // Show success message
       setSuccessMessage("Appointment deleted successfully!");
       // Clear any previous errors
       setError(null);
-      
+
       // Close modal
       setIsDeleteAppointmentModalOpen(false);
       setAppointmentToDelete(null);
@@ -516,7 +548,11 @@ function TasksPage() {
     }
     try {
       const projectIdNum = parseInt(projectId);
-      const saved = await updateAppointment(updatedAppointment.id, projectIdNum, updatedAppointment);
+      const saved = await updateAppointment(
+        updatedAppointment.id,
+        projectIdNum,
+        updatedAppointment
+      );
       await loadAppointments();
       setSuccessMessage("Appointment updated successfully!");
       setIsEditAppointmentModalOpen(false);
@@ -600,15 +636,9 @@ function TasksPage() {
   const handleCreateTeam = async (teamData) => {
     const newTeam = await createTeam({ ...teamData, projectId });
     setTeams((prev) => [...prev, newTeam]);
-    // Link team to project by updating project.team_id
-    try {
-      if (projectId && newTeam?.id) {
-        const updated = await updateProjectApi(projectId, { team_id: newTeam.id, title: projectName, description: project?.description, status: project?.status });
-        setProject(updated);
-      }
-    } catch (e) {
-      console.warn("Failed to link team to project:", e);
-    }
+    // Note: Backend projects table doesn't have team_id column,
+    // so we don't try to link team to project via project update
+    // Teams are linked to projects through project_memberships or other relationships
     setIsTeamModalOpen(false);
   };
 
@@ -655,7 +685,9 @@ function TasksPage() {
       const projectIdNum = parseInt(projectId);
       const savedTask = await updateTask(projectIdNum, taskId, updatedTask);
       setTasks((prev) => prev.map((t) => (t.id === taskId ? savedTask : t)));
-      setFilteredTasks((prev) => prev.map((t) => (t.id === taskId ? savedTask : t)));
+      setFilteredTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? savedTask : t))
+      );
     } catch (err) {
       console.error("Failed to move task:", err);
       setError("Failed to move task. Please try again.");
@@ -783,8 +815,11 @@ function TasksPage() {
             ×
           </button>
         </div>
-        )}
-  <div className={styles.pageContainer} style={{ fontFamily: "Arial, sans-serif" }}>
+      )}
+      <div
+        className={styles.pageContainer}
+        style={{ fontFamily: "Arial, sans-serif" }}
+      >
         <TaskHeader
           projectName={projectName}
           onBack={projectId ? () => navigate("/") : null}
@@ -795,10 +830,13 @@ function TasksPage() {
           onDeleteProject={openDeleteProject}
         />
 
-        <FilterTabs activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+        <FilterTabs
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
 
         {/* Appointments Section - Only show when Appointments tab is active */}
-        {activeFilter === 'appointments' && (
+        {activeFilter === "appointments" && (
           <div style={{ marginBottom: "30px" }}>
             <AppointmentsCalendar
               appointments={appointments}
@@ -809,24 +847,28 @@ function TasksPage() {
         )}
 
         {/* Tasks Section - Only show when By Total Tasks tab is active */}
-        {activeFilter === 'byTotalTasks' && (
+        {activeFilter === "byTotalTasks" && (
           <main className={styles.main}>
             {/* Pending Section (static) */}
             <section
               className={styles.section}
               onDragOver={allowDrop}
-              onDrop={() => handleDropToStatus('pending')}
+              onDrop={() => handleDropToStatus("pending")}
             >
-              <ProgressBar count={totalPending} label="Pending" color="yellow" />
+              <ProgressBar
+                count={totalPending}
+                label="Pending"
+                color="yellow"
+              />
               {tasksByStatus.pending.length === 0 && (
-                <p style={{ color: '#777', fontStyle: 'italic' }}>No tasks</p>
+                <p style={{ color: "#777", fontStyle: "italic" }}>No tasks</p>
               )}
               {tasksByStatus.pending.map((task) => (
                 <div
                   key={task.id}
                   draggable
                   onDragStart={() => handleDragStart(task.id)}
-                  style={{ cursor: 'grab' }}
+                  style={{ cursor: "grab" }}
                 >
                   <TaskCard
                     title={task.title}
@@ -834,8 +876,18 @@ function TasksPage() {
                     priorityLabel={task.priority}
                     status={task.status}
                     taskCount={task.taskCount}
-                    responsiblePerson={task.responsiblePerson || task.assigned_to || task.assignee || (task.user && task.user.name)}
-                    endDate={task.endDate || task.due_date || task.deadline || task.endingDate}
+                    responsiblePerson={
+                      task.responsiblePerson ||
+                      task.assigned_to ||
+                      task.assignee ||
+                      (task.user && task.user.name)
+                    }
+                    endDate={
+                      task.endDate ||
+                      task.due_date ||
+                      task.deadline ||
+                      task.endingDate
+                    }
                     onClick={() => openTaskActions(task)}
                   />
                 </div>
@@ -846,18 +898,22 @@ function TasksPage() {
             <section
               className={styles.section}
               onDragOver={allowDrop}
-              onDrop={() => handleDropToStatus('inProgress')}
+              onDrop={() => handleDropToStatus("inProgress")}
             >
-              <ProgressBar count={totalInProgress} label="In Progress" color="purple" />
+              <ProgressBar
+                count={totalInProgress}
+                label="In Progress"
+                color="purple"
+              />
               {tasksByStatus.inProgress.length === 0 && (
-                <p style={{ color: '#777', fontStyle: 'italic' }}>No tasks</p>
+                <p style={{ color: "#777", fontStyle: "italic" }}>No tasks</p>
               )}
               {tasksByStatus.inProgress.map((task) => (
                 <div
                   key={task.id}
                   draggable
                   onDragStart={() => handleDragStart(task.id)}
-                  style={{ cursor: 'grab' }}
+                  style={{ cursor: "grab" }}
                 >
                   <TaskCard
                     title={task.title}
@@ -865,8 +921,18 @@ function TasksPage() {
                     priorityLabel={task.priority}
                     status={task.status}
                     taskCount={task.taskCount}
-                    responsiblePerson={task.responsiblePerson || task.assigned_to || task.assignee || (task.user && task.user.name)}
-                    endDate={task.endDate || task.due_date || task.deadline || task.endingDate}
+                    responsiblePerson={
+                      task.responsiblePerson ||
+                      task.assigned_to ||
+                      task.assignee ||
+                      (task.user && task.user.name)
+                    }
+                    endDate={
+                      task.endDate ||
+                      task.due_date ||
+                      task.deadline ||
+                      task.endingDate
+                    }
                     onClick={() => openTaskActions(task)}
                   />
                 </div>
@@ -877,18 +943,18 @@ function TasksPage() {
             <section
               className={styles.section}
               onDragOver={allowDrop}
-              onDrop={() => handleDropToStatus('completed')}
+              onDrop={() => handleDropToStatus("completed")}
             >
               <ProgressBar count={totalDone} label="Completed" color="green" />
               {tasksByStatus.completed.length === 0 && (
-                <p style={{ color: '#777', fontStyle: 'italic' }}>No tasks</p>
+                <p style={{ color: "#777", fontStyle: "italic" }}>No tasks</p>
               )}
               {tasksByStatus.completed.map((task) => (
                 <div
                   key={task.id}
                   draggable
                   onDragStart={() => handleDragStart(task.id)}
-                  style={{ cursor: 'grab' }}
+                  style={{ cursor: "grab" }}
                 >
                   <TaskCard
                     title={task.title}
@@ -896,8 +962,18 @@ function TasksPage() {
                     priorityLabel={task.priority}
                     status={task.status}
                     taskCount={task.taskCount}
-                    responsiblePerson={task.responsiblePerson || task.assigned_to || task.assignee || (task.user && task.user.name)}
-                    endDate={task.endDate || task.due_date || task.deadline || task.endingDate}
+                    responsiblePerson={
+                      task.responsiblePerson ||
+                      task.assigned_to ||
+                      task.assignee ||
+                      (task.user && task.user.name)
+                    }
+                    endDate={
+                      task.endDate ||
+                      task.due_date ||
+                      task.deadline ||
+                      task.endingDate
+                    }
                     onClick={() => openTaskActions(task)}
                   />
                 </div>
@@ -907,21 +983,28 @@ function TasksPage() {
         )}
 
         {/* Teams Section - Only show when Teams tab is active */}
-        {activeFilter === 'teams' && (
+        {activeFilter === "teams" && (
           <div className={styles.teamsGrid}>
             {teamToView ? (
               <TeamDetails
                 team={teamToView}
-                tasks={filteredTasks.filter(t => t.team_id === teamToView.id)}
-                onEditTeam={(t) => { setTeamToEdit(t); setIsTeamModalOpen(true); }}
+                tasks={filteredTasks.filter((t) => t.team_id === teamToView.id)}
+                onEditTeam={(t) => {
+                  setTeamToEdit(t);
+                  setIsTeamModalOpen(true);
+                }}
                 onDeleteTeam={(id) => handleDeleteTeamClick({ id })}
                 onRemoveMember={(teamId, userId) => {
                   // Placeholder: implement backend removal if available
-                  console.warn('Remove member not implemented', teamId, userId);
+                  console.warn("Remove member not implemented", teamId, userId);
                 }}
                 onAddMemberByEmail={(teamId, email) => {
                   // Placeholder: implement backend add via email if available
-                  console.warn('Add member by email not implemented', teamId, email);
+                  console.warn(
+                    "Add member by email not implemented",
+                    teamId,
+                    email
+                  );
                 }}
               />
             ) : (
@@ -1064,7 +1147,10 @@ function TasksPage() {
       {isTaskActionsModalOpen && taskForActions && (
         <TaskDetailsModal
           task={taskForActions}
-          onClose={() => { setIsTaskActionsModalOpen(false); setTaskForActions(null); }}
+          onClose={() => {
+            setIsTaskActionsModalOpen(false);
+            setTaskForActions(null);
+          }}
           onEdit={() => handleOpenEditModal(taskForActions.id)}
           onDelete={() => handleDeleteTaskClick(taskForActions.id)}
         />
