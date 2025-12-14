@@ -80,6 +80,60 @@
   padding-left: 4px;
 }
 
+.adminButton {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2), 0 1px 2px rgba(0, 0, 0, 0.06);
+  letter-spacing: 0.2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.adminButton::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.adminButton:hover::before {
+  left: 100%;
+}
+
+.adminButton:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.adminButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.adminButton:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #6366f1;
+  ring-offset: 2px;
+}
+
 .logoutButton {
   padding: 10px 24px;
   background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
@@ -97,13 +151,18 @@
 }
 
 .logoutButton::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
   transition: left 0.5s;
 }
 
@@ -147,6 +206,12 @@
     gap: 10px;
   }
 
+  .adminButton {
+    padding: 8px 16px;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
   .userInfo {
     padding: 8px 14px;
     flex-shrink: 1;
@@ -185,6 +250,11 @@
     gap: 8px;
   }
 
+  .adminButton {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
   .userInfo {
     padding: 6px 12px;
     gap: 4px;
@@ -203,4 +273,3 @@
     font-size: 12px;
   }
 }
-

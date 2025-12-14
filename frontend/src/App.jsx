@@ -3,6 +3,7 @@ import { useAuth } from "./context/AuthContext";
 import Dashboard from "./pages/Dashboard";
 import TasksPage from "./pages/TasksPage";
 import TeamDetailsPage from "./pages/TeamDetailsPage";
+import AuditLogsPage from "./pages/AuditLogsPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -14,9 +15,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div style={{ padding: "40px", textAlign: "center" }}>
-        Loading...
-      </div>
+      <div style={{ padding: "40px", textAlign: "center" }}>Loading...</div>
     );
   }
 
@@ -50,7 +49,18 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />} />
+        <Route
+          path="/admin/audit-logs"
+          element={
+            <ProtectedRoute requiredRole="Admin">
+              <AuditLogsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="*"
+          element={<Navigate to={isAuthenticated ? "/" : "/login"} replace />}
+        />
       </Routes>
     </>
   );
