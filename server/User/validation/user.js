@@ -74,3 +74,16 @@ exports.userRegValidation = [
         next();
     }
 ];
+
+exports.oauthValidation = [
+    body('idToken')
+      .notEmpty()
+      .withMessage('idToken is required.'),
+    (req, res, next) => {
+      const result = validationResult(req);
+      if (!result.isEmpty()) {
+        return res.status(400).json({ errors: result.array() });
+      }
+      next();
+    }
+  ];

@@ -6,13 +6,16 @@ const refreshTokenController = require('../controller/refreshTokenController');
 const registerController = require('../controller/registerController');
 const {userAuthValidation} = require('../validation/user');
 const {userRegValidation} = require('../validation/user');
+const oauthController = require('../controller/oauthController');
+const { oauthValidation } = require('../validation/user');
 
 //validation only for registering and authorization things
 router
 .post('/auth', userAuthValidation, authController.handleLogin)
 .get('/logout', logoutController.handleLogout)
 .get('/refresh', refreshTokenController.handleRefreshToken)
-.post('/register', userRegValidation, registerController.handleNewUser);
-
+.post('/register', userRegValidation, registerController.handleNewUser)
+.post('/oauth/google', oauthValidation, oauthController.handleGoogleOAuth);
+  
 module.exports = router;
 

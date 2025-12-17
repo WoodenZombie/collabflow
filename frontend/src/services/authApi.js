@@ -150,3 +150,20 @@ export const refreshAccessToken = async () => {
     throw error;
   }
 };
+
+export async function googleLogin(idToken) {
+  const res = await fetch(`${API_BASE_URL}/oauth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+    credentials: "include",
+  });
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
+
+  if (!res.ok) {
+    throw new Error(data.message || `Google auth failed (${res.status})`);
+  }
+  return data; // { accessToken }
+}

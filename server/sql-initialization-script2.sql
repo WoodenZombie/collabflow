@@ -11,6 +11,25 @@ CREATE TABLE IF NOT EXISTS users (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
+-- OAUTH IDENTITIES (Google/Apple login link)
+CREATE TABLE IF NOT EXISTS oauth_identities (
+  id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  provider VARCHAR(50) NOT NULL,
+  provider_user_id VARCHAR(255) NOT NULL,
+  email VARCHAR(150) NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+  PRIMARY KEY (id),
+  UNIQUE KEY uniq_provider_user (provider, provider_user_id),
+  KEY idx_user_id (user_id),
+
+  CONSTRAINT fk_oauth_user
+    FOREIGN KEY (user_id)
+    REFERENCES users(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- TEAMS
 CREATE TABLE IF NOT EXISTS teams (
   id INT AUTO_INCREMENT PRIMARY KEY,

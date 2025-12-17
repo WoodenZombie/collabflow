@@ -1,3 +1,4 @@
+import { GoogleLogin } from "@react-oauth/google";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -8,15 +9,45 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, googleLogin, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  console.log("VITE_GOOGLE_CLIENT_ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!window.google) return;
+  
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: async (response) => {
+        const result = await googleLogin(response.credential);
+  
+        if (result.success) {
+          navigate("/");
+        } else {
+          setError("Google sign-in failed. Please try again.");
+        }
+      },
+    });
+  
+    window.google.accounts.id.renderButton(
+      document.getElementById("google-signin"),
+      {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+        shape: "rectangular",
+        width: 300,
+      }
+    );
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,6 +117,16 @@ function Login() {
             {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
+        
+        <GoogleLogin
+  onSuccess={(credentialResponse) => {
+    console.log("JWT FROM GOOGLE:", credentialResponse.credential);
+    googleLogin(credentialResponse.credential);
+  }}
+  onError={() => {
+    console.error("Google login failed");
+  }}
+/>
 
         <div className={styles.footer}>
           <p>
