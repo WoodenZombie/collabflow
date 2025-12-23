@@ -30,7 +30,7 @@ const handleLogin = async (req, res) =>{
         await User.updateRefreshToken(foundUser.id, refreshToken);
 
         //saving jwt token to cookies in httpOnly, that it didn't get access throug javascript
-        res.cookie('jwt', refreshToken, {httpOnly: true, sameSite: 'None', /*secure:true,*/ maxAge: 24*60*60*1000});
+        res.cookie('jwt', refreshToken, {httpOnly: true, sameSite: 'None', secure: process.env.NODE_ENV === 'production', maxAge: 24*60*60*1000});
         //comment  secure:true, if you test it in development mode, but uncomment it if it's in production or browser
         res.json({accessToken})
     } else {

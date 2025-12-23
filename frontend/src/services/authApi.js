@@ -3,7 +3,7 @@
  * Handles login, signup, and user authentication requests
  */
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 /**
  * Get authorization headers with token
@@ -36,18 +36,18 @@ export const login = async (email, password) => {
     if (!response.ok) {
       // Try to get error message from backend
       const errorData = await response.json().catch(() => ({}));
-      
+
       // Backend might return validation errors in format: { errors: [{ msg: "...", ... }] }
       if (errorData.errors && Array.isArray(errorData.errors)) {
         const errorMessages = errorData.errors.map(err => err.msg || err.message).join(", ");
         throw new Error(errorMessages);
       }
-      
+
       // Handle specific status codes
       if (response.status === 401) {
         throw new Error("Invalid email or password. Please check your credentials.");
       }
-      
+
       throw new Error(errorData.message || `Login failed: ${response.statusText}`);
     }
 
@@ -81,16 +81,16 @@ export const signup = async (name, email, password, confirmPassword) => {
       if (response.status === 409) {
         throw new Error("User with this email already exists");
       }
-      
+
       // Try to parse validation errors
       const errorData = await response.json().catch(() => ({}));
-      
+
       // Backend returns validation errors in format: { errors: [{ msg: "...", ... }] }
       if (errorData.errors && Array.isArray(errorData.errors)) {
         const errorMessages = errorData.errors.map(err => err.msg || err.message).join(", ");
         throw new Error(errorMessages);
       }
-      
+
       throw new Error(errorData.message || `Signup failed: ${response.statusText}`);
     }
 

@@ -6,7 +6,7 @@
 
 import { getAuthHeaders } from "./authApi";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 /**
  * Map backend status to frontend status
@@ -72,12 +72,12 @@ const mapBackendToFrontend = (backendProject) => {
  */
 const formatDateForBackend = (dateString) => {
   if (!dateString) return null;
-  
+
   // If already in YYYY-MM-DD format, return as is
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
   }
-  
+
   // Try to parse MM/DD/YY format
   try {
     const parts = dateString.split("/");
@@ -87,7 +87,7 @@ const formatDateForBackend = (dateString) => {
       const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
       return `${year}-${month}-${day}`;
     }
-    
+
     // Try parsing as Date object
     const date = new Date(dateString);
     if (!isNaN(date.getTime())) {
@@ -99,7 +99,7 @@ const formatDateForBackend = (dateString) => {
   } catch (error) {
     console.warn("Error formatting date for backend:", error);
   }
-  
+
   return null;
 };
 
@@ -241,7 +241,7 @@ export const deleteProject = async (projectId) => {
       method: "DELETE",
       headers: getAuthHeaders(),
     });
-    
+
     if (response.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -255,7 +255,7 @@ export const deleteProject = async (projectId) => {
         errorData.message || `HTTP error! status: ${response.status}`
       );
     }
-    
+
     const data = await response.json();
     return data;
   } catch (error) {
@@ -271,7 +271,7 @@ export const deleteProject = async (projectId) => {
 export const createProject = async (projectData) => {
   try {
     console.log("createProject called with projectData:", projectData);
-    
+
     const backendData = mapFrontendToBackend(projectData);
     console.log("Mapped backendData:", backendData);
 
@@ -319,7 +319,7 @@ export const createProject = async (projectData) => {
       console.error("403 Forbidden - Token might be expired or invalid");
       const errorData = await response.json().catch(() => ({}));
       console.error("403 Error response:", errorData);
-      
+
       // Clear token and redirect to login
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -330,17 +330,17 @@ export const createProject = async (projectData) => {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error("Error response data:", errorData);
-      
+
       // Build detailed error message
       let errorMessage = `HTTP error! status: ${response.status}`;
-      
+
       if (errorData.message) {
         errorMessage = errorData.message;
       } else if (errorData.errors && Array.isArray(errorData.errors)) {
         const validationErrors = errorData.errors.map(e => e.msg || e.message || JSON.stringify(e)).join(", ");
         errorMessage = validationErrors || errorMessage;
       }
-      
+
       console.error("Throwing error:", errorMessage);
       throw new Error(errorMessage);
     }
@@ -366,7 +366,7 @@ export const createProject = async (projectData) => {
 export const updateProject = async (projectId, projectData) => {
   try {
     console.log("updateProject called with projectId:", projectId, "projectData:", projectData);
-    
+
     const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
     const backendData = mapFrontendToBackend(projectData);
     console.log("Mapped backendData:", backendData);

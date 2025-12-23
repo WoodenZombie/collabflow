@@ -6,7 +6,7 @@
 
 import { getAuthHeaders } from "./authApi";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 /**
  * Map backend audit log data to frontend format
@@ -67,9 +67,8 @@ export const getAuditLogs = async (filters = {}) => {
     if (filters.startDate) queryParams.append("startDate", filters.startDate);
     if (filters.endDate) queryParams.append("endDate", filters.endDate);
 
-    const url = `${API_BASE_URL}/audit-logs${
-      queryParams.toString() ? `?${queryParams.toString()}` : ""
-    }`;
+    const url = `${API_BASE_URL}/audit-logs${queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
 
     const response = await fetch(url, {
       method: "GET",
@@ -91,7 +90,7 @@ export const getAuditLogs = async (filters = {}) => {
       const errorData = await parseErrorResponse(response);
       throw new Error(
         errorData.message ||
-          `Failed to fetch audit logs: ${response.statusText}`
+        `Failed to fetch audit logs: ${response.statusText}`
       );
     }
 

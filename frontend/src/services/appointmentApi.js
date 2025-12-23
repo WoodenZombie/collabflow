@@ -5,7 +5,7 @@
 
 import { getAuthHeaders } from "./authApi";
 
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 /**
  * Map backend appointment data to frontend format
@@ -110,7 +110,7 @@ export const getAppointmentsByProject = async (projectId) => {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message ||
-          `Failed to fetch appointments: ${response.status} ${response.statusText}`
+        `Failed to fetch appointments: ${response.status} ${response.statusText}`
       );
     }
 
@@ -209,7 +209,7 @@ export const deleteAppointment = async (appointmentId, projectId) => {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message ||
-          `Failed to delete appointment: ${response.status} ${response.statusText}`
+        `Failed to delete appointment: ${response.status} ${response.statusText}`
       );
     }
 
@@ -255,7 +255,7 @@ export const updateAppointment = async (
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message ||
-          `Failed to update appointment: ${response.status} ${response.statusText}`
+        `Failed to update appointment: ${response.status} ${response.statusText}`
       );
     }
 

@@ -22,7 +22,7 @@ function issueTokensAndSetCookie(res, foundUser) {
   res.cookie('jwt', refreshToken, {
     httpOnly: true,
     sameSite: 'None',
-    // secure: true,
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 24 * 60 * 60 * 1000,
   });
 
