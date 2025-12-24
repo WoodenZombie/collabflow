@@ -1,5 +1,6 @@
 .headerStyle {
   margin-bottom: 1.5rem;
+  width: 100%;
 }
 
 .titleStyle {
@@ -38,6 +39,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
 }
 
 .iconButtonStyle {

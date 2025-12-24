@@ -1,0 +1,155 @@
+.overlayStyle {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalStyle {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  position: relative;
+}
+
+.headerStyle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.titleStyle {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.closeButtonStyle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background-color: #f5f5f5;
+  color: #666;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButtonStyle:hover {
+  background-color: #e0e0e0;
+}
+
+.fieldContainerStyle {
+  margin-bottom: 20px;
+}
+
+.labelStyle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2C2C2C;
+  text-align: start;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.inputStyle {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 12px;
+  background-color: #F2F2F7;
+  color: #8E8E93;
+  box-sizing: border-box;
+}
+
+.inputStyle:focus {
+  outline: none;
+  background-color: #e8e8ed;
+}
+
+.errorStyle {
+  font-size: 12px;
+  color: #dc143c;
+  margin-top: 4px;
+  margin-left: 4px;
+  text-align: start;
+}
+
+.submitButtonStyle {
+  width: 100%;
+  padding: 20px;
+  background-color: #1a1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 24px;
+}
+
+.submitButtonStyle:hover {
+  background-color: #333333;
+}
+
+/* Ensure textarea uses same styles as input */
+.inputStyle[type="textarea"],
+textarea.inputStyle {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Actions row for edit appointment modal */
+.actionsRow {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.primaryButtonStyle {
+  flex: 1;
+  padding: 16px;
+  background-color: #4F46E5; /* indigo-600 */
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.primaryButtonStyle:hover {
+  background-color: #4338CA; /* indigo-700 */
+}
+
+.cancelButtonStyle {
+  flex: 1;
+  padding: 16px;
+  background-color: #F2F2F7;
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}

@@ -6,8 +6,9 @@ import styles from "./createTask.module.css";
  * Props:
  * - onClose: function (callback to close modal)
  * - onCreate: function (callback when form is submitted with task data)
+ * - availableTeams: array of team objects from the project
  */
-function CreateTaskForm({ onClose, onCreate }) {
+function CreateTaskForm({ onClose, onCreate, availableTeams = [] }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -18,9 +19,6 @@ function CreateTaskForm({ onClose, onCreate }) {
   });
 
   const [errors, setErrors] = useState({});
-
-  // Available teams
-  const availableTeams = ["Frontend", "Backend", "QA"];
 
   // Handle input changes
   const handleChange = (field, value) => {
@@ -39,8 +37,10 @@ function CreateTaskForm({ onClose, onCreate }) {
 
   // Handle team selection
   const handleTeamChange = (e) => {
-    const selectedTeam = e.target.value;
-    if (selectedTeam && !formData.teams.includes(selectedTeam)) {
+    const selectedTeamId = e.target.value;
+    const selectedTeam = availableTeams.find(team => String(team.id) === selectedTeamId);
+    
+    if (selectedTeam && !formData.teams.some(team => team.id === selectedTeam.id)) {
       setFormData((prev) => ({
         ...prev,
         teams: [...prev.teams, selectedTeam],
@@ -54,7 +54,7 @@ function CreateTaskForm({ onClose, onCreate }) {
   const handleRemoveTeam = (teamToRemove) => {
     setFormData((prev) => ({
       ...prev,
-      teams: prev.teams.filter((team) => team !== teamToRemove),
+      teams: prev.teams.filter((team) => team.id !== teamToRemove.id),
     }));
   };
 
@@ -203,21 +203,21 @@ function CreateTaskForm({ onClose, onCreate }) {
                 Choose team
               </option>
               {availableTeams.map((team) => (
-                <option key={team} value={team}>
-                  {team}
+                <option key={team.id} value={team.id}>
+                  {team.name}
                 </option>
               ))}
             </select>
             {formData.teams.length > 0 && (
               <div className={styles.teamTagsContainerStyle}>
                 {formData.teams.map((team) => (
-                  <div key={team} className={styles.teamTagStyle}>
-                    {team}
+                  <div key={team.id} className={styles.teamTagStyle}>
+                    {team.name}
                     <button
                       type="button"
                       className={styles.removeTeamButtonStyle}
                       onClick={() => handleRemoveTeam(team)}
-                      aria-label={`Remove ${team}`}
+                      aria-label={`Remove ${team.name}`}
                     >
                       <div className="cross"></div>
                     </button>

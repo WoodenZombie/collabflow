@@ -1,9 +1,18 @@
-main {
-  display: flex;
-  /* flex-direction: row; */
-  gap: 2rem;
-  justify-content: center;
-  flex-wrap: wrap;
+/* Page container with static width based on viewport */
+.pageContainer {
+  width: 100%;
+  flex: 1 1 auto; /* grow to fill available space */
+  margin: 0; /* occupy full width next to sidebar */
+  padding: 20px; /* page padding */
+  box-sizing: border-box;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* even 3 columns */
+  gap: 3rem; /* increased gap for wider columns */
+  width: 100%;
+  max-width: none; /* remove any width restrictions */
 }
 .deleteButtonStyle {
   position: fixed;
@@ -25,17 +34,23 @@ main {
   z-index: 100;
 }
 
-section {
+.section {
   background: #f1f5f9;
-  padding: 32px 16px;
+  padding: 40px 24px; /* increased padding for wider feel */
   border-radius: 32px;
+  width: 100%;
+  min-width: 350px; /* ensure minimum width for content */
+}
+
+/* Teams grid layout to better utilize space */
+.teamsGrid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
 }
 
 .deleteButtonStyle:hover {
   background-color: #cc0000;
 }
-@media screen and (max-width: 900px) {
-  main {
-    flex-direction: column;
-  }
-}
+/* Keep columns inline across screen sizes as requested */

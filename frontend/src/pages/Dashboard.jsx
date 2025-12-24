@@ -122,7 +122,12 @@ function Dashboard() {
       console.log("Project creation completed successfully");
     } catch (err) {
       console.error("Failed to create project:", err);
-      setError("Failed to create project. Please try again.");
+      console.error("Error object:", err);
+      console.error("Error message:", err.message);
+      
+      // Show detailed error message to user
+      const errorMessage = err.message || "Failed to create project. Please try again.";
+      setError(errorMessage);
       // Don't close modal on error so user can try again
     }
   };
@@ -160,15 +165,15 @@ function Dashboard() {
       };
       
       // Update the project in local state
-      setProjects((prevProjects) =>
+    setProjects((prevProjects) =>
         prevProjects.map((p) =>
           p.id === savedProject.id.toString() ? projectWithProgress : p
         )
-      );
+    );
       
       // Close modal after successful update
-      setIsEditModalOpen(false);
-      setProjectToEdit(null);
+    setIsEditModalOpen(false);
+    setProjectToEdit(null);
       setError(null);
       
       console.log("Project update completed successfully");
@@ -198,14 +203,14 @@ function Dashboard() {
       await deleteProject(projectId);
       
       // Remove the project from local state immediately (optimistic update)
-      setProjects((prevProjects) =>
+    setProjects((prevProjects) =>
         prevProjects.filter((p) => p.id !== projectId.toString())
-      );
+    );
       
       // Close modal and clear selected project
-      setIsDeleteModalOpen(false);
-      setProjectToDelete(null);
-      
+    setIsDeleteModalOpen(false);
+    setProjectToDelete(null);
+       
       console.log("Project deleted successfully");
     } catch (err) {
       console.error("Failed to delete project:", err);
@@ -214,17 +219,49 @@ function Dashboard() {
     }
   };
 
+  // Derived quick stats
+  const username = "User"; // placeholder
+  const totalProjects = projects.length;
+  const totalPendingTasks = projects.reduce((sum, p) => sum + ((p.progress?.waiting || 0) + (p.progress?.inProgress || 0)), 0);
+  const totalCompletedTasks = projects.reduce((sum, p) => sum + (p.progress?.done || 0), 0);
+
+  const formatDate = (date) => {
+    return new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric" }).format(date);
+  };
+
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <h1>Projects</h1>
-        <button
-          onClick={handleOpenCreateModal}
-          className={styles.createButton}
-          title="Create Project"
-        >
-          +
-        </button>
+      {/* Command Center Header */}
+      <div className={styles.ccHeader}>
+        <div>
+          <h1 className={styles.ccTitle}>Hello, {username}</h1>
+          <div className={styles.ccSubtitle}>{formatDate(new Date())}</div>
+        </div>
+        <div>
+          <button
+            onClick={handleOpenCreateModal}
+            className={styles.primaryButton}
+            title="Create Project"
+          >
+            Create Project
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Stats */}
+      <div className={styles.quickStatsRow}>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Active Projects</div>
+          <div className={styles.statValue}>{totalProjects}</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Pending Tasks</div>
+          <div className={styles.statValue}>{totalPendingTasks}</div>
+        </div>
+        <div className={styles.statCard}>
+          <div className={styles.statLabel}>Completed Tasks</div>
+          <div className={styles.statValue}>{totalCompletedTasks}</div>
+        </div>
       </div>
 
       {/* Error Display */}
@@ -244,30 +281,19 @@ function Dashboard() {
           <p>No projects available</p>
         </div>
       ) : (
-        <div className={styles.projectCardContainer}>
+        <div className={styles.projectGrid}>
           {projects.map((project) => {
             // Validate project has required fields
             if (!project || !project.id) {
               return null;
             }
             return (
-              <div key={project.id}>
-                <ProjectCard project={project} />
-                <div className={styles.projectActions}>
-                  <button
-                    className={`${styles.button} ${styles.edit}`}
-                    onClick={() => handleOpenEditModal(project)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className={`${styles.button} ${styles.delete}`}
-                    onClick={() => handleOpenDeleteModal(project)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+              <ProjectCard
+                key={project.id}
+                project={project}
+                onEdit={() => handleOpenEditModal(project)}
+                onDelete={() => handleOpenDeleteModal(project)}
+              />
             );
           })}
         </div>

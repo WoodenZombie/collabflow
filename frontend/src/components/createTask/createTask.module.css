@@ -135,7 +135,7 @@
 .submitButtonStyle {
   width: 100%;
   padding: 20px;
-  background-color: #007AFF;
+  background-color: #1a1a1a;
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -147,5 +147,5 @@
 }
 
 .submitButtonStyle:hover {
-  background-color: #1976d2;
+  background-color: #333333;
 }

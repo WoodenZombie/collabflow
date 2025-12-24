@@ -1,0 +1,211 @@
+.container {
+  padding: 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  color: #111827; /* gray-900 */
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #6b7280; /* gray-500 */
+  margin: 0;
+}
+
+/* Error Message */
+.errorMessage {
+  background-color: #fef2f2; /* red-50 */
+  border: 1px solid #fecaca; /* red-200 */
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+  color: #dc2626; /* red-600 */
+}
+
+.errorMessage p {
+  margin: 0;
+}
+
+/* Loading State */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280; /* gray-500 */
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280; /* gray-500 */
+}
+
+/* Table Container */
+.tableContainer {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table thead {
+  background-color: #f9fafb; /* gray-50 */
+  border-bottom: 2px solid #e5e7eb; /* gray-200 */
+}
+
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151; /* gray-700 */
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid #e5e7eb; /* gray-200 */
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f9fafb; /* gray-50 */
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table td {
+  padding: 12px 16px;
+  color: #111827; /* gray-900 */
+  vertical-align: top;
+}
+
+/* Cell Styles */
+.timestampCell {
+  white-space: nowrap;
+  font-family: monospace;
+  font-size: 0.8125rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.userCell {
+  min-width: 150px;
+}
+
+.userName {
+  font-weight: 600;
+  color: #111827; /* gray-900 */
+  margin-bottom: 2px;
+}
+
+.userEmail {
+  font-size: 0.75rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.actionCell {
+  min-width: 100px;
+}
+
+.actionBadge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: #dbeafe; /* blue-100 */
+  color: #1e40af; /* blue-800 */
+}
+
+.entityTypeCell {
+  text-transform: capitalize;
+  color: #374151; /* gray-700 */
+}
+
+.entityIdCell {
+  font-family: monospace;
+  font-size: 0.8125rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.ipCell {
+  font-family: monospace;
+  font-size: 0.8125rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.detailsCell {
+  max-width: 300px;
+}
+
+.details {
+  cursor: pointer;
+}
+
+.detailsSummary {
+  color: #4f46e5; /* indigo-600 */
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+}
+
+.detailsSummary:hover {
+  color: #4338ca; /* indigo-700 */
+  text-decoration: underline;
+}
+
+.detailsContent {
+  margin-top: 8px;
+  padding: 12px;
+  background-color: #f9fafb; /* gray-50 */
+  border: 1px solid #e5e7eb; /* gray-200 */
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #374151; /* gray-700 */
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .tableContainer {
+    overflow-x: scroll;
+  }
+
+  .table {
+    font-size: 0.75rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 12px;
+  }
+}
