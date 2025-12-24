@@ -1,15 +1,13 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "common/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
+      "source": "/api/(.*)",
+      "destination": "/server/common/index.js"
+    },
     {
-      "src": "/(.*)",
-      "dest": "common/index.js"
+      "source": "/(.*)",
+      "destination": "/frontend/dist/$1"
     }
   ]
 }
