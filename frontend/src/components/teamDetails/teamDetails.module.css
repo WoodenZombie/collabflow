@@ -1,0 +1,182 @@
+.container {
+  width: 100%;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Changed from space-between to keep buttons near title */
+  gap: 16px; /* Add space between title and buttons */
+  margin-bottom: 16px;
+  width: 100%;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #333;
+  margin: 0;
+}
+
+.headerActions { display: flex; gap: 8px; }
+
+.iconButton {
+  border: none;
+  background: #F2F2F7;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.deleteButton {
+  border: none;
+  background: #DC143C;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Disabled visual state for header actions */
+.disabled {
+  opacity: 0.5;
+  pointer-events: none; /* no clicks */
+  cursor: not-allowed !important;
+}
+
+.splitGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px; /* space between divider above and columns */
+}
+
+@media (max-width: 768px) {
+  .splitGrid { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 16px;
+  min-height: 200px; /* Minimum height instead of fixed */
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the title */
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.addButton {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: #4F46E5;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addButton:hover {
+  background: #4338CA;
+}
+
+.membersList { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  flex: 1;
+  margin-bottom: 12px; /* Space before add member section */
+}
+
+.tasksList { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+  flex: 1;
+  margin-bottom: 12px; /* Match members list spacing for consistency */
+}
+.empty { 
+  color: #777; 
+  font-style: italic; 
+  text-align: center; 
+  margin-top: 20px; /* Same distance from headers */
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: #F2F2F7;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.memberInfo { display: flex; align-items: center; gap: 8px; }
+
+.removeIcon { border: none; background: transparent; cursor: pointer; }
+
+.addMemberRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: auto; /* Push to bottom of column */
+}
+
+.input {
+  flex: 1; /* Take remaining space next to button */
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background-color: #F2F2F7;
+  color: #333;
+}
+
+.primaryButton {
+  padding: 12px 16px;
+  background-color: #4F46E5;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.taskRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  background: #F2F2F7;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.taskTitle { font-weight: 600; color: #333; }
+.taskStatus { color: #555; }
+
+/* Divider spacing and style */
+.divider {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid #e5e7eb; /* light gray */
+}

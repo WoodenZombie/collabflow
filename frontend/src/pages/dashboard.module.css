@@ -1,34 +1,67 @@
+
 .container {
-  padding: 20px;
+  padding: 24px;
   width: 100%;
 }
 
-.header {
+/* Command Center Header */
+.ccHeader {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  align-items: flex-end;
+  margin-bottom: 16px;
 }
 
-.header h1 {
+.ccTitle {
   font-size: 2rem;
-  margin: 0;
-  color: #333;
+  font-weight: 800;
+  margin: 0 0 8px 0; /* Add 8px margin-bottom for distance from date */
+  color: #111827; /* gray-900 */
 }
 
-.createButton {
-  font-size: 1.5rem;
-  padding: 8px 16px;
+.ccSubtitle {
+  font-size: 1rem;
+  color: #6B7280; /* gray-500 */
+}
+
+.primaryButton {
+  background-color: #4F46E5; /* indigo-600 */
+  color: #fff;
   border: none;
-  border-radius: 8px;
-  background-color: #4caf50;
-  color: white;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.3s;
 }
 
-.createButton:hover {
-  background-color: #45a049;
+.primaryButton:hover {
+  background-color: #4338CA; /* indigo-700 */
+}
+
+/* Quick Stats Row */
+.quickStatsRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  padding: 16px;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  color: #6B7280;
+}
+
+.statValue {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #111827;
 }
 
 .button {
@@ -36,45 +69,42 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background-color 0.2s;
   font-size: 0.85rem;
+  color: #FFFFFF;
 }
 
 .button.edit {
-  background-color: #3b5174;
-  color: white;
+  background-color: #6366F1;
 }
 
 .button.edit:hover {
-  opacity: 0.8;
+  background-color: #4F46E5;
 }
 
 .button.delete {
-  background-color: #ef4444;
-  color: white;
+  background-color: #EF4444;
 }
 
-.projectCardContainer {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
+.button.delete:hover {
+  background-color: #DC2626;
 }
 
-.projectCardContainer > div {
-  background-color: #ffffff;
-  border-radius: 16px; 
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  gap: 16px; 
+.projectGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
-.projectActions {
-    display: flex;
-    justify-content: space-evenly;
-    margin-top: 20px;
+
+/* Responsive grid breakpoints */
+@media (max-width: 1024px) {
+  .projectGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .projectGrid {
+    grid-template-columns: 1fr;
+  }
 }

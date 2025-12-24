@@ -8,8 +8,8 @@ module.exports = {
     client: 'mysql2',
     connection: {
       host:process.env.DB_HOST,
-      user:process.env.DB_USER,
-      database: process.env.DB_NAME,
+      user: process.env.DB_USERNAME || 'root',
+      database: process.env.DB_DATABASE || 'collabflow',
       //Write your password in .env file for connecting with db
       password: process.env.DB_PASSWORD
     },
@@ -27,8 +27,9 @@ module.exports = {
     client: 'mysql2',
     connection: {
       host:process.env.DB_HOST,
-      user:process.env.DB_USER,
-      database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 14489,
+      user: process.env.DB_USERNAME || 'root',
+      database: process.env.DB_DATABASE || 'collabflow',
       //Write your password in .env file for connecting with db
       password: process.env.DB_PASSWORD
     },

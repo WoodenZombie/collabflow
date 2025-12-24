@@ -4,7 +4,9 @@
  * Uses nested routes: /api/projects/:projectId/tasks
  */
 
-const API_BASE_URL = "http://localhost:3000/api";
+import { getAuthHeaders } from "./authApi";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 /**
  * Map status_id to frontend status string
@@ -13,13 +15,12 @@ const API_BASE_URL = "http://localhost:3000/api";
  * Default mapping: 1 = pending, 2 = inProgress, 3 = review, 4 = completed
  */
 const mapStatusIdToStatus = (statusId) => {
-  const statusMap = {
-    1: "pending", // To Do
-    2: "inProgress", // In Progress
-    3: "pending", // Review (treating as pending)
-    4: "completed", // Done
+  const map = {
+    Pending: "pending",
+    "In Progress": "inProgress",
+    Completed: "completed",
   };
-  return statusMap[statusId] || "pending";
+  return map[statusId] || "pending";
 };
 
 /**
@@ -100,11 +101,11 @@ const mapFrontendToBackend = (frontendTask) => {
   // Map frontend status to status_id if provided
   if (frontendTask.status) {
     const statusToIdMap = {
-      pending: 1,
-      inProgress: 2,
-      completed: 4,
+      pending: "Pending",
+      inProgress: "In Progress",
+      completed: "Completed",
     };
-    backendData.status_id = statusToIdMap[frontendTask.status] || 1;
+    backendData.status_id = statusToIdMap[frontendTask.status];
   }
 
   // Add due_date if endingDate is provided, convert to DATE format (YYYY-MM-DD)
@@ -113,6 +114,12 @@ const mapFrontendToBackend = (frontendTask) => {
     if (formattedDate) {
       backendData.due_date = formattedDate;
     }
+  }
+
+  // Add team_id only if it's provided and not null
+  // Don't send team_id if it's not available (backend may have default or handle it differently)
+  if (frontendTask.team_id !== undefined && frontendTask.team_id !== null) {
+    backendData.team_id = frontendTask.team_id;
   }
 
   return backendData;
@@ -131,7 +138,10 @@ export const getAllTasks = async (projectId) => {
     }
 
     const url = `${API_BASE_URL}/projects/${projectId}/tasks`;
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) {
       // If 500 error, return empty array instead of throwing (table might not exist yet)
       if (response.status === 500) {
@@ -167,7 +177,11 @@ export const getTaskById = async (projectId, taskId) => {
     }
 
     const response = await fetch(
-      `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`
+      `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
+      {
+        method: "GET",
+        headers: getAuthHeaders(),
+      }
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -196,9 +210,7 @@ export const createTask = async (projectId, taskData) => {
       `${API_BASE_URL}/projects/${projectId}/tasks`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(backendData),
       }
     );
@@ -233,9 +245,7 @@ export const updateTask = async (projectId, taskId, taskData) => {
       `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
       {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(backendData),
       }
     );
@@ -268,6 +278,7 @@ export const deleteTask = async (projectId, taskId) => {
       `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
       {
         method: "DELETE",
+        headers: getAuthHeaders(),
       }
     );
     if (!response.ok) {

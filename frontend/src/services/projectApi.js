@@ -4,7 +4,9 @@
  * Uses routes: /api/projects
  */
 
-const API_BASE_URL = "http://localhost:3000/api";
+import { getAuthHeaders } from "./authApi";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 /**
  * Map backend status to frontend status
@@ -70,12 +72,12 @@ const mapBackendToFrontend = (backendProject) => {
  */
 const formatDateForBackend = (dateString) => {
   if (!dateString) return null;
-  
+
   // If already in YYYY-MM-DD format, return as is
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
     return dateString;
   }
-  
+
   // Try to parse MM/DD/YY format
   try {
     const parts = dateString.split("/");
@@ -85,7 +87,7 @@ const formatDateForBackend = (dateString) => {
       const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
       return `${year}-${month}-${day}`;
     }
-    
+
     // Try parsing as Date object
     const date = new Date(dateString);
     if (!isNaN(date.getTime())) {
@@ -97,7 +99,7 @@ const formatDateForBackend = (dateString) => {
   } catch (error) {
     console.warn("Error formatting date for backend:", error);
   }
-  
+
   return null;
 };
 
@@ -140,6 +142,14 @@ const mapFrontendToBackend = (frontendProject) => {
   // Note: teams and users arrays are not stored in projects table
   // They would need separate tables/endpoints if needed
 
+  // Allow setting team_id when linking a team to a project
+  if (frontendProject.team_id) {
+    const teamIdNum = typeof frontendProject.team_id === "string" ? parseInt(frontendProject.team_id) : frontendProject.team_id;
+    if (!isNaN(teamIdNum)) {
+      backendData.team_id = teamIdNum;
+    }
+  }
+
   return backendData;
 };
 
@@ -149,8 +159,18 @@ const mapFrontendToBackend = (frontendProject) => {
  */
 export const getAllProjects = async () => {
   try {
-    const url = `${API_BASE_URL}/projects`;
-    const response = await fetch(url);
+    const response = await fetch(`${API_BASE_URL}/projects`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       if (response.status === 500) {
         console.warn(
@@ -183,7 +203,18 @@ export const getProjectById = async (projectId) => {
       throw new Error("projectId is required");
     }
 
-    const response = await fetch(`${API_BASE_URL}/projects/${projectId}`);
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -208,15 +239,23 @@ export const deleteProject = async (projectId) => {
     const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
     const response = await fetch(`${API_BASE_URL}/projects/${projectIdNum}`, {
       method: "DELETE",
+      headers: getAuthHeaders(),
     });
-    
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message || `HTTP error! status: ${response.status}`
       );
     }
-    
+
     const data = await response.json();
     return data;
   } catch (error) {
@@ -232,23 +271,78 @@ export const deleteProject = async (projectId) => {
 export const createProject = async (projectData) => {
   try {
     console.log("createProject called with projectData:", projectData);
-    
+
     const backendData = mapFrontendToBackend(projectData);
     console.log("Mapped backendData:", backendData);
 
+    // Check token before making request
+    const token = localStorage.getItem("token");
+    console.log("Token exists:", !!token);
+    console.log("Token length:", token ? token.length : 0);
+    if (token) {
+      // Try to decode token to check expiration
+      try {
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        console.log("Token payload:", tokenPayload);
+        const expirationTime = tokenPayload.exp * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
+        console.log("Token expiration:", new Date(expirationTime));
+        console.log("Current time:", new Date(currentTime));
+        console.log("Token expired:", currentTime > expirationTime);
+      } catch (e) {
+        console.error("Error decoding token:", e);
+      }
+    }
+
+    const headers = getAuthHeaders();
+    console.log("Request headers:", { ...headers, Authorization: headers.Authorization ? "Bearer ***" : "none" });
+
     const response = await fetch(`${API_BASE_URL}/projects`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: headers,
+      credentials: "include",
       body: JSON.stringify(backendData),
     });
 
+    console.log("Response status:", response.status);
+    console.log("Response ok:", response.ok);
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+
+    if (response.status === 403) {
+      // Token might be expired or invalid
+      console.error("403 Forbidden - Token might be expired or invalid");
+      const errorData = await response.json().catch(() => ({}));
+      console.error("403 Error response:", errorData);
+
+      // Clear token and redirect to login
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Session expired. Please login again.");
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `HTTP error! status: ${response.status}`
-      );
+      console.error("Error response data:", errorData);
+
+      // Build detailed error message
+      let errorMessage = `HTTP error! status: ${response.status}`;
+
+      if (errorData.message) {
+        errorMessage = errorData.message;
+      } else if (errorData.errors && Array.isArray(errorData.errors)) {
+        const validationErrors = errorData.errors.map(e => e.msg || e.message || JSON.stringify(e)).join(", ");
+        errorMessage = validationErrors || errorMessage;
+      }
+
+      console.error("Throwing error:", errorMessage);
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
@@ -256,6 +350,10 @@ export const createProject = async (projectData) => {
     return mapBackendToFrontend(data);
   } catch (error) {
     console.error("Error creating project:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+    });
     throw error;
   }
 };
@@ -268,18 +366,23 @@ export const createProject = async (projectData) => {
 export const updateProject = async (projectId, projectData) => {
   try {
     console.log("updateProject called with projectId:", projectId, "projectData:", projectData);
-    
+
     const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
     const backendData = mapFrontendToBackend(projectData);
     console.log("Mapped backendData:", backendData);
 
     const response = await fetch(`${API_BASE_URL}/projects/${projectIdNum}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(backendData),
     });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

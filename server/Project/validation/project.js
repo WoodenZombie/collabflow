@@ -16,6 +16,42 @@ exports.projectValidation = [
     .isIn(['Planning', 'In Progress', 'Completed'])
     .withMessage('Status is invalid'),
 
+    body('start_date')
+    .trim()
+    .notEmpty()
+    .withMessage('Start date is required')
+    .bail()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage('Start date must be in format YYYY-MM-DD')
+    .bail()
+    .isISO8601()
+    .withMessage('Start date must be a valid date')
+    .bail()
+    .toDate(),
+
+    body('end_date')
+    .trim()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .withMessage('End date must be in format YYYY-MM-DD')
+    .bail()
+    .isISO8601()
+    .withMessage('End date must be a valid date')
+    .bail()
+    .toDate(),
+
+    body('end_date')
+    .custom((end_date, { req }) => {
+      const start_date = req.body.start_date;
+
+      if (!end_date) return true;
+
+      if (new Date(end_date) < new Date(start_date)) {
+        throw new Error('End date cannot be earlier than start date');
+      }
+
+      return true;
+    }),
+
     //We use validation in controller. And when it comes to to an error it sents error 400
     (req, res, next)=>{
         const result = validationResult(req);

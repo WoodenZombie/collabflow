@@ -1,0 +1,114 @@
+.calendarContainer {
+  width: 100%;
+  max-width: 100%; /* Ensure it doesn't exceed container width */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 16px;
+  /* Let content determine height naturally */
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.leftActions { display: flex; gap: 8px; }
+.rightSpacer { width: 48px; }
+
+.navButton {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #F2F2F7;
+  color: #333;
+  cursor: pointer;
+}
+
+.monthLabel {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.weekHeader {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #666;
+}
+
+.weekday { text-align: center; font-weight: 600; }
+
+.grid {
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: 8px;
+  /* Expand to fill available vertical space */
+  flex: 1;
+  width: 100%;
+  min-height: 500px; /* Minimum height for proper calendar display */
+}
+
+.weekRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  width: 100%; /* Ensure full width */
+}
+
+.dayCell {
+  /* Let the grid control height for uniform rows */
+  min-height: 120px; /* Minimum height for better visibility */
+  height: 100%; /* Fill available height in grid */
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  width: 100%; /* Fill available width */
+}
+
+.otherMonth {
+  background-color: #fafafa;
+}
+
+.dayNumber {
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.appointmentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.noAppointments { color: #bbb; text-align: center; }
+
+.appointmentItem {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: center;
+  gap: 6px;
+  background-color: #F2F2F7;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.appointmentTime {
+  font-weight: 600;
+  color: #333;
+}
+
+.appointmentTitle { color: #555; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.appointmentItem:hover { background-color: #e9e9ef; }
