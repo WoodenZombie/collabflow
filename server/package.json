@@ -9,6 +9,8 @@
   "scripts": {
     "migrate": "npx knex migrate:latest",
     "dev": "nodemon ./common/index.js",
+    "start": "node ./common/index.js",
+    "build": "echo 'No build step for Express' && exit 0",
     "test": "jest"
   },
   "dependencies": {
