@@ -34,13 +34,13 @@ function App() {
           }
         />
         <Route
-          path="/tasks/:projectId"
-          element={
-            <ProtectedRoute>
-              <TasksPage />
-            </ProtectedRoute>
-          }
-        />
+               path="/projects/:projectId"
+               element={
+                 <ProtectedRoute>
+                   <TasksPage />
+                 </ProtectedRoute>
+               }
+             />
         <Route
           path="/projects/:projectId/teams/:teamId"
           element={

@@ -33,13 +33,13 @@ const mapBackendToFrontend = (backendTask) => {
     name: backendTask.title,
     title: backendTask.title,
     description: backendTask.description || "",
-    startingDate: "",
-    endingDate: backendTask.due_date || "",
+    startingDate: backendTask.starting_date || backendTask.startingDate || "",
+    endingDate: backendTask.due_date || backendTask.endingDate || "",
     status: mapStatusIdToStatus(backendTask.status_id),
     priority: backendTask.priority || "Medium",
     taskCount: 0,
-    teams: [],
-    users: [],
+    teams: backendTask.teams || backendTask.assignees || [],
+    users: backendTask.users || backendTask.assignees || [],
     list_id: backendTask.project_id, // For compatibility
     project_id: backendTask.project_id,
     status_id: backendTask.status_id, // Keep original for updates
@@ -108,6 +108,14 @@ const mapFrontendToBackend = (frontendTask) => {
     backendData.status_id = statusToIdMap[frontendTask.status];
   }
 
+  // // Add starting_date if startingDate is provided
+  // if (frontendTask.startingDate) {
+  //   const formattedDate = formatDateForBackend(frontendTask.startingDate);
+  //   if (formattedDate) {
+  //     backendData.starting_date = formattedDate;
+  //   }
+  // }
+
   // Add due_date if endingDate is provided, convert to DATE format (YYYY-MM-DD)
   if (frontendTask.endingDate) {
     const formattedDate = formatDateForBackend(frontendTask.endingDate);
@@ -141,6 +149,7 @@ export const getAllTasks = async (projectId) => {
     const response = await fetch(url, {
       method: "GET",
       headers: getAuthHeaders(),
+      credentials: "include",
     });
     if (!response.ok) {
       // If 500 error, return empty array instead of throwing (table might not exist yet)
@@ -181,6 +190,7 @@ export const getTaskById = async (projectId, taskId) => {
       {
         method: "GET",
         headers: getAuthHeaders(),
+        credentials: "include",
       }
     );
     if (!response.ok) {
@@ -210,12 +220,16 @@ export const createTask = async (projectId, taskData) => {
       `${API_BASE_URL}/projects/${projectId}/tasks`,
       {
         method: "POST",
-        headers: getAuthHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
         body: JSON.stringify(backendData),
       }
     );
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message || `HTTP error! status: ${response.status}`
       );
@@ -245,12 +259,16 @@ export const updateTask = async (projectId, taskId, taskData) => {
       `${API_BASE_URL}/projects/${projectId}/tasks/${taskId}`,
       {
         method: "PUT",
-        headers: getAuthHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
         body: JSON.stringify(backendData),
       }
     );
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message || `HTTP error! status: ${response.status}`
       );
@@ -279,10 +297,11 @@ export const deleteTask = async (projectId, taskId) => {
       {
         method: "DELETE",
         headers: getAuthHeaders(),
+        credentials: "include",
       }
     );
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message || `HTTP error! status: ${response.status}`
       );
