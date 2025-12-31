@@ -1,6 +1,8 @@
 const User = require('../../User/model/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const db = require('../../db/db');
+const ROLES_LIST = require('../../common/utils/roles_list');
 
 const handleLogin = async (req, res) =>{
     const {password, email} = req.body;
@@ -11,11 +13,16 @@ const handleLogin = async (req, res) =>{
     //evaluate password
     const match = await bcrypt.compare(password, foundUser.password_hash);
     if(match){
+         //Admin check
+        const adminCheck = await db('admins').where({ email }).first();
+        const role = adminCheck ? 'Admin' : 'User';
+
         //create JWTs
         const accessToken = jwt.sign(
             {"UserInfo":{
                 "id": foundUser.id,
-                "email": foundUser.email
+                "email": foundUser.email,
+                "role": role
             }},
             process.env.ACCESS_TOKEN_SECRET,
             {expiresIn: '15m'}

@@ -14,39 +14,39 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
  * Frontend format: { id, userId, action, entityType, entityId, details, ipAddress, createdAt }
  */
 const mapBackendToFrontend = (backendLog) => {
-  return {
-    id: String(backendLog.id),
-    userId: String(backendLog.user_id || backendLog.userId || ""),
-    userName: backendLog.user_name || backendLog.userName || "Unknown",
-    userEmail: backendLog.user_email || backendLog.userEmail || "",
-    action: backendLog.action || "",
-    entityType: backendLog.entity_type || backendLog.entityType || "",
-    entityId: String(backendLog.entity_id || backendLog.entityId || ""),
-    details: backendLog.details || {},
-    ipAddress: backendLog.ip_address || backendLog.ipAddress || "",
-    createdAt:
-      backendLog.created_at || backendLog.createdAt || new Date().toISOString(),
-  };
+ return {
+   id: String(backendLog.id),
+   userId: String(backendLog.user_id || backendLog.userId || ""),
+   userName: backendLog.user_name || backendLog.userName || "Unknown",
+   userEmail: backendLog.user_email || backendLog.userEmail || "",
+   action: backendLog.action || "",
+   entityType: backendLog.entity_type || backendLog.entityType || "",
+   entityId: String(backendLog.entity_id || backendLog.entityId || ""),
+   details: backendLog.details || {},
+   ipAddress: backendLog.ip_address || backendLog.ipAddress || "",
+   createdAt:
+     backendLog.created_at || backendLog.createdAt || new Date().toISOString(),
+ };
 };
 
 /**
  * Parse error response from backend
  */
 const parseErrorResponse = async (response) => {
-  try {
-    const errorData = await response.json();
-    return {
-      message: errorData.message || errorData.error || "An error occurred",
-      errors: errorData.errors || null,
-      statusCode: response.status,
-    };
-  } catch {
-    return {
-      message: `HTTP ${response.status}: ${response.statusText}`,
-      errors: null,
-      statusCode: response.status,
-    };
-  }
+ try {
+   const errorData = await response.json();
+   return {
+     message: errorData.message || errorData.error || "An error occurred",
+     errors: errorData.errors || null,
+     statusCode: response.status,
+   };
+ } catch {
+   return {
+     message: `HTTP ${response.status}: ${response.statusText}`,
+     errors: null,
+     statusCode: response.status,
+   };
+ }
 };
 
 /**
@@ -55,55 +55,59 @@ const parseErrorResponse = async (response) => {
  * @returns {Promise<Array>} Array of audit logs
  */
 export const getAuditLogs = async (filters = {}) => {
-  try {
-    const queryParams = new URLSearchParams();
+ try {
+   const queryParams = new URLSearchParams();
 
-    if (filters.limit) queryParams.append("limit", filters.limit);
-    if (filters.offset) queryParams.append("offset", filters.offset);
-    if (filters.userId) queryParams.append("userId", filters.userId);
-    if (filters.entityType)
-      queryParams.append("entityType", filters.entityType);
-    if (filters.action) queryParams.append("action", filters.action);
-    if (filters.startDate) queryParams.append("startDate", filters.startDate);
-    if (filters.endDate) queryParams.append("endDate", filters.endDate);
+   if (filters.limit) queryParams.append("limit", filters.limit);
+   if (filters.offset) queryParams.append("offset", filters.offset);
+   if (filters.userId) queryParams.append("userId", filters.userId);
+   if (filters.entityType)
+     queryParams.append("entityType", filters.entityType);
+   if (filters.action) queryParams.append("action", filters.action);
+   if (filters.startDate) queryParams.append("startDate", filters.startDate);
+   if (filters.endDate) queryParams.append("endDate", filters.endDate);
 
-    const url = `${API_BASE_URL}/audit-logs${queryParams.toString() ? `?${queryParams.toString()}` : ""
-      }`;
+   const url = `${API_BASE_URL}/audit-logs${
+     queryParams.toString() ? `?${queryParams.toString()}` : ""
+   }`;
 
-    const response = await fetch(url, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
+   console.log('FETCH URL:', url);
+   console.log('FETCH HEADERS:', getAuthHeaders());
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = "/login";
-        throw new Error("Unauthorized. Please log in.");
-      }
+   const response = await fetch(url, {
+     method: "GET",
+     headers: getAuthHeaders(),
+   });
 
-      if (response.status === 403) {
-        throw new Error(
-          "You don't have permission to view audit logs. Admin access required."
-        );
-      }
+   console.log('RESPONSE STATUS:', response.status);
 
-      const errorData = await parseErrorResponse(response);
-      throw new Error(
-        errorData.message ||
-        `Failed to fetch audit logs: ${response.statusText}`
-      );
-    }
+   if (response.status === 401) {
+     localStorage.removeItem('token');
+     localStorage.removeItem('user');
+     window.location.href = "/login";
+     return [];
+   }
 
-    const data = await response.json();
+   if (response.status === 403) {
+     return [];
+   }
 
-    // Handle both array and object with logs array
-    const logsArray = Array.isArray(data) ? data : data.logs || data.data || [];
+   if (!response.ok) {
+     const errorData = await parseErrorResponse(response);
+     console.error('API ERROR:', errorData.message);
+     return [];
+   }
 
-    return logsArray.map(mapBackendToFrontend);
-  } catch (error) {
-    console.error("Error fetching audit logs:", error);
-    throw error;
-  }
+   const data = await response.json();
+
+   // Handle both array and object with logs array
+   const logsArray = Array.isArray(data) ? data : data.logs || data.data || [];
+
+   return logsArray.map(mapBackendToFrontend);
+ } catch (error) {
+   console.error("Error fetching audit logs:", error);
+   return [];
+ }
 };
 
 /**
@@ -112,43 +116,34 @@ export const getAuditLogs = async (filters = {}) => {
  * @returns {Promise<object>} Audit log object
  */
 export const getAuditLogById = async (logId) => {
-  try {
-    if (!logId) {
-      throw new Error("Audit log ID is required");
-    }
+ try {
+   if (!logId) {
+     return null;
+   }
 
-    const url = `${API_BASE_URL}/audit-logs/${logId}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: getAuthHeaders(),
-    });
+   const url = `${API_BASE_URL}/audit-logs/${logId}`;
+   const response = await fetch(url, {
+     method: "GET",
+     headers: getAuthHeaders(),
+   });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = "/login";
-        throw new Error("Unauthorized. Please log in.");
-      }
+   if (response.status === 401 || response.status === 403) {
+     localStorage.removeItem('token');
+     localStorage.removeItem('user');
+     window.location.href = "/login";
+     return null;
+   }
 
-      if (response.status === 403) {
-        throw new Error(
-          "You don't have permission to view audit logs. Admin access required."
-        );
-      }
+   if (!response.ok) {
+     const errorData = await parseErrorResponse(response);
+     console.error("Error fetching audit log:", errorData.message);
+     return null;
+   }
 
-      if (response.status === 404) {
-        throw new Error("Audit log not found");
-      }
-
-      const errorData = await parseErrorResponse(response);
-      throw new Error(
-        errorData.message || `Failed to fetch audit log: ${response.statusText}`
-      );
-    }
-
-    const data = await response.json();
-    return mapBackendToFrontend(data);
-  } catch (error) {
-    console.error("Error fetching audit log:", error);
-    throw error;
-  }
+   const data = await response.json();
+   return mapBackendToFrontend(data);
+ } catch (error) {
+   console.error("Error fetching audit log:", error);
+   return null;
+ }
 };

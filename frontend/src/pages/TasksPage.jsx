@@ -1042,6 +1042,7 @@ function TasksPage() {
       {isEditModalOpen && taskToEdit && (
         <EditTaskForm
           task={taskToEdit}
+          availableTeams={teams}
           onClose={handleCloseEditModal}
           onUpdate={handleUpdateTask}
           onCancel={() => {

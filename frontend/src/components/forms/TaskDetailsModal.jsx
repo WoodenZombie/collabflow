@@ -12,16 +12,17 @@ import styles from './editTask.module.css';
 function TaskDetailsModal({ task, onClose, onEdit, onDelete }) {
   if (!task) return null;
 
-  // Format MM/DD/YY to YYYY-MM-DD for date inputs
+  // Format date to YYYY-MM-DD for date inputs
   const parseDate = (dateString) => {
     if (!dateString) return '';
     // Already in YYYY-MM-DD
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+    // Try parsing MM/DD/YY format
     const parts = dateString.split('/');
     if (parts.length === 3) {
       const month = parts[0].padStart(2, '0');
       const day = parts[1].padStart(2, '0');
-      const year = '20' + parts[2];
+      const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
       return `${year}-${month}-${day}`;
     }
     // Try generic Date parse
@@ -35,7 +36,24 @@ function TaskDetailsModal({ task, onClose, onEdit, onDelete }) {
     return '';
   };
 
-  const teams = task.teams || [];
+  // Handle teams - can be array of strings, objects with name/id, or empty
+  const getTeams = () => {
+    if (!task.teams || !Array.isArray(task.teams) || task.teams.length === 0) {
+      return [];
+    }
+    // If teams are objects with name property, extract names
+    return task.teams.map(team => {
+      if (typeof team === 'string') {
+        return team;
+      }
+      if (team && typeof team === 'object') {
+        return team.name || team.id || String(team);
+      }
+      return String(team);
+    });
+  };
+
+  const teams = getTeams();
   const users = task.users || [];
 
   return (
@@ -71,6 +89,7 @@ function TaskDetailsModal({ task, onClose, onEdit, onDelete }) {
           <label className={styles.labelStyle}>Starting Date</label>
           <input
             type="date"
+            lang="en"
             className={styles.inputStyle}
             value={parseDate(task.startingDate)}
             readOnly
@@ -83,8 +102,9 @@ function TaskDetailsModal({ task, onClose, onEdit, onDelete }) {
           <label className={styles.labelStyle}>Ending date</label>
           <input
             type="date"
+            lang="en"
             className={styles.inputStyle}
-            value={parseDate(task.endingDate)}
+            value={parseDate(task.endingDate || task.due_date)}
             readOnly
             disabled
           />
@@ -106,8 +126,8 @@ function TaskDetailsModal({ task, onClose, onEdit, onDelete }) {
           <label className={styles.labelStyle}>Teams</label>
           {teams.length > 0 ? (
             <div className={styles.teamTagsContainerStyle}>
-              {teams.map((team) => (
-                <div key={team} className={styles.teamTagStyle}>{team}</div>
+              {teams.map((team, index) => (
+                <div key={index} className={styles.teamTagStyle}>{team}</div>
               ))}
             </div>
           ) : (

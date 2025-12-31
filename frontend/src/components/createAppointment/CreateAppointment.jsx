@@ -14,21 +14,105 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
     title: "",
     description: "",
     date: "",
-    time: "", // Add time field
-    duration: 60, // Default 60 minutes
+    time: "",
+    duration: 60,
     location: "",
   });
 
   const [errors, setErrors] = useState({});
 
+  // Get current time in HH:MM format for min attribute
+  const getCurrentTime = () => {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+  };
+
+  // Get min time for time input based on selected date
+  const getMinTime = () => {
+    if (!formData.date) return "";
+    const selectedDate = new Date(formData.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    // If selected date is today, return current time
+    if (selectedDate.getTime() === today.getTime()) {
+      return getCurrentTime();
+    }
+    // If selected date is in the future, no minimum time restriction
+    return "";
+  };
+
   // Handle input changes
   const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+
+      // If date changes, validate time if date is today
+      if (field === "date" && value) {
+        const selectedDate = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        // If selected date is today and time is set, validate time
+        if (selectedDate.getTime() === today.getTime() && updated.time) {
+          const now = new Date();
+          const [hours, minutes] = updated.time.split(":");
+          const selectedDateTime = new Date();
+          selectedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+          if (selectedDateTime <= now) {
+            setErrors((prev) => ({
+              ...prev,
+              time: "Time must be in the future",
+            }));
+          } else {
+            setErrors((prev) => ({
+              ...prev,
+              time: "",
+            }));
+          }
+        }
+      }
+
+      // If time changes and date is today, validate time
+      if (field === "time" && value && updated.date) {
+        const selectedDate = new Date(updated.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        if (selectedDate.getTime() === today.getTime()) {
+          const now = new Date();
+          const [hours, minutes] = value.split(":");
+          const selectedDateTime = new Date();
+          selectedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+          if (selectedDateTime <= now) {
+            setErrors((prev) => ({
+              ...prev,
+              time: "Time must be in the future",
+            }));
+          } else {
+            setErrors((prev) => ({
+              ...prev,
+              time: "",
+            }));
+          }
+        }
+      }
+
+      return updated;
+    });
+
     // Clear error for this field when user starts typing
-    if (errors[field]) {
+    if (errors[field] && field !== "time") {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
@@ -70,6 +154,25 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
       }
     }
 
+    // Validate time is in the future if date is today
+    if (formData.date && formData.time) {
+      const selectedDate = new Date(formData.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+
+      if (selectedDate.getTime() === today.getTime()) {
+        const now = new Date();
+        const [hours, minutes] = formData.time.split(":");
+        const selectedDateTime = new Date();
+        selectedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+        if (selectedDateTime <= now) {
+          newErrors.time = "Time must be in the future";
+        }
+      }
+    }
+
     // Validate duration is a positive number
     if (formData.duration && (isNaN(formData.duration) || formData.duration <= 0)) {
       newErrors.duration = "Duration must be a positive number";
@@ -98,7 +201,7 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
       title: formData.title.trim(),
       description: formData.description.trim(),
       date: formData.date.trim(),
-      time: formData.time.trim(), // Add time field
+      time: formData.time.trim(),
       duration: parseInt(formData.duration) || 60,
       location: formData.location.trim(),
     };
@@ -172,10 +275,11 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
             <label className={styles.labelStyle}>Date *</label>
             <input
               type="date"
+              lang="en"
               className={styles.inputStyle}
               value={formData.date}
               onChange={(e) => handleChange("date", e.target.value)}
-              min={new Date().toISOString().split("T")[0]} // Prevent past dates
+              min={new Date().toISOString().split("T")[0]}
             />
             {errors.date && (
               <div className={styles.errorStyle}>{errors.date}</div>
@@ -190,6 +294,7 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
               className={styles.inputStyle}
               value={formData.time}
               onChange={(e) => handleChange("time", e.target.value)}
+              min={getMinTime()}
             />
             {errors.time && (
               <div className={styles.errorStyle}>{errors.time}</div>

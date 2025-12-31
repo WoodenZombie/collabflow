@@ -255,7 +255,7 @@ function Dashboard() {
           <div className={styles.statValue}>{totalProjects}</div>
         </div>
         <div className={styles.statCard}>
-          <div className={styles.statLabel}>Pending Tasks</div>
+        <div className={styles.statLabel}>Open Tasks</div>
           <div className={styles.statValue}>{totalPendingTasks}</div>
         </div>
         <div className={styles.statCard}>

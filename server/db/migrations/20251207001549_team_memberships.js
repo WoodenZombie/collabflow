@@ -10,6 +10,7 @@ exports.up = function(knex) {
     //foreign tables such USERS AND TASKS
     table.foreign('team_id').references('id').inTable('tasks').onDelete('CASCADE');
     table.foreign('user_id').references('id').inTable('users').onDelete('CASCADE');
+    table.foreign('team_id').references('id').inTable('teams').onDelete('CASCADE');
     })
 };
 

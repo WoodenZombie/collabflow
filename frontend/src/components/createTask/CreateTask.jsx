@@ -20,14 +20,92 @@ function CreateTaskForm({ onClose, onCreate, availableTeams = [] }) {
 
   const [errors, setErrors] = useState({});
 
+  // Get today's date in YYYY-MM-DD format for min attribute
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayDate = getTodayDate();
+
   // Handle input changes
   const handleChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+
+      // Real-time validation for date fields
+      if (field === "startingDate" || field === "endingDate") {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Validate that dates are not in the past
+        if (field === "startingDate" && value) {
+          const selectedDate = new Date(value);
+          selectedDate.setHours(0, 0, 0, 0);
+          
+          if (selectedDate < today) {
+            setErrors((prev) => ({
+              ...prev,
+              startingDate: "Starting date cannot be in the past",
+            }));
+          } else {
+            setErrors((prev) => ({
+              ...prev,
+              startingDate: "",
+            }));
+          }
+        }
+
+        if (field === "endingDate" && value) {
+          const selectedDate = new Date(value);
+          selectedDate.setHours(0, 0, 0, 0);
+          
+          if (selectedDate < today) {
+            setErrors((prev) => ({
+              ...prev,
+              endingDate: "Ending date cannot be in the past",
+            }));
+          } else {
+            setErrors((prev) => ({
+              ...prev,
+              endingDate: "",
+            }));
+          }
+        }
+
+        // Validate dates when both are filled
+        if (updated.startingDate && updated.endingDate) {
+          const startDate = new Date(updated.startingDate);
+          const endDate = new Date(updated.endingDate);
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(0, 0, 0, 0);
+          
+          if (startDate > endDate) {
+            setErrors((prev) => ({
+              ...prev,
+              endingDate: "Ending date must be after starting date",
+            }));
+          } else if (startDate >= today && endDate >= today) {
+            // Clear ending date error if both dates are valid
+            setErrors((prev) => ({
+              ...prev,
+              endingDate: "",
+            }));
+          }
+        }
+      }
+
+      return updated;
+    });
+
     // Clear error for this field when user starts typing
-    if (errors[field]) {
+    if (errors[field] && field !== "endingDate" && field !== "startingDate") {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
@@ -61,6 +139,8 @@ function CreateTaskForm({ onClose, onCreate, availableTeams = [] }) {
   // Validate form
   const validateForm = () => {
     const newErrors = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
@@ -72,10 +152,33 @@ function CreateTaskForm({ onClose, onCreate, availableTeams = [] }) {
 
     if (!formData.startingDate) {
       newErrors.startingDate = "Starting date is required";
+    } else {
+      const startDate = new Date(formData.startingDate);
+      startDate.setHours(0, 0, 0, 0);
+      if (startDate < today) {
+        newErrors.startingDate = "Starting date cannot be in the past";
+      }
     }
 
     if (!formData.endingDate) {
       newErrors.endingDate = "Ending date is required";
+    } else {
+      const endDate = new Date(formData.endingDate);
+      endDate.setHours(0, 0, 0, 0);
+      if (endDate < today) {
+        newErrors.endingDate = "Ending date cannot be in the past";
+      }
+    }
+
+    // Validate that starting date is not after ending date
+    if (formData.startingDate && formData.endingDate) {
+      const startDate = new Date(formData.startingDate);
+      const endDate = new Date(formData.endingDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+      if (startDate > endDate) {
+        newErrors.endingDate = "Ending date must be after starting date";
+      }
     }
 
     if (formData.teams.length === 0) {
@@ -168,7 +271,9 @@ function CreateTaskForm({ onClose, onCreate, availableTeams = [] }) {
             <label className={styles.labelStyle}>Starting Date</label>
             <input
               type="date"
+              lang="en"
               className={styles.inputStyle}
+              min={todayDate}
               value={formData.startingDate}
               onChange={(e) => handleChange("startingDate", e.target.value)}
             />
@@ -182,7 +287,9 @@ function CreateTaskForm({ onClose, onCreate, availableTeams = [] }) {
             <label className={styles.labelStyle}>Ending Date</label>
             <input
               type="date"
+              lang="en"
               className={styles.inputStyle}
+              min={todayDate}
               value={formData.endingDate}
               onChange={(e) => handleChange("endingDate", e.target.value)}
             />

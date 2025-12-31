@@ -9,6 +9,7 @@ const verifyJWT = require('../common/middleware/verifyJWT');
 const cookieParser = require('cookie-parser');
 const userRouter = require('../User/routes/userRouter');
 const ports = process.env.PORT || 3000;
+const auditLogsRouter = require("../AuditLogs/routes/auditLogs");
 
 // Enable CORS for frontend communication
 app.use((req, res, next) => {
@@ -34,6 +35,9 @@ app.use(express.json());
 
 //user router
 app.use("/api", userRouter);
+
+//audit logs router
+app.use("/api", auditLogsRouter);
 
 //verifying jwt
 app.use(verifyJWT);

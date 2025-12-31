@@ -81,7 +81,7 @@ function TeamDetailsPage() {
     try {
       await deleteTeam(id || team.id, projectId);
       setIsDeleteTeamModalOpen(false);
-      navigate(`/tasks/${projectId}`);
+      navigate(`/projects/${projectId}`);
     } catch (err) {
       console.error("Failed to delete team:", err);
       setIsDeleteTeamModalOpen(false);
@@ -92,7 +92,7 @@ function TeamDetailsPage() {
     <div className={styles.pageContainer}>
       <TaskHeader
         projectName={team ? (team.name || "Unnamed Team") : "Loading..."}
-        onBack={() => navigate(`/tasks/${projectId}`)}
+        onBack={() => navigate(`/projects/${projectId}`)}
         onCreateTask={null}
         onCreateAppointment={null}
         onCreateTeam={null}
