@@ -57,10 +57,6 @@ function DeleteTeamMemberModal({ user, teamName, onClose, onConfirm }) {
               </div>
             </div>
           </div>
-
-          <p style={{ marginTop: '16px', color: '#c62828', fontSize: '13px', fontStyle: 'italic' }}>
-            This action cannot be undone.
-          </p>
         </div>
 
         {/* Action Buttons */}
@@ -70,7 +66,7 @@ function DeleteTeamMemberModal({ user, teamName, onClose, onConfirm }) {
             onClick={onClose}
             style={{
               flex: 1,
-              padding: '12px',
+              padding: '12px 16px',
               backgroundColor: '#F2F2F7',
               color: '#333',
               border: 'none',
@@ -78,6 +74,7 @@ function DeleteTeamMemberModal({ user, teamName, onClose, onConfirm }) {
               fontSize: '14px',
               fontWeight: 600,
               cursor: 'pointer',
+              minWidth: 0,
             }}
           >
             Cancel
@@ -87,7 +84,7 @@ function DeleteTeamMemberModal({ user, teamName, onClose, onConfirm }) {
             onClick={handleConfirm}
             style={{
               flex: 1,
-              padding: '12px',
+              padding: '12px 16px',
               backgroundColor: '#C62828',
               color: '#fff',
               border: 'none',
@@ -95,6 +92,7 @@ function DeleteTeamMemberModal({ user, teamName, onClose, onConfirm }) {
               fontSize: '14px',
               fontWeight: 600,
               cursor: 'pointer',
+              minWidth: 0,
             }}
           >
             Remove Member
