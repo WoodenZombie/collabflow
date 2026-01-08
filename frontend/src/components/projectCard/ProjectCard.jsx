@@ -42,7 +42,7 @@ function ProjectCard({ project, onEdit, onDelete }) {
   const handleClick = () => {
     // Navigate to tasks page with project ID
     if (project.id) {
-      navigate(`/tasks/${project.id}`);
+      navigate(`/projects/${project.id}`);
     }
   };
 

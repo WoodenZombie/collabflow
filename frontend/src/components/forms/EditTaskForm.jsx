@@ -8,8 +8,9 @@ import styles from './editTask.module.css';
  * - task: object (task to edit)
  * - onClose: function (callback to close modal)
  * - onUpdate: function (callback when form is submitted with updated task data)
+ * - availableTeams: array of team objects from the project (optional)
  */
-function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
+function EditTaskForm({ task, onClose, onUpdate, onCancel, availableTeams = [] }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -20,9 +21,6 @@ function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
   });
 
   const [errors, setErrors] = useState({});
-
-  // Available teams
-  const availableTeams = ['Frontend', 'Backend', 'QA'];
 
   // Mock users for adding
   const availableUsers = [
@@ -44,26 +42,50 @@ function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
       // Convert date format from MM/DD/YY to YYYY-MM-DD for date inputs
       const parseDate = (dateString) => {
         if (!dateString) return '';
+        // Already in YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
         const parts = dateString.split('/');
         if (parts.length === 3) {
           const month = parts[0].padStart(2, '0');
           const day = parts[1].padStart(2, '0');
-          const year = '20' + parts[2];
+          const year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
           return `${year}-${month}-${day}`;
         }
+        // Try generic Date parse
+        const d = new Date(dateString);
+        if (!isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}`;
+        }
         return '';
+      };
+
+      // Normalize teams - handle both string and object formats
+      const normalizeTeams = (taskTeams) => {
+        if (!taskTeams || !Array.isArray(taskTeams)) return [];
+        return taskTeams.map(team => {
+          if (typeof team === 'string') {
+            // If it's a string, try to find matching team object
+            const foundTeam = availableTeams.find(t => t.name === team || String(t.id) === team);
+            return foundTeam || team;
+          }
+          // If it's already an object, return as is
+          return team;
+        });
       };
 
       setFormData({
         name: task.name || task.title || '',
         description: task.description || '',
         startingDate: parseDate(task.startingDate),
-        endingDate: parseDate(task.endingDate),
-        teams: task.teams || [],
+        endingDate: parseDate(task.endingDate || task.due_date),
+        teams: normalizeTeams(task.teams),
         users: task.users || []
       });
     }
-  }, [task]);
+  }, [task, availableTeams]);
 
   // Handle input changes
   const handleChange = (field, value) => {
@@ -80,24 +102,44 @@ function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
     }
   };
 
-  // Handle team selection
+  // Handle team selection - now works with team objects
   const handleTeamChange = (e) => {
-    const selectedTeam = e.target.value;
-    if (selectedTeam && !formData.teams.includes(selectedTeam)) {
-      setFormData(prev => ({
-        ...prev,
-        teams: [...prev.teams, selectedTeam]
-      }));
+    const selectedTeamId = e.target.value;
+    if (selectedTeamId) {
+      const selectedTeam = availableTeams.find(team => String(team.id) === selectedTeamId);
+      if (selectedTeam) {
+        // Check if team is already added (compare by id)
+        const isAlreadyAdded = formData.teams.some(team => 
+          (typeof team === 'object' ? String(team.id) : team) === String(selectedTeam.id)
+        );
+        if (!isAlreadyAdded) {
+          setFormData(prev => ({
+            ...prev,
+            teams: [...prev.teams, selectedTeam]
+          }));
+        }
+      }
     }
     // Reset select to placeholder
     e.target.value = '';
   };
 
-  // Remove team
+  // Remove team - now works with both string and object formats
   const handleRemoveTeam = (teamToRemove) => {
     setFormData(prev => ({
       ...prev,
-      teams: prev.teams.filter(team => team !== teamToRemove)
+      teams: prev.teams.filter(team => {
+        if (typeof team === 'object' && typeof teamToRemove === 'object') {
+          return String(team.id) !== String(teamToRemove.id);
+        }
+        if (typeof team === 'string' && typeof teamToRemove === 'string') {
+          return team !== teamToRemove;
+        }
+        // Mixed types comparison
+        const teamId = typeof team === 'object' ? String(team.id) : team;
+        const removeId = typeof teamToRemove === 'object' ? String(teamToRemove.id) : teamToRemove;
+        return teamId !== removeId;
+      })
     }));
   };
 
@@ -170,6 +212,16 @@ function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
       return `${month}/${day}/${year}`;
     };
 
+    // Normalize teams for submission - convert objects to strings if needed
+    const normalizeTeamsForSubmission = (teams) => {
+      return teams.map(team => {
+        if (typeof team === 'object' && team.name) {
+          return team.name;
+        }
+        return typeof team === 'string' ? team : String(team);
+      });
+    };
+
     // Create updated task object
     const updatedTask = {
       ...task, // Keep all existing fields
@@ -178,7 +230,7 @@ function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
       description: formData.description.trim(),
       startingDate: formatDate(formData.startingDate),
       endingDate: formatDate(formData.endingDate),
-      teams: formData.teams,
+      teams: normalizeTeamsForSubmission(formData.teams),
       users: formData.users
     };
 
@@ -228,6 +280,7 @@ function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
             <label className={styles.labelStyle}>Starting Date</label>
             <input
               type="date"
+              lang="en"
               className={styles.inputStyle}
               value={formData.startingDate}
               onChange={(e) => handleChange('startingDate', e.target.value)}
@@ -240,6 +293,7 @@ function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
             <label className={styles.labelStyle}>Ending date</label>
             <input
               type="date"
+              lang="en"
               className={styles.inputStyle}
               value={formData.endingDate}
               onChange={(e) => handleChange('endingDate', e.target.value)}
@@ -268,26 +322,30 @@ function EditTaskForm({ task, onClose, onUpdate, onCancel }) {
             >
               <option value="" disabled>Choose team</option>
               {availableTeams.map(team => (
-                <option key={team} value={team}>
-                  {team}
+                <option key={team.id} value={team.id}>
+                  {team.name}
                 </option>
               ))}
             </select>
             {formData.teams.length > 0 && (
               <div className={styles.teamTagsContainerStyle}>
-                {formData.teams.map(team => (
-                  <div key={team} className={styles.teamTagStyle}>
-                    {team}
-                    <button
-                      type="button"
-                      className={styles.removeTeamButtonStyle}
-                      onClick={() => handleRemoveTeam(team)}
-                      aria-label={`Remove ${team}`}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+                {formData.teams.map((team, index) => {
+                  const teamName = typeof team === 'object' ? team.name : team;
+                  const teamId = typeof team === 'object' ? team.id : index;
+                  return (
+                    <div key={teamId} className={styles.teamTagStyle}>
+                      {teamName}
+                      <button
+                        type="button"
+                        className={styles.removeTeamButtonStyle}
+                        onClick={() => handleRemoveTeam(team)}
+                        aria-label={`Remove ${teamName}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
             {errors.teams && <div className={styles.errorStyle}>{errors.teams}</div>}
