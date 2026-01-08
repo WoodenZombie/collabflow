@@ -41,6 +41,7 @@ const mapBackendToFrontend = (backendAppointment) => {
     location: backendAppointment.location || "",
     startTime: backendAppointment.start_time,
     createdAt: backendAppointment.created_at,
+    team_id: backendAppointment.task_team_id || null, // Use task_team_id from join with tasks
   };
 };
 
@@ -85,14 +86,19 @@ const mapFrontendToBackend = (frontendAppointment) => {
  *
  * @param {number} projectId - Required project ID to fetch appointments for
  */
-export const getAppointmentsByProject = async (projectId) => {
+export const getAppointmentsByProject = async (projectId, teamId) => {
   if (!projectId) {
     throw new Error("Project ID is required to fetch appointments");
   }
 
   try {
+    const params = new URLSearchParams();
+    if (teamId) {
+      params.set("teamId", teamId);
+    }
+    const queryString = params.toString() ? `?${params}` : "";
     const response = await fetch(
-      `${API_BASE_URL}/projects/${projectId}/appointments`,
+      `${API_BASE_URL}/projects/${projectId}/appointments${queryString}`,
       {
         method: "GET",
         headers: getAuthHeaders(),

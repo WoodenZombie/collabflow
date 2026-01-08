@@ -59,6 +59,7 @@ function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -197,20 +198,72 @@ function TasksPage() {
   /**
    * Load tasks, appointments and project name from API on component mount or when projectId changes
    */
+
+  // Load teams for the project (used for filtering tasks and appointments)
+  const loadProjectTeams = useCallback(async () => {
+    if (!projectId) {
+      setTeams([]);
+      return;
+    }
+    try {
+      const teamsData = await getTeamsByProject(projectId);
+      setTeams(teamsData);
+    } catch (err) {
+      console.error("Error loading project teams:", err);
+      setTeams([]);
+    }
+  }, [projectId]);
+
   useEffect(() => {
     loadTasks();
+    loadProjectTeams();
     loadAppointments();
     loadProjectName();
-  }, [loadTasks, loadAppointments, loadProjectName]);
+  }, [loadTasks, loadAppointments, loadProjectName, loadProjectTeams]);
 
   /**
-   * Filter tasks by projectId when tasks or projectId changes
+   * Filter tasks by teams that belong to the project
+   * Only show tasks that belong to teams in this project
    */
   useEffect(() => {
-    // Tasks API already returns tasks scoped to projectId when provided,
-    // so we can use the list directly. If no projectId, show all tasks.
-    setFilteredTasks(tasks);
-  }, [tasks]);
+    // If no teams loaded yet or no project, show all tasks for the project
+    if (!teams || teams.length === 0 || !projectId) {
+      setFilteredTasks(tasks);
+      return;
+    }
+    
+    // Get team IDs that belong to this project
+    const projectTeamIds = teams.map(team => parseInt(team.id));
+    
+    // Filter tasks: show only if task belongs to a project team
+    const filtered = tasks.filter(task => {
+      const taskTeamId = task.team_id ? parseInt(task.team_id) : null;
+      return taskTeamId !== null && projectTeamIds.includes(taskTeamId);
+    });
+    setFilteredTasks(filtered);
+  }, [tasks, teams, projectId]);
+
+  /**
+   * Filter appointments - show only appointments linked to tasks that belong to project teams
+   */
+  useEffect(() => {
+    // If no teams loaded yet or no project, show all appointments for the project
+    if (!teams || teams.length === 0 || !projectId) {
+      setFilteredAppointments(appointments);
+      return;
+    }
+    
+    // Get team IDs that belong to this project
+    const projectTeamIds = teams.map(team => parseInt(team.id));
+    
+    // Filter appointments: show only if appointment's task belongs to a project team
+    const filtered = appointments.filter(appointment => {
+      const appointmentTeamId = appointment.team_id ? parseInt(appointment.team_id) : null;
+      // If appointment has no team_id (not linked to a task), don't show it
+      return appointmentTeamId !== null && projectTeamIds.includes(appointmentTeamId);
+    });
+    setFilteredAppointments(filtered);
+  }, [appointments, teams, projectId]);
 
   // Auto-hide success message after 3 seconds
   useEffect(() => {
@@ -595,14 +648,6 @@ function TasksPage() {
   // TEAM logic
 
   // Load teams for the project (used for Create Task and Teams tab)
-  const loadProjectTeams = useCallback(async () => {
-    try {
-      const teamsData = await getTeamsByProject(projectId);
-      setTeams(teamsData);
-    } catch (err) {
-      console.error("Error loading project teams:", err);
-    }
-  }, [projectId]);
 
   const loadTeamsData = useCallback(async () => {
     if (activeFilter === "teams") {
@@ -839,7 +884,7 @@ function TasksPage() {
         {activeFilter === "appointments" && (
           <div style={{ marginBottom: "30px" }}>
             <AppointmentsCalendar
-              appointments={appointments}
+              appointments={filteredAppointments}
               onDelete={handleDeleteAppointment}
               isLoading={isLoadingAppointments}
             />
