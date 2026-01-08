@@ -1,6 +1,7 @@
 .container {
   min-height: 100vh;
   display: flex;
+  width: 100%;
   align-items: center;
   justify-content: center;
   background-color: #f5f5f5;
@@ -79,7 +80,7 @@
 
 .submitButton {
   width: 100%;
-  padding: 20px;
+  padding: 16px;
   background-color: #1a1a1a;
   color: #fff;
   border: none;

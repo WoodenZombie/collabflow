@@ -1,10 +1,3 @@
-#root {
-  /* max-width: 1280px; */
-  margin: 0 auto;
-  /* padding: 2rem; */
-  text-align: center;
-}
-
 .cross:after{
   display: inline-block;
   content: "\00d7"; 
@@ -12,3 +5,10 @@
   font-size: 25px;
 }
 
+::root {
+  width: 100%;
+  /* display: flex; */
+  /* justify-content: stretch; */
+  
+
+}
