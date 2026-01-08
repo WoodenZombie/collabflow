@@ -12,6 +12,8 @@
   gap: 3rem;
   width: 100%;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 .deleteButtonStyle {
   position: fixed;
@@ -35,6 +37,7 @@
 
 .section {
   background: #f1f5f9;
+  flex-grow: 1;
   padding: 40px 24px; /* increased padding for wider feel */
   border-radius: 32px;
   min-width: 350px; /* ensure minimum width for content */
