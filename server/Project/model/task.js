@@ -152,7 +152,7 @@ const taskModel = {
     data.updated_at = new Date();
 
     await db.transaction(async (trx) => {
-        // 1. Update Task details - starting_date se aktualizuje z data
+        // 1. Update Task details - starting_date se aktualizuje z dat
         if (Object.keys(data).length > 0) {
             await trx("tasks").where({ id }).update(data);
         }

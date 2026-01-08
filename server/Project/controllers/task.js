@@ -48,8 +48,6 @@ exports.postTask = asyncErrorHandler(async (req, res, next) => {
     const userId = req.user.id;
     const projectId = req.params.id;
 
-    if (!projectId) return next(new customError("Project ID is required", 400));
-
     // Map frontend startingDate to DB starting_date
     const startingDate = req.body.startingDate;
     if (startingDate) {
@@ -66,7 +64,6 @@ exports.putTask = asyncErrorHandler(async (req, res, next) => {
   // Extract assignees to handle reassignment
     const { assignees, ...data } = req.body;
     const taskId = req.params.taskId;
-    
     // Map frontend startingDate to DB starting_date
     const startingDate = req.body.startingDate;
     if (startingDate !== undefined) {
