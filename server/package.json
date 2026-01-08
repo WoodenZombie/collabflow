@@ -10,7 +10,7 @@
     "migrate": "npx knex migrate:latest",
     "dev": "nodemon ./common/index.js",
     "start": "node ./common/index.js",
-    "build": "echo 'No build step for Express' && exit 0",
+    "build": "mkdir -p public && echo '<h1>Server is active</h1>' > public/index.html", 
     "test": "jest"
   },
   "dependencies": {
