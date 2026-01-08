@@ -108,13 +108,13 @@ const mapFrontendToBackend = (frontendTask) => {
     backendData.status_id = statusToIdMap[frontendTask.status];
   }
 
-  // // Add starting_date if startingDate is provided
-  // if (frontendTask.startingDate) {
-  //   const formattedDate = formatDateForBackend(frontendTask.startingDate);
-  //   if (formattedDate) {
-  //     backendData.starting_date = formattedDate;
-  //   }
-  // }
+   // Add starting_date if startingDate is provided
+   if (frontendTask.startingDate) {
+     const formattedDate = formatDateForBackend(frontendTask.startingDate);
+     if (formattedDate) {
+       backendData.starting_date = formattedDate;
+     }
+   }
 
   // Add due_date if endingDate is provided, convert to DATE format (YYYY-MM-DD)
   if (frontendTask.endingDate) {
