@@ -8,7 +8,7 @@ const taskModel = {
     data.created_by = userId;
 
     const [taskId] = await db.transaction(async(trx) => {
-        // 1. Insert Task
+        // 1. Insert Task - starting_date se uloží automaticky z data
         const [id] = await trx("tasks").insert(data);
         
         // 2. Insert Assignees if present
@@ -29,14 +29,14 @@ const taskModel = {
   async getTasksByProject(projectId) {
      // Старый код, оставляю как есть, но рекомендую проверить имена колонок
      // Я лишь исправлю проверку camel/snake case для надежности
-    const hasSnake = await db.schema.hasColumn('tasks', 'project_id');
-    const colName = hasSnake ? 'project_id' : 'projectId';
+     const hasSnake = await db.schema.hasColumn('tasks', 'project_id');
+     const colName = hasSnake ? 'project_id' : 'projectId';
 
       return await db('tasks')
         .leftJoin('projects', `tasks.${colName}`, 'projects.id')
         .leftJoin('teams', 'tasks.team_id', 'teams.id')
         .select(
-          'tasks.*',
+          'tasks.*',  // Obsahuje starting_date z DB
           'teams.name as team_name'
         )
         .where({ [`tasks.${colName}`]: projectId })
@@ -52,7 +52,7 @@ const taskModel = {
       .leftJoin('projects', 'tasks.project_id', 'projects.id')
       .leftJoin('teams', 'tasks.team_id', 'teams.id')
       .select(
-        'tasks.*',
+        'tasks.*',  // starting_date se vrátí automaticky
         'teams.id as team_id_val',
         'teams.name as team_name',
         'teams.description as team_description'
@@ -88,7 +88,7 @@ const taskModel = {
             .leftJoin('teams', 'tasks.team_id', 'teams.id')
             .where({ 'tasks.project_id': projectId })
             .select(
-                'tasks.*',
+                'tasks.*',  // starting_date vráceno
                 'teams.name as team_name'
             )
             .orderBy('tasks.created_at', 'desc');
@@ -116,7 +116,7 @@ const taskModel = {
             .leftJoin('teams', 'tasks.team_id', 'teams.id')
             .where('ta.user_id', userId)
             .select(
-                'tasks.*',
+                'tasks.*',  // starting_date vráceno
                 'teams.name as team_name'
             )
             .orderBy('tasks.created_at', 'desc')
@@ -131,7 +131,7 @@ const taskModel = {
             .leftJoin('teams', 'tasks.team_id', 'teams.id')
             .where('tasks.team_id', teamId)
             .select(
-                'tasks.*',
+                'tasks.*',  // starting_date vráceno
                 'teams.name as team_name'
             )
             .orderBy('tasks.created_at', 'desc')
@@ -144,7 +144,7 @@ const taskModel = {
     async getByIdWithoutAssociations(id) {
         return await db("tasks")
             .where({ id })
-            .select('id', 'project_id', 'team_id', 'created_by') 
+            .select('id', 'project_id', 'team_id', 'created_by', 'starting_date')  // Přidáno starting_date
             .first(); 
     },
 
@@ -152,7 +152,7 @@ const taskModel = {
     data.updated_at = new Date();
 
     await db.transaction(async (trx) => {
-        // 1. Update Task details
+        // 1. Update Task details - starting_date se aktualizuje z dat
         if (Object.keys(data).length > 0) {
             await trx("tasks").where({ id }).update(data);
         }

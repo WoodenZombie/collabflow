@@ -48,25 +48,34 @@ exports.postTask = asyncErrorHandler(async (req, res, next) => {
     const userId = req.user.id;
     const projectId = req.params.id;
 
-    if (!projectId) return next(new customError("Project ID is required", 400));
+    // Map frontend startingDate to DB starting_date
+    const startingDate = req.body.startingDate;
+    if (startingDate) {
+      data.starting_date = startingDate;
+    }
 
     data.project_id = projectId;
     const newTask = await taskModel.createTask(data, userId, assignees);
     res.status(201).json(newTask);
-  });
+});
 
 // updates a card by ID and returns it with status 200 or an error 404
 exports.putTask = asyncErrorHandler(async (req, res, next) => {
   // Extract assignees to handle reassignment
     const { assignees, ...data } = req.body;
     const taskId = req.params.taskId;
+    // Map frontend startingDate to DB starting_date
+    const startingDate = req.body.startingDate;
+    if (startingDate !== undefined) {
+      data.starting_date = startingDate;
+    }
     
     const updatedTask = await taskModel.updateTask(taskId, data, assignees);
 
     if (!updatedTask) return next(new customError("Card with this ID is not found", 404));
 
     res.status(200).json(updatedTask);
-  })
+})
 
 // deletes a card by ID and returns it with status 200 or an error 404
 exports.deleteTask = asyncErrorHandler(async (req, res, next) => {
