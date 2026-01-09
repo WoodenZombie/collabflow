@@ -129,11 +129,25 @@
   background: #F2F2F7;
   border-radius: 8px;
   padding: 8px 10px;
+  position: relative;
 }
 
-.memberInfo { display: flex; align-items: center; gap: 8px; }
+.memberInfo { 
+  display: flex; 
+  align-items: center; 
+  gap: 8px;
+  flex: 1;
+  pointer-events: none; /* Prevent member info from blocking button clicks */
+}
 
-.removeIcon { border: none; background: transparent; cursor: pointer; }
+.removeIcon { 
+  border: none; 
+  background: transparent; 
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+}
 
 .addMemberRow {
   display: flex;

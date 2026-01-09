@@ -137,9 +137,10 @@ export const getTeamsByProject = async (projectId) => {
     }
 
     const url = `${API_BASE_URL}/projects/${projectId}/teams`;
-    const response = await fetch(url, {
+      const response = await fetch(url, {
       method: "GET",
       headers: getAuthHeaders(),
+      credentials: "include",
     });
 
     if (response.ok) {
@@ -156,6 +157,7 @@ export const getTeamsByProject = async (projectId) => {
         {
           method: "GET",
           headers: getAuthHeaders(),
+          credentials: "include",
         }
       );
 
@@ -183,6 +185,7 @@ export const getTeamsByProject = async (projectId) => {
           {
             method: "GET",
             headers: getAuthHeaders(),
+            credentials: "include",
           }
         );
 
@@ -233,9 +236,10 @@ export const getTeamsByProject = async (projectId) => {
 export const getAllTeams = async () => {
   try {
     const url = `${API_BASE_URL}/teams`;
-    const response = await fetch(url, {
+      const response = await fetch(url, {
       method: "GET",
       headers: getAuthHeaders(),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -294,6 +298,7 @@ export const getTeamById = async (teamId, projectId) => {
         {
           method: "GET",
           headers: getAuthHeaders(),
+          credentials: "include",
         }
       );
 
@@ -349,6 +354,7 @@ export const createTeam = async (teamData) => {
       {
         method: "POST",
         headers: getAuthHeaders(),
+        credentials: "include",
         body: JSON.stringify(backendData),
       }
     );
@@ -446,6 +452,7 @@ export const updateTeam = async (teamId, teamData) => {
     const response = await fetch(base, {
       method: "PUT",
       headers: getAuthHeaders(),
+      credentials: "include",
       body: JSON.stringify(backendData),
     });
 
@@ -527,6 +534,7 @@ export const deleteTeam = async (teamId, projectId) => {
     const response = await fetch(url, {
       method: "DELETE",
       headers: getAuthHeaders(),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -552,5 +560,143 @@ export const deleteTeam = async (teamId, projectId) => {
       error,
       projectId ? "unassign team from project" : "delete team"
     );
+  }
+};
+
+/**
+ * Add a user to a team by email
+ * @param {string|number} teamId - Team ID
+ * @param {string|number} projectId - Project ID
+ * @param {string} email - User email
+ * @returns {Promise<{message: string, membershipId: number}>}
+ */
+export const addTeamMember = async (teamId, projectId, email) => {
+  try {
+    if (!teamId) {
+      throw new TeamApiError("Team ID is required", 400);
+    }
+    if (!projectId) {
+      throw new TeamApiError("Project ID is required", 400);
+    }
+    if (!email || !email.trim()) {
+      throw new TeamApiError("User email is required", 400);
+    }
+
+    const teamIdNum = typeof teamId === "string" ? parseInt(teamId) : teamId;
+    const projectIdNum =
+      typeof projectId === "string" ? parseInt(projectId) : projectId;
+
+    if (isNaN(teamIdNum)) {
+      throw new TeamApiError("Invalid team ID format", 400);
+    }
+    if (isNaN(projectIdNum)) {
+      throw new TeamApiError("Invalid project ID format", 400);
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectIdNum}/teams/${teamIdNum}/members`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        credentials: "include", // Important for cookies/refresh token
+        body: JSON.stringify({ email: email.trim() }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await parseErrorResponse(response);
+      
+      // Handle 403 Forbidden - user is not a team member
+      if (response.status === 403) {
+        throw new TeamApiError(
+          errorData.message || "You must be a member of this team to add members. Please contact your team or project manager.",
+          response.status
+        );
+      }
+      
+      throw new TeamApiError(
+        getErrorMessage(response.status, "add team member", errorData.message),
+        response.status
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof TeamApiError) {
+      throw error;
+    }
+    console.error("Error adding team member:", error);
+    throw handleFetchError(error, "add team member");
+  }
+};
+
+/**
+ * Remove a member from a team
+ * @param {string|number} teamId - Team ID
+ * @param {string|number} projectId - Project ID
+ * @param {string|number} memberId - User ID to remove
+ * @returns {Promise<{message: string}>}
+ */
+export const removeTeamMember = async (teamId, projectId, memberId) => {
+  try {
+    if (!teamId) {
+      throw new TeamApiError("Team ID is required", 400);
+    }
+    if (!projectId) {
+      throw new TeamApiError("Project ID is required", 400);
+    }
+    if (!memberId) {
+      throw new TeamApiError("Member ID is required", 400);
+    }
+
+    const teamIdNum = typeof teamId === "string" ? parseInt(teamId) : teamId;
+    const projectIdNum =
+      typeof projectId === "string" ? parseInt(projectId) : projectId;
+    const memberIdNum =
+      typeof memberId === "string" ? parseInt(memberId) : memberId;
+
+    if (isNaN(teamIdNum)) {
+      throw new TeamApiError("Invalid team ID format", 400);
+    }
+    if (isNaN(projectIdNum)) {
+      throw new TeamApiError("Invalid project ID format", 400);
+    }
+    if (isNaN(memberIdNum)) {
+      throw new TeamApiError("Invalid member ID format", 400);
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectIdNum}/teams/${teamIdNum}/members/${memberIdNum}`,
+      {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        credentials: "include",
+      }
+    );
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new TeamApiError("Unauthorized", 401);
+    }
+
+    if (!response.ok) {
+      const errorData = await parseErrorResponse(response);
+      throw new TeamApiError(
+        getErrorMessage(response.status, "remove team member", errorData.message),
+        response.status
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    if (error instanceof TeamApiError) {
+      throw error;
+    }
+    console.error("Error removing team member:", error);
+    throw handleFetchError(error, "remove team member");
   }
 };

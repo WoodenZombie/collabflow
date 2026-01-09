@@ -27,7 +27,29 @@ class TeamModel {
     }
     //return specific team, which is chosen by id 
     async getById(id){
-        return await db('teams').where({id}).first();
+        const team = await db('teams').where({id}).first();
+        if (!team) return null;
+        
+        // Get team members with user information
+        const members = await db('team_memberships')
+            .where({ team_id: id })
+            .join('users', 'team_memberships.user_id', 'users.id')
+            .select(
+                'users.id',
+                'users.name',
+                'users.email',
+                'team_memberships.role'
+            );
+        
+        // Format members data
+        team.members = members.map(member => ({
+            id: member.id,
+            name: member.name,
+            email: member.email,
+            role: member.role
+        }));
+        
+        return team;
     }
     //return all teams for project
     async getTeamsByProject(projectId) {

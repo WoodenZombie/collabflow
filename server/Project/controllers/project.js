@@ -71,3 +71,45 @@ exports.addProjectMember = asyncErrorHandler(async(req, res, next)=>{
         membershipId: membershipId 
     });
 });
+
+// Remove member from project
+exports.removeProjectMember = asyncErrorHandler(async(req, res, next) => {
+    const projectId = req.params.id;
+    const userIdToRemove = req.params.memberId;
+    const requestingUserId = req.user.id;
+
+    // Validate project exists
+    const project = await projectModel.getByIdWithoutCheck(projectId);
+    if (!project) {
+        return next(new customError(`Project with ID ${projectId} not found.`, 404));
+    }
+
+    // Validate user exists
+    const userToRemove = await userModel.findById(userIdToRemove);
+    if (!userToRemove) {
+        return next(new customError(`User with ID ${userIdToRemove} not found.`, 404));
+    }
+
+    // Check if user is a member of the project
+    const existingMembership = await projectMembershipModel.getMembership(projectId, userIdToRemove);
+    if (!existingMembership) {
+        return next(new customError(`User ${userIdToRemove} is not a member of project ${projectId}.`, 404));
+    }
+
+    // Prevent removing yourself (optional - can be removed if business logic allows)
+    // if (String(userIdToRemove) === String(requestingUserId)) {
+    //     return next(new customError('You cannot remove yourself from the project.', 400));
+    // }
+
+    // Remove member from project
+    const result = await projectMembershipModel.removeMember(projectId, userIdToRemove);
+    
+    // Verify that at least one record was deleted
+    if (result === 0) {
+        return next(new customError(`Could not remove user ${userIdToRemove} from project ${projectId}.`, 500));
+    }
+
+    res.status(200).json({ 
+        message: `User ${userToRemove.name} (${userToRemove.email}) successfully removed from project ${projectId}.`
+    });
+});

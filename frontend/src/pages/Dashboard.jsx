@@ -4,7 +4,7 @@ import ProjectCard from "../components/projectCard/ProjectCard";
 import CreateProjectForm from "../components/createProject/CreateProject";
 import EditProjectForm from "../components/editProject/EditProject";
 import DeleteProjectForm from "../components/deleteProject/DeleteProject";
-import { getAllProjects, deleteProject, createProject, updateProject } from "../services/projectApi";
+import { getAllProjects, deleteProject, createProject, updateProject, addProjectMember } from "../services/projectApi";
 import { getAllTasks } from "../services/taskApi";
 import styles from "./dashboard.module.css";
 
@@ -18,6 +18,7 @@ function Dashboard() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [projectToEdit, setProjectToEdit] = useState(null);
   const [projectToDelete, setProjectToDelete] = useState(null);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   /**
    * Calculate task progress counts for a project
@@ -99,11 +100,42 @@ function Dashboard() {
   const handleCreateProject = async (newProject) => {
     console.log("handleCreateProject called with newProject:", newProject);
     
+    setIsCreatingProject(true);
     try {
+      // Extract user emails if provided
+      const userEmails = newProject.userEmails || [];
+      const projectData = { ...newProject };
+      delete projectData.userEmails; // Remove userEmails from project creation data
+      
       // Call the API to create the project
       console.log("Calling createProject API");
-      const createdProject = await createProject(newProject);
+      const createdProject = await createProject(projectData);
       console.log("Project created successfully:", createdProject);
+      
+      // Add users to the project if any were selected
+      if (userEmails.length > 0) {
+        console.log("Adding users to project:", userEmails);
+        const addUserPromises = userEmails.map((email) =>
+          addProjectMember(createdProject.id, email).catch((err) => {
+            console.error(`Failed to add user ${email}:`, err);
+            // Continue with other users even if one fails
+            return { email, error: err.message };
+          })
+        );
+        
+        const results = await Promise.allSettled(addUserPromises);
+        const failedUsers = results
+          .filter((result) => result.status === "rejected" || (result.value && result.value.error))
+          .map((result, index) => ({
+            email: userEmails[index],
+            error: result.status === "rejected" ? result.reason?.message : result.value?.error,
+          }));
+        
+        if (failedUsers.length > 0) {
+          console.warn("Some users could not be added:", failedUsers);
+          // Optionally show a warning, but don't fail the whole operation
+        }
+      }
       
       // Calculate progress for the new project (will be empty initially)
       const progress = await calculateProjectProgress(createdProject.id);
@@ -129,6 +161,8 @@ function Dashboard() {
       const errorMessage = err.message || "Failed to create project. Please try again.";
       setError(errorMessage);
       // Don't close modal on error so user can try again
+    } finally {
+      setIsCreatingProject(false);
     }
   };
 
@@ -304,6 +338,7 @@ function Dashboard() {
         <CreateProjectForm
           onClose={handleCloseCreateModal}
           onCreate={handleCreateProject}
+          isSubmitting={isCreatingProject}
         />
       )}
 
