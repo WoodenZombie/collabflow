@@ -42,6 +42,7 @@ const mapBackendToFrontend = (backendAppointment) => {
     startTime: backendAppointment.start_time,
     createdAt: backendAppointment.created_at,
     team_id: backendAppointment.task_team_id || null, // Use task_team_id from join with tasks
+    participants: backendAppointment.participants || [], // Include participants array
   };
 };
 

@@ -81,8 +81,14 @@ const taskModel = {
   },
 
   async getTasksByProjectFiltered(projectId, userId) {
-        const membership = await projectMembershipModel.getMembership(projectId, userId);
-        const isProjectManager = membership?.role === 'Project Manager';
+        let isProjectManager = false;
+        try {
+            const membership = await projectMembershipModel.getMembership(projectId, userId);
+            isProjectManager = membership?.role === 'Project Manager';
+        } catch (err) {
+            // If project_memberships table doesn't exist or query fails, assume user is not Project Manager
+            console.warn('Error checking project membership, assuming user is not Project Manager:', err.message);
+        }
 
         let query = db('tasks')
             .leftJoin('teams', 'tasks.team_id', 'teams.id')
@@ -94,9 +100,14 @@ const taskModel = {
             .orderBy('tasks.created_at', 'desc');
 
         if (!isProjectManager) {
-            query = query
-                .join('task_assignees as ta', 'tasks.id', 'ta.task_id')
-                .andWhere('ta.user_id', userId);
+            try {
+                query = query
+                    .join('task_assignees as ta', 'tasks.id', 'ta.task_id')
+                    .andWhere('ta.user_id', userId);
+            } catch (err) {
+                // If task_assignees table doesn't exist, show all tasks
+                console.warn('Error filtering by task assignees, showing all tasks:', err.message);
+            }
         }
 
         const tasks = await query;

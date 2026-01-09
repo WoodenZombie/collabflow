@@ -234,48 +234,80 @@ function TasksPage() {
   }, [loadTasks, loadAppointments, loadProjectName, loadProjectTeams]);
 
   /**
-   * Filter tasks by teams that belong to the project
-   * Only show tasks that belong to teams in this project
+   * Filter tasks by teams where the current user is a member
+   * Show tasks that either:
+   * - Don't have a team_id (unassigned tasks)
+   * - Have a team_id that belongs to a team where the user is a member
    */
   useEffect(() => {
-    // If no teams loaded yet or no project, show all tasks for the project
-    if (!teams || teams.length === 0 || !projectId) {
+    // If no teams loaded yet or no project or no user, show all tasks for the project
+    if (!teams || teams.length === 0 || !projectId || !user) {
+      console.debug("TasksPage: No teams/user, showing all tasks", tasks.length);
       setFilteredTasks(tasks);
       return;
     }
     
-    // Get team IDs that belong to this project
-    const projectTeamIds = teams.map(team => parseInt(team.id));
+    // Get team IDs where the current user is a member
+    const userId = typeof user.id === "string" ? parseInt(user.id) : user.id;
+    const userTeamIds = teams
+      .filter(team => {
+        // Check if user is in team.members array
+        if (team.members && Array.isArray(team.members)) {
+          return team.members.some(member => {
+            const memberId = typeof member.id === "string" ? parseInt(member.id) : member.id;
+            return memberId === userId;
+          });
+        }
+        return false;
+      })
+      .map(team => parseInt(team.id));
     
-    // Filter tasks: show only if task belongs to a project team
+    console.debug("TasksPage: Filtering tasks. User teams:", userTeamIds, "Total tasks:", tasks.length, "User ID:", userId);
+    
+    // Filter tasks: show if task has no team_id OR if task belongs to a team where user is a member
     const filtered = tasks.filter(task => {
       const taskTeamId = task.team_id ? parseInt(task.team_id) : null;
-      return taskTeamId !== null && projectTeamIds.includes(taskTeamId);
+      // Show task if it has no team_id (unassigned) or if it belongs to a team where user is a member
+      const shouldShow = taskTeamId === null || userTeamIds.includes(taskTeamId);
+      if (!shouldShow) {
+        console.debug("TasksPage: Filtered out task", task.title, "team_id:", taskTeamId);
+      }
+      return shouldShow;
     });
+    console.debug("TasksPage: Filtered tasks count:", filtered.length, "out of", tasks.length);
     setFilteredTasks(filtered);
-  }, [tasks, teams, projectId]);
+  }, [tasks, teams, projectId, user]);
 
   /**
-   * Filter appointments - show only appointments linked to tasks that belong to project teams
+   * Filter appointments - show only appointments where the current user is a participant
+   * Note: Appointments don't have team_id in the database schema,
+   * but they have participants array
    */
   useEffect(() => {
-    // If no teams loaded yet or no project, show all appointments for the project
-    if (!teams || teams.length === 0 || !projectId) {
+    // If no user, show all appointments
+    if (!user) {
       setFilteredAppointments(appointments);
       return;
     }
     
-    // Get team IDs that belong to this project
-    const projectTeamIds = teams.map(team => parseInt(team.id));
+    const userId = typeof user.id === "string" ? parseInt(user.id) : user.id;
     
-    // Filter appointments: show only if appointment's task belongs to a project team
+    // Filter appointments: show only if user is in participants array
     const filtered = appointments.filter(appointment => {
-      const appointmentTeamId = appointment.team_id ? parseInt(appointment.team_id) : null;
-      // If appointment has no team_id (not linked to a task), don't show it
-      return appointmentTeamId !== null && projectTeamIds.includes(appointmentTeamId);
+      // Check if appointment has participants array and user is in it
+      if (appointment.participants && Array.isArray(appointment.participants)) {
+        return appointment.participants.some(participantId => {
+          const pId = typeof participantId === "string" ? parseInt(participantId) : participantId;
+          return pId === userId;
+        });
+      }
+      // If no participants array, show the appointment (backward compatibility)
+      return true;
     });
+    
+    console.debug("TasksPage: Filtered appointments count:", filtered.length, "out of", appointments.length, "User ID:", userId);
     setFilteredAppointments(filtered);
-  }, [appointments, teams, projectId]);
+  }, [appointments, projectId, user]);
 
   // Auto-hide success message after 3 seconds
   useEffect(() => {
@@ -429,9 +461,15 @@ function TasksPage() {
 
       const projectIdNum = parseInt(projectId);
 
-      // Determine team_id: use project's team_id, or first team from teams list, or undefined (don't send)
-      let teamId = project?.team_id;
-      if (!teamId && teams && teams.length > 0) {
+      // Determine team_id: use first team from newTask.teams (selected in form), 
+      // or project's team_id, or first team from teams list, or undefined (don't send)
+      let teamId = null;
+      if (newTask.teams && newTask.teams.length > 0) {
+        // Use team selected in form
+        teamId = parseInt(newTask.teams[0].id);
+      } else if (project?.team_id) {
+        teamId = parseInt(project.team_id);
+      } else if (teams && teams.length > 0) {
         teamId = parseInt(teams[0].id);
       }
 
@@ -632,6 +670,9 @@ function TasksPage() {
    * Group tasks by status
    */
   const getTasksByStatus = () => {
+    console.debug("TasksPage: Grouping tasks by status. Filtered tasks:", filteredTasks.length);
+    console.debug("TasksPage: Sample task statuses:", filteredTasks.slice(0, 3).map(t => ({ title: t.title, status: t.status })));
+    
     const inProgressTasks = filteredTasks.filter(
       (t) => t.status === "inProgress"
     );
@@ -639,6 +680,8 @@ function TasksPage() {
     const completedTasks = filteredTasks.filter(
       (t) => t.status === "completed"
     );
+
+    console.debug("TasksPage: Grouped - Pending:", pendingTasks.length, "In Progress:", inProgressTasks.length, "Completed:", completedTasks.length);
 
     return {
       inProgress: inProgressTasks,
