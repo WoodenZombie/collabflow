@@ -8,8 +8,9 @@ import styles from "./createAppointment.module.css";
  * - onClose: function (callback to close modal)
  * - onCreate: function (callback when form is submitted with appointment data)
  * - projectId: number (required project ID)
+ * - availableTeams: array of team objects from the project
  */
-function CreateAppointmentForm({ onClose, onCreate, projectId }) {
+function CreateAppointmentForm({ onClose, onCreate, projectId, availableTeams = [] }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -17,6 +18,7 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
     time: "",
     duration: 60,
     location: "",
+    team: null,
   });
 
   const [errors, setErrors] = useState({});
@@ -144,6 +146,10 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
       newErrors.location = "Location is required";
     }
 
+    if (!formData.team && availableTeams.length > 0) {
+      newErrors.team = "Team selection is required";
+    }
+
     // Validate date is not in the past
     if (formData.date) {
       const selectedDate = new Date(formData.date);
@@ -204,6 +210,7 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
       time: formData.time.trim(),
       duration: parseInt(formData.duration) || 60,
       location: formData.location.trim(),
+      team_id: formData.team ? parseInt(formData.team) : null,
     };
 
     try {
@@ -331,6 +338,30 @@ function CreateAppointmentForm({ onClose, onCreate, projectId }) {
               <div className={styles.errorStyle}>{errors.location}</div>
             )}
           </div>
+
+          {/* Team Field */}
+          {availableTeams.length > 0 && (
+            <div className={styles.fieldContainerStyle}>
+              <label className={styles.labelStyle}>Team *</label>
+              <select
+                className={styles.inputStyle}
+                value={formData.team || ""}
+                onChange={(e) => handleChange("team", parseInt(e.target.value))}
+              >
+                <option value="" disabled>
+                  Choose team
+                </option>
+                {availableTeams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+              {errors.team && (
+                <div className={styles.errorStyle}>{errors.team}</div>
+              )}
+            </div>
+          )}
 
           {/* Submit Button */}
           <button type="submit" className={styles.submitButtonStyle}>
