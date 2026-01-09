@@ -279,35 +279,71 @@ function TasksPage() {
   }, [tasks, teams, projectId, user]);
 
   /**
-   * Filter appointments - show only appointments where the current user is a participant
-   * Note: Appointments don't have team_id in the database schema,
-   * but they have participants array
+   * Filter appointments - show appointments where:
+   * - User is in participants array, OR
+   * - Appointment has team_id and user is a member of that team, OR
+   * - Appointment has no team_id (backward compatibility)
    */
   useEffect(() => {
-    // If no user, show all appointments
-    if (!user) {
+    // If no user or no teams loaded yet, show all appointments
+    if (!user || !teams || teams.length === 0) {
       setFilteredAppointments(appointments);
       return;
     }
     
     const userId = typeof user.id === "string" ? parseInt(user.id) : user.id;
     
-    // Filter appointments: show only if user is in participants array
+    // Get team IDs where the current user is a member
+    const userTeamIds = teams
+      .filter(team => {
+        if (team.members && Array.isArray(team.members)) {
+          return team.members.some(member => {
+            const memberId = typeof member.id === "string" ? parseInt(member.id) : member.id;
+            return memberId === userId;
+          });
+        }
+        return false;
+      })
+      .map(team => parseInt(team.id));
+    
+    // Filter appointments
     const filtered = appointments.filter(appointment => {
-      // Check if appointment has participants array and user is in it
+      // Check if user is in participants array
       if (appointment.participants && Array.isArray(appointment.participants)) {
-        return appointment.participants.some(participantId => {
+        const isParticipant = appointment.participants.some(participantId => {
           const pId = typeof participantId === "string" ? parseInt(participantId) : participantId;
           return pId === userId;
         });
+        if (isParticipant) {
+          console.debug("TasksPage: Appointment", appointment.title, "shown - user is participant");
+          return true;
+        }
       }
-      // If no participants array, show the appointment (backward compatibility)
-      return true;
+      
+      // Check if appointment has team_id and user is a member of that team
+      if (appointment.team_id) {
+        const appointmentTeamId = typeof appointment.team_id === "string" 
+          ? parseInt(appointment.team_id) 
+          : appointment.team_id;
+        if (userTeamIds.includes(appointmentTeamId)) {
+          console.debug("TasksPage: Appointment", appointment.title, "shown - user is member of team", appointmentTeamId);
+          return true;
+        } else {
+          console.debug("TasksPage: Appointment", appointment.title, "filtered out - team_id:", appointmentTeamId, "user teams:", userTeamIds);
+        }
+      } else {
+        // If no team_id, show the appointment (backward compatibility)
+        console.debug("TasksPage: Appointment", appointment.title, "shown - no team_id (backward compatibility)");
+        return true;
+      }
+      
+      return false;
     });
     
-    console.debug("TasksPage: Filtered appointments count:", filtered.length, "out of", appointments.length, "User ID:", userId);
+    console.debug("TasksPage: Filtered appointments count:", filtered.length, "out of", appointments.length, "User ID:", userId, "User teams:", userTeamIds);
+    console.debug("TasksPage: All appointments data:", appointments.map(a => ({ title: a.title, team_id: a.team_id, participants: a.participants })));
     setFilteredAppointments(filtered);
-  }, [appointments, projectId, user]);
+  }, [appointments, teams, projectId, user]);
 
   // Auto-hide success message after 3 seconds
   useEffect(() => {
@@ -461,16 +497,21 @@ function TasksPage() {
 
       const projectIdNum = parseInt(projectId);
 
-      // Determine team_id: use first team from newTask.teams (selected in form), 
-      // or project's team_id, or first team from teams list, or undefined (don't send)
+      // Determine team_id: use first team from newTask.teams (selected in form)
+      // Only use fallback if no team was selected in the form
       let teamId = null;
-      if (newTask.teams && newTask.teams.length > 0) {
-        // Use team selected in form
+      if (newTask.teams && newTask.teams.length > 0 && newTask.teams[0] && newTask.teams[0].id) {
+        // Use team selected in form - this is the primary source
         teamId = parseInt(newTask.teams[0].id);
+        console.debug("TasksPage: Using team from form:", teamId, "Team name:", newTask.teams[0].name);
       } else if (project?.team_id) {
+        // Fallback to project's team_id only if no team was selected
         teamId = parseInt(project.team_id);
+        console.debug("TasksPage: Using project team_id as fallback:", teamId);
       } else if (teams && teams.length > 0) {
+        // Last fallback: first team from teams list
         teamId = parseInt(teams[0].id);
+        console.debug("TasksPage: Using first team from teams list as fallback:", teamId);
       }
 
       // Add team_id to task data only if we have a valid team_id
@@ -478,6 +519,8 @@ function TasksPage() {
         ...newTask,
         ...(teamId && { team_id: teamId }),
       };
+      
+      console.debug("TasksPage: Creating task with team_id:", teamId, "Task data:", taskData);
 
       // Create task on backend
       const savedTask = await createTask(projectIdNum, taskData);
@@ -1410,6 +1453,7 @@ function TasksPage() {
           onClose={handleCloseCreateAppointmentModal}
           onCreate={handleCreateAppointment}
           projectId={projectId}
+          availableTeams={teams}
         />
       )}
 
