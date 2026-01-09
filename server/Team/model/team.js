@@ -54,20 +54,48 @@ class TeamModel {
     //return all teams for project
     async getTeamsByProject(projectId) {
     const hasSnake = await db.schema.hasColumn('teams', 'project_id');
+    let teams;
+    
     if (hasSnake) {
-        return await db('teams')
+        teams = await db('teams')
             .where({ project_id: projectId })
             .select('*');
+    } else {
+        const hasCamel = await db.schema.hasColumn('teams', 'projectId');
+        if (hasCamel) {
+            teams = await db('teams')
+                .where({ projectId: projectId })
+                .select('*');
+        } else {
+            return [];
+        }
     }
-
-    const hasCamel = await db.schema.hasColumn('teams', 'projectId');
-    if (hasCamel) {
-        return await db('teams')
-            .where({ projectId: projectId })
-            .select('*');
-    }
-
-    return [];
+    
+    // Fetch members for each team
+    const teamsWithMembers = await Promise.all(
+        teams.map(async (team) => {
+            const members = await db('team_memberships')
+                .where({ team_id: team.id })
+                .join('users', 'team_memberships.user_id', 'users.id')
+                .select(
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'team_memberships.role'
+                );
+            
+            team.members = members.map(member => ({
+                id: member.id,
+                name: member.name,
+                email: member.email,
+                role: member.role
+            }));
+            
+            return team;
+        })
+    );
+    
+    return teamsWithMembers;
     }
     //update a specific team, depending by its id 
     async update(id, data){

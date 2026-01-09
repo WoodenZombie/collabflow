@@ -27,9 +27,11 @@ const mapBackendToFrontend = (backendAppointment) => {
     const hours = String(startTime.getHours()).padStart(2, "0");
     const minutes = String(startTime.getMinutes()).padStart(2, "0");
     time = `${hours}:${minutes}`;
+  } else {
+    console.warn("Appointment has invalid start_time:", backendAppointment.start_time, backendAppointment);
   }
 
-  return {
+  const mapped = {
     id: String(backendAppointment.id),
     projectId: backendAppointment.project_id,
     taskId: backendAppointment.task_id,
@@ -41,8 +43,12 @@ const mapBackendToFrontend = (backendAppointment) => {
     location: backendAppointment.location || "",
     startTime: backendAppointment.start_time,
     createdAt: backendAppointment.created_at,
-    team_id: backendAppointment.task_team_id || null, // Use task_team_id from join with tasks
+    team_id: backendAppointment.team_id || null,
+    participants: backendAppointment.participants || [], // Include participants array
   };
+  
+  console.debug("Mapped appointment:", mapped.title, "date:", mapped.date, "time:", mapped.time, "team_id:", mapped.team_id);
+  return mapped;
 };
 
 /**
@@ -75,6 +81,11 @@ const mapFrontendToBackend = (frontendAppointment) => {
   // Add project_id if provided
   if (frontendAppointment.projectId) {
     backendData.project_id = parseInt(frontendAppointment.projectId);
+  }
+
+  // Add team_id if provided
+  if (frontendAppointment.team_id !== undefined && frontendAppointment.team_id !== null) {
+    backendData.team_id = parseInt(frontendAppointment.team_id);
   }
 
   return backendData;

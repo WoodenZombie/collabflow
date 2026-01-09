@@ -59,8 +59,12 @@ function AppointmentsCalendar({ appointments = [], onDelete, isLoading = false }
   // Group appointments by date (YYYY-MM-DD)
   const appointmentsByDate = useMemo(() => {
     const map = new Map();
+    console.debug("AppointmentsCalendar: Processing", appointments.length, "appointments");
     appointments.forEach((a) => {
-      if (!a?.date) return;
+      if (!a?.date) {
+        console.warn("AppointmentsCalendar: Appointment missing date:", a);
+        return;
+      }
       const key = a.date;
       if (!map.has(key)) map.set(key, []);
       map.get(key).push(a);
@@ -75,6 +79,7 @@ function AppointmentsCalendar({ appointments = [], onDelete, isLoading = false }
         return xMinutes - yMinutes;
       });
     }
+    console.debug("AppointmentsCalendar: Appointments by date:", Array.from(map.entries()).map(([date, apps]) => `${date}: ${apps.length}`));
     return map;
   }, [appointments]);
 

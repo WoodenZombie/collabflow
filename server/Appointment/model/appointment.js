@@ -28,8 +28,22 @@ const appointmentModel = {
   },
 
   async getAppointmentsByProject(projectId) {
-    // Optimized: Assuming snake_case 'project_id' based on DB structure provided
-    return await db('appointments').where({ project_id: projectId });
+    // Get all appointments for the project
+    const appointments = await db('appointments').where({ project_id: projectId });
+    
+    // Fetch participants for each appointment
+    const appointmentsWithParticipants = await Promise.all(
+      appointments.map(async (appointment) => {
+        const participants = await db("appointment_participants")
+          .where({ appointment_id: appointment.id })
+          .select('user_id');
+        
+        appointment.participants = participants.map(p => p.user_id);
+        return appointment;
+      })
+    );
+    
+    return appointmentsWithParticipants;
   },
 
   async getById(id) {
