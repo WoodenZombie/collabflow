@@ -1,4 +1,3 @@
-
 .container {
   padding: 24px;
   width: 100%;
@@ -21,11 +20,11 @@
 
 .ccSubtitle {
   font-size: 1rem;
-  color: #6B7280; /* gray-500 */
+  color: #6b7280; /* gray-500 */
 }
 
 .primaryButton {
-  background-color: #4F46E5; /* indigo-600 */
+  background-color: #4f46e5; /* indigo-600 */
   color: #fff;
   border: none;
   border-radius: 10px;
@@ -35,27 +34,28 @@
 }
 
 .primaryButton:hover {
-  background-color: #4338CA; /* indigo-700 */
+  background-color: #4338ca; /* indigo-700 */
 }
 
 /* Quick Stats Row */
 .quickStatsRow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 24px;
 }
 
 .statCard {
   background: #fff;
+  flex-grow: 1;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   padding: 16px;
 }
 
 .statLabel {
   font-size: 0.9rem;
-  color: #6B7280;
+  color: #6b7280;
 }
 
 .statValue {
@@ -71,23 +71,23 @@
   cursor: pointer;
   transition: background-color 0.2s;
   font-size: 0.85rem;
-  color: #FFFFFF;
+  color: #ffffff;
 }
 
 .button.edit {
-  background-color: #6366F1;
+  background-color: #6366f1;
 }
 
 .button.edit:hover {
-  background-color: #4F46E5;
+  background-color: #4f46e5;
 }
 
 .button.delete {
-  background-color: #EF4444;
+  background-color: #ef4444;
 }
 
 .button.delete:hover {
-  background-color: #DC2626;
+  background-color: #dc2626;
 }
 
 .projectGrid {
