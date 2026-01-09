@@ -39,6 +39,7 @@
 }
 
 /* Quick Stats Row */
+
 .quickStatsRow {
 display: flex;
     flex-wrap: wrap;
