@@ -42,6 +42,7 @@ const mapBackendToFrontend = (backendTask) => {
     users: backendTask.users || backendTask.assignees || [],
     list_id: backendTask.project_id, // For compatibility
     project_id: backendTask.project_id,
+    team_id: backendTask.team_id, // Add team_id for filtering
     status_id: backendTask.status_id, // Keep original for updates
   };
 };

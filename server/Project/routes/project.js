@@ -21,6 +21,12 @@ router.post('/projects/:id/members',
     projectController.addProjectMember 
 );
 
+//endpoint for removing user from project
+router.delete('/projects/:id/members/:memberId',
+    verifyRole('Project Manager', 'project', 'id', 'role'),
+    projectController.removeProjectMember 
+);
+
 // souvisejici routy pro porojects
 router.use("/projects/:id/tasks", taskRouter);
 router.use("/projects/:id/appointments", appointmentRouter);

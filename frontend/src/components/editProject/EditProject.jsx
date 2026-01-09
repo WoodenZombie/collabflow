@@ -14,21 +14,9 @@ function EditProjectForm({ project, onClose, onUpdate }) {
     description: "",
     startingDate: "",
     endingDate: "",
-    teams: [],
-    users: [],
   });
 
   const [errors, setErrors] = useState({});
-
-  // Available teams
-  const availableTeams = ["Frontend", "Backend", "QA"];
-
-  // Available users (mock data)
-  const availableUsers = [
-    { id: "1", name: "Alice", initial: "A" },
-    { id: "2", name: "Bob", initial: "B" },
-    { id: "3", name: "Charlie", initial: "C" },
-  ];
 
   // Initialize form data from project
   useEffect(() => {
@@ -36,12 +24,22 @@ function EditProjectForm({ project, onClose, onUpdate }) {
       // Parse dates from MM/DD/YY to YYYY-MM-DD format for input
       const parseDate = (dateString) => {
         if (!dateString) return "";
+        // Already in YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
         const parts = dateString.split("/");
         if (parts.length === 3) {
           const month = parts[0].padStart(2, "0");
           const day = parts[1].padStart(2, "0");
-          const year = "20" + parts[2];
+          const year = parts[2].length === 2 ? "20" + parts[2] : parts[2];
           return `${year}-${month}-${day}`;
+        }
+        // Try generic Date parse
+        const d = new Date(dateString);
+        if (!isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          return `${yyyy}-${mm}-${dd}`;
         }
         return "";
       };
@@ -51,8 +49,6 @@ function EditProjectForm({ project, onClose, onUpdate }) {
         description: project.description || "",
         startingDate: parseDate(project.startingDate) || "",
         endingDate: parseDate(project.endingDate) || "",
-        teams: project.teams || [],
-        users: project.users || [],
       });
     }
   }, [project]);
@@ -95,45 +91,6 @@ function EditProjectForm({ project, onClose, onUpdate }) {
         [field]: "",
       }));
     }
-  };
-
-  // Handle team selection
-  const handleTeamChange = (e) => {
-    const selectedTeam = e.target.value;
-    if (selectedTeam && !formData.teams.includes(selectedTeam)) {
-      setFormData((prev) => ({
-        ...prev,
-        teams: [...prev.teams, selectedTeam],
-      }));
-    }
-    e.target.value = "";
-  };
-
-  // Remove team
-  const handleRemoveTeam = (teamToRemove) => {
-    setFormData((prev) => ({
-      ...prev,
-      teams: prev.teams.filter((team) => team !== teamToRemove),
-    }));
-  };
-
-  // Handle user selection
-  const handleUserChange = (userId) => {
-    const user = availableUsers.find((u) => u.id === userId);
-    if (user && !formData.users.find((u) => u.id === userId)) {
-      setFormData((prev) => ({
-        ...prev,
-        users: [...prev.users, user],
-      }));
-    }
-  };
-
-  // Remove user
-  const handleRemoveUser = (userIdToRemove) => {
-    setFormData((prev) => ({
-      ...prev,
-      users: prev.users.filter((user) => user.id !== userIdToRemove),
-    }));
   };
 
   // Validate form
@@ -198,8 +155,6 @@ function EditProjectForm({ project, onClose, onUpdate }) {
       description: formData.description.trim(),
       startingDate: formatDate(formData.startingDate),
       endingDate: formatDate(formData.endingDate),
-      teams: formData.teams,
-      users: formData.users,
     };
 
     // Call onUpdate callback - parent will handle closing modal after success
@@ -253,6 +208,7 @@ function EditProjectForm({ project, onClose, onUpdate }) {
           </div>
           <input
             type="date"
+            lang="en"
             className={styles.input}
             value={formData.startingDate}
             onChange={(e) => handleChange("startingDate", e.target.value)}
@@ -270,6 +226,7 @@ function EditProjectForm({ project, onClose, onUpdate }) {
           </div>
           <input
             type="date"
+            lang="en"
             className={styles.input}
             value={formData.endingDate}
             onChange={(e) => handleChange("endingDate", e.target.value)}
@@ -293,104 +250,6 @@ function EditProjectForm({ project, onClose, onUpdate }) {
           {errors.description && (
             <div className={styles.error}>{errors.description}</div>
           )}
-        </div>
-
-        {/* Teams Field */}
-        <div className={styles.fieldContainer}>
-          <label className={styles.label}>Teams</label>
-          <div className={styles.currentValueTagsContainer}>
-            {project.teams && project.teams.length > 0 ? (
-              project.teams.map((team) => (
-                <span key={team} className={styles.currentValueTag}>
-                  {team}
-                </span>
-              ))
-            ) : (
-              <span className={styles.currentValueTag}>No teams</span>
-            )}
-          </div>
-          <select
-            className={styles.select}
-            onChange={handleTeamChange}
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Choose team to add
-            </option>
-            {availableTeams.map((team) => (
-              <option key={team} value={team}>
-                {team}
-              </option>
-            ))}
-          </select>
-          {formData.teams.length > 0 && (
-            <div className={styles.tagsContainer}>
-              {formData.teams.map((team) => (
-                <div key={team} className={styles.tag}>
-                  {team}
-                  <button
-                    type="button"
-                    className={styles.removeTagButton}
-                    onClick={() => handleRemoveTeam(team)}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Users Field */}
-        <div className={styles.fieldContainer}>
-          <label className={styles.label}>Users</label>
-          <div className={styles.currentValueTagsContainer}>
-            {project.users && project.users.length > 0 ? (
-              project.users.map((user) => (
-                <div
-                  key={typeof user === "string" ? user : user.id || user}
-                  className={styles.currentValueTag}
-                >
-                  {typeof user === "string"
-                    ? user
-                    : user.initial || user.name || "?"}
-                </div>
-              ))
-            ) : (
-              <span className={styles.currentValueTag}>No users</span>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <div className={styles.tagsContainer} style={{ flexGrow: 1, marginTop: 0 }}>
-              {formData.users.map((user) => (
-                <div key={user.id} className={styles.tag}>
-                  <span>{user.initial}</span>
-                  <button
-                    type="button"
-                    className={styles.removeTagButton}
-                    onClick={() => handleRemoveUser(user.id)}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              className={styles.addUserButton}
-              onClick={() => {
-                const availableUser = availableUsers.find(
-                  (u) =>
-                    !formData.users.find((existing) => existing.id === u.id)
-                );
-                if (availableUser) {
-                  handleUserChange(availableUser.id);
-                }
-              }}
-            >
-              +
-            </button>
-          </div>
         </div>
 
         {/* Submit Button */}

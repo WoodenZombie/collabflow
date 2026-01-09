@@ -1,63 +1,59 @@
 require('dotenv').config();
 const express = require("express");
 const app = express();
+const cors = require('cors'); // <--- 1. Import cors
+const cookieParser = require('cookie-parser');
+
 const customError = require("./utils/customError");
 const globalErrorHandler = require("./middleware/errorController");
 const projectRouter = require("../Project/routes/project");
 const dashboardRoutes = require('./../Dashboard/routes/dashboard');
 const verifyJWT = require('../common/middleware/verifyJWT');
-const cookieParser = require('cookie-parser');
 const userRouter = require('../User/routes/userRouter');
-const ports = process.env.PORT || 3000;
 const auditLogsRouter = require("../AuditLogs/routes/auditLogs");
 
-// Enable CORS for frontend communication
-app.use((req, res, next) => {
-  const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
-  res.header("Access-Control-Allow-Origin", allowedOrigin);
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-  next();
-});
+const ports = process.env.PORT || 3000;
 
-//middleware for cookies. jwt is saved in cookies
+// --- FIXED CORS SETUP ---
+// 2. Use the package instead of manual headers
+app.use(cors({
+    origin: process.env.FRONTEND_URL, // e.g. 'https://my-frontend.vercel.app'
+    credentials: true, // Essential for cookies
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+}));
+
+// middleware for cookies
 app.use(cookieParser());
 
-//it parsed req.body to a readable JSON format
+// json parser
 app.use(express.json());
 
-//user router
-app.use("/api", userRouter);
+// --- ROUTES ---
 
-//audit logs router
+// Public Routes (Login, Register, Refresh Token)
+// These MUST be before verifyJWT
+app.use("/api", userRouter); 
+
+// SECURITY NOTE: Your audit logs are currently public! 
+// If they need protection, move this line BELOW verifyJWT.
 app.use("/api", auditLogsRouter);
 
-//verifying jwt
-app.use(verifyJWT);
+// --- PROTECTED ZONE ---
+app.use(verifyJWT); // Blocks anything below this if no valid Token
 
-//to reach router projects, and others you need write /api/projects. It's need for connecting with frontend
 app.use("/api", projectRouter);
 app.use('/api/dashboard', dashboardRoutes);
 
-//Sents an error if user write invalid url, for e.g. /api/projeghg/3
+// Error Handling
 app.use((req, res, next) => {
-  const err = new customError(
-    `Can't find ${req.originalUrl} on the server`,
-    404
-  );
+  const err = new customError(`Can't find ${req.originalUrl} on the server`, 404);
   next(err);
 });
 
-//catch errors from errorController in controllers
 app.use(globalErrorHandler);
 
+// Vercel Serverless Check
 if (process.env.NODE_ENV !== 'production') {
   app.listen(ports, () => {
     console.log(`Server running on ${ports}`);

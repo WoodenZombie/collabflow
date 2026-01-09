@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import TaskCard from "../components/taskCard/TaskCard";
 import FilterTabs from "../components/filterTabs/FilterTabs";
 import TaskHeader from "../components/TaskHeader/TaskHeader";
@@ -26,6 +27,7 @@ import {
   getProjectById,
   updateProject as updateProjectApi,
   deleteProject as deleteProjectApi,
+  addProjectMember,
 } from "../services/projectApi";
 import styles from "./tasksPage.module.css";
 
@@ -37,9 +39,12 @@ import {
   createTeam,
   updateTeam,
   deleteTeam,
+  addTeamMember,
+  removeTeamMember,
 } from "../services/teamApi";
 import { getAllUsers } from "../services/userApi";
 import DeleteTeamForm from "../components/forms/DeleteTeamForm";
+import DeleteTeamMemberModal from "../components/forms/DeleteTeamMemberModal";
 import DeleteAppointmentModal from "../components/DeleteAppoinment/DeleteAppoinmentModal";
 import EditAppointmentForm from "../components/forms/EditAppointmentForm";
 import DeleteTaskModal from "../components/deleteTaskModule/deleteTaskModule";
@@ -57,8 +62,10 @@ function TasksPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
+  const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -89,6 +96,12 @@ function TasksPage() {
   const [isDeleteTeamModalOpen, setIsDeleteTeamModalOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState(null);
   const [teamToView, setTeamToView] = useState(null);
+  const [isAddingTeamMember, setIsAddingTeamMember] = useState(false);
+  const [isRemovingTeamMember, setIsRemovingTeamMember] = useState(false);
+  const [teamMemberError, setTeamMemberError] = useState(null);
+  const [teamMemberSuccess, setTeamMemberSuccess] = useState(null);
+  const [isDeleteMemberModalOpen, setIsDeleteMemberModalOpen] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState(null);
 
   // Add state for delete appointment modal
   const [isDeleteAppointmentModalOpen, setIsDeleteAppointmentModalOpen] =
@@ -197,20 +210,72 @@ function TasksPage() {
   /**
    * Load tasks, appointments and project name from API on component mount or when projectId changes
    */
+
+  // Load teams for the project (used for filtering tasks and appointments)
+  const loadProjectTeams = useCallback(async () => {
+    if (!projectId) {
+      setTeams([]);
+      return;
+    }
+    try {
+      const teamsData = await getTeamsByProject(projectId);
+      setTeams(teamsData);
+    } catch (err) {
+      console.error("Error loading project teams:", err);
+      setTeams([]);
+    }
+  }, [projectId]);
+
   useEffect(() => {
     loadTasks();
+    loadProjectTeams();
     loadAppointments();
     loadProjectName();
-  }, [loadTasks, loadAppointments, loadProjectName]);
+  }, [loadTasks, loadAppointments, loadProjectName, loadProjectTeams]);
 
   /**
-   * Filter tasks by projectId when tasks or projectId changes
+   * Filter tasks by teams that belong to the project
+   * Only show tasks that belong to teams in this project
    */
   useEffect(() => {
-    // Tasks API already returns tasks scoped to projectId when provided,
-    // so we can use the list directly. If no projectId, show all tasks.
-    setFilteredTasks(tasks);
-  }, [tasks]);
+    // If no teams loaded yet or no project, show all tasks for the project
+    if (!teams || teams.length === 0 || !projectId) {
+      setFilteredTasks(tasks);
+      return;
+    }
+    
+    // Get team IDs that belong to this project
+    const projectTeamIds = teams.map(team => parseInt(team.id));
+    
+    // Filter tasks: show only if task belongs to a project team
+    const filtered = tasks.filter(task => {
+      const taskTeamId = task.team_id ? parseInt(task.team_id) : null;
+      return taskTeamId !== null && projectTeamIds.includes(taskTeamId);
+    });
+    setFilteredTasks(filtered);
+  }, [tasks, teams, projectId]);
+
+  /**
+   * Filter appointments - show only appointments linked to tasks that belong to project teams
+   */
+  useEffect(() => {
+    // If no teams loaded yet or no project, show all appointments for the project
+    if (!teams || teams.length === 0 || !projectId) {
+      setFilteredAppointments(appointments);
+      return;
+    }
+    
+    // Get team IDs that belong to this project
+    const projectTeamIds = teams.map(team => parseInt(team.id));
+    
+    // Filter appointments: show only if appointment's task belongs to a project team
+    const filtered = appointments.filter(appointment => {
+      const appointmentTeamId = appointment.team_id ? parseInt(appointment.team_id) : null;
+      // If appointment has no team_id (not linked to a task), don't show it
+      return appointmentTeamId !== null && projectTeamIds.includes(appointmentTeamId);
+    });
+    setFilteredAppointments(filtered);
+  }, [appointments, teams, projectId]);
 
   // Auto-hide success message after 3 seconds
   useEffect(() => {
@@ -595,14 +660,6 @@ function TasksPage() {
   // TEAM logic
 
   // Load teams for the project (used for Create Task and Teams tab)
-  const loadProjectTeams = useCallback(async () => {
-    try {
-      const teamsData = await getTeamsByProject(projectId);
-      setTeams(teamsData);
-    } catch (err) {
-      console.error("Error loading project teams:", err);
-    }
-  }, [projectId]);
 
   const loadTeamsData = useCallback(async () => {
     if (activeFilter === "teams") {
@@ -661,6 +718,179 @@ function TasksPage() {
   const handleCreateTeamClick = () => {
     setTeamToEdit(null);
     setIsTeamModalOpen(true);
+  };
+
+  // Check if current user is Project Manager
+  const isProjectManager = () => {
+    if (!user || !project) return false;
+    
+    // Check if user role is Project Manager
+    if (user.role === "Project Manager") {
+      return true;
+    }
+    
+    // Check if user is the creator of the project
+    const userId = typeof user.id === "string" ? parseInt(user.id) : user.id;
+    const projectCreatorId = typeof project.created_by === "string" 
+      ? parseInt(project.created_by) 
+      : project.created_by;
+    
+    return userId === projectCreatorId;
+  };
+
+  // Handle adding user to team
+  const handleAddTeamMember = async (teamId, email) => {
+    if (!isProjectManager()) {
+      setTeamMemberError("Only Project Managers can add users to teams.");
+      setTimeout(() => setTeamMemberError(null), 5000);
+      return;
+    }
+
+    if (!email || !email.trim()) {
+      setTeamMemberError("Please enter a valid email address.");
+      return;
+    }
+
+    setIsAddingTeamMember(true);
+    setTeamMemberError(null);
+    setTeamMemberSuccess(null);
+
+    try {
+      // First, add user to project (if not already a member)
+      try {
+        await addProjectMember(projectId, email);
+        console.log(`User ${email} added to project ${projectId}`);
+      } catch (projectErr) {
+        // If user is already a project member, that's fine - continue
+        if (projectErr.message && projectErr.message.includes("already")) {
+          console.log(`User ${email} is already a project member`);
+        } else {
+          // If it's a different error, log it but continue - backend will handle validation
+          console.warn(`Warning when adding user to project:`, projectErr.message);
+        }
+      }
+
+      // Then, add user to team
+      const result = await addTeamMember(teamId, projectId, email);
+      setTeamMemberSuccess(result.message || `User ${email} successfully added to the team.`);
+      
+      // Refresh teams data to show new member
+      await loadProjectTeams();
+      if (activeFilter === "teams") {
+        await loadTeamsData();
+      }
+      
+      // If viewing team details, refresh that team
+      if (teamToView && String(teamToView.id) === String(teamId)) {
+        const updatedTeams = await getTeamsByProject(projectId);
+        const updatedTeam = updatedTeams.find(t => String(t.id) === String(teamId));
+        if (updatedTeam) {
+          setTeamToView(updatedTeam);
+        }
+      }
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setTeamMemberSuccess(null);
+      }, 5000);
+    } catch (err) {
+      console.error("Failed to add team member:", err);
+      const errorMsg = err.message || "Failed to add user to team. Please try again.";
+      setTeamMemberError(errorMsg);
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => {
+        setTeamMemberError(null);
+      }, 5000);
+    } finally {
+      setIsAddingTeamMember(false);
+    }
+  };
+
+  // Handle removing user from team
+  const handleRemoveTeamMember = (teamId, userId) => {
+    console.log('handleRemoveTeamMember called:', { teamId, userId, teamToView, teams });
+    
+    if (!isProjectManager()) {
+      setTeamMemberError("Only Project Managers can remove users from teams.");
+      setTimeout(() => setTeamMemberError(null), 5000);
+      return;
+    }
+
+    // Find user info from team members
+    const team = teamToView || teams.find(t => String(t.id) === String(teamId));
+    console.log('Found team:', team);
+    console.log('Team members:', team?.members);
+    
+    if (!team) {
+      console.error('Team not found for teamId:', teamId);
+      setTeamMemberError("Team not found.");
+      setTimeout(() => setTeamMemberError(null), 5000);
+      return;
+    }
+
+    const userToRemove = team?.members?.find(m => {
+      const memberId = m.id || (typeof m === 'object' ? m.user_id : m);
+      return String(memberId) === String(userId);
+    });
+    
+    console.log('User to remove:', userToRemove);
+    
+    if (userToRemove) {
+      const memberId = userToRemove.id || userId;
+      setMemberToRemove({ id: memberId, teamId, ...userToRemove });
+      setIsDeleteMemberModalOpen(true);
+    } else {
+      console.error('User not found in team members:', { userId, members: team.members });
+      setTeamMemberError("User not found in team members.");
+      setTimeout(() => setTeamMemberError(null), 5000);
+    }
+  };
+
+  const confirmRemoveTeamMember = async () => {
+    if (!memberToRemove) return;
+
+    setIsRemovingTeamMember(true);
+    setTeamMemberError(null);
+    setTeamMemberSuccess(null);
+
+    try {
+      const result = await removeTeamMember(memberToRemove.teamId, projectId, memberToRemove.id);
+      setTeamMemberSuccess(result.message || `User ${memberToRemove.email || memberToRemove.name} successfully removed from the team.`);
+      
+      // Refresh teams data to show updated member list
+      await loadProjectTeams();
+      if (activeFilter === "teams") {
+        await loadTeamsData();
+      }
+      
+      // If viewing team details, refresh that team
+      if (teamToView && String(teamToView.id) === String(memberToRemove.teamId)) {
+        const updatedTeams = await getTeamsByProject(projectId);
+        const updatedTeam = updatedTeams.find(t => String(t.id) === String(memberToRemove.teamId));
+        if (updatedTeam) {
+          setTeamToView(updatedTeam);
+        }
+      }
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setTeamMemberSuccess(null);
+      }, 5000);
+    } catch (err) {
+      console.error("Failed to remove team member:", err);
+      const errorMsg = err.message || "Failed to remove user from team. Please try again.";
+      setTeamMemberError(errorMsg);
+      
+      // Clear error message after 5 seconds
+      setTimeout(() => {
+        setTeamMemberError(null);
+      }, 5000);
+    } finally {
+      setIsRemovingTeamMember(false);
+      setIsDeleteMemberModalOpen(false);
+      setMemberToRemove(null);
+    }
   };
 
   // HTML5 Drag & Drop handlers
@@ -839,7 +1069,7 @@ function TasksPage() {
         {activeFilter === "appointments" && (
           <div style={{ marginBottom: "30px" }}>
             <AppointmentsCalendar
-              appointments={appointments}
+              appointments={filteredAppointments}
               onDelete={handleDeleteAppointment}
               isLoading={isLoadingAppointments}
             />
@@ -985,27 +1215,87 @@ function TasksPage() {
         {/* Teams Section - Only show when Teams tab is active */}
         {activeFilter === "teams" && (
           <div className={styles.teamsGrid}>
+            {/* Success/Error Messages */}
+            {teamMemberSuccess && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  backgroundColor: "#e8f5e9",
+                  color: "#2e7d32",
+                  borderRadius: "8px",
+                  marginBottom: "16px",
+                  gridColumn: "1 / -1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span>{teamMemberSuccess}</span>
+                <button
+                  onClick={() => setTeamMemberSuccess(null)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#2e7d32",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    padding: "0 8px",
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            {teamMemberError && (
+              <div
+                style={{
+                  padding: "12px 16px",
+                  backgroundColor: "#ffebee",
+                  color: "#c62828",
+                  borderRadius: "8px",
+                  marginBottom: "16px",
+                  gridColumn: "1 / -1",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span>{teamMemberError}</span>
+                <button
+                  onClick={() => setTeamMemberError(null)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#c62828",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                    padding: "0 8px",
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
             {teamToView ? (
               <TeamDetails
                 team={teamToView}
                 tasks={filteredTasks.filter((t) => t.team_id === teamToView.id)}
                 onEditTeam={(t) => {
-                  setTeamToEdit(t);
-                  setIsTeamModalOpen(true);
+                  if (isProjectManager()) {
+                    setTeamToEdit(t);
+                    setIsTeamModalOpen(true);
+                  }
                 }}
-                onDeleteTeam={(id) => handleDeleteTeamClick({ id })}
-                onRemoveMember={(teamId, userId) => {
-                  // Placeholder: implement backend removal if available
-                  console.warn("Remove member not implemented", teamId, userId);
+                onDeleteTeam={(id) => {
+                  if (isProjectManager()) {
+                    handleDeleteTeamClick({ id });
+                  }
                 }}
-                onAddMemberByEmail={(teamId, email) => {
-                  // Placeholder: implement backend add via email if available
-                  console.warn(
-                    "Add member by email not implemented",
-                    teamId,
-                    email
-                  );
-                }}
+                onRemoveMember={isProjectManager() ? handleRemoveTeamMember : undefined}
+                onAddMemberByEmail={isProjectManager() ? handleAddTeamMember : undefined}
+                isAddingMember={isAddingTeamMember}
+                availableUsers={allUsers}
               />
             ) : (
               <>
@@ -1018,6 +1308,11 @@ function TasksPage() {
                       team={team}
                       allUsers={allUsers}
                       onOpenDetails={openTeamDetails}
+                      isProjectManager={isProjectManager()}
+                      onAddUsers={(teamId) => {
+                        // Navigate to team details page where users can be added
+                        navigate(`/projects/${projectId}/teams/${teamId}`);
+                      }}
                     />
                   ))
                 )}
@@ -1110,6 +1405,19 @@ function TasksPage() {
           allUsers={allUsers}
           onClose={() => setIsDeleteTeamModalOpen(false)}
           onDelete={confirmDeleteTeam}
+        />
+      )}
+
+      {/* Delete Team Member Modal */}
+      {isDeleteMemberModalOpen && memberToRemove && (
+        <DeleteTeamMemberModal
+          user={memberToRemove}
+          teamName={teamToView?.name || teams.find(t => String(t.id) === String(memberToRemove.teamId))?.name || "team"}
+          onClose={() => {
+            setIsDeleteMemberModalOpen(false);
+            setMemberToRemove(null);
+          }}
+          onConfirm={confirmRemoveTeamMember}
         />
       )}
 

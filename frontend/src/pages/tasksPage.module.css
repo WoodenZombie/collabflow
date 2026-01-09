@@ -8,11 +8,12 @@
 }
 
 .main {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* even 3 columns */
-  gap: 3rem; /* increased gap for wider columns */
+  display: flex;
+  gap: 3rem;
   width: 100%;
-  max-width: none; /* remove any width restrictions */
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 .deleteButtonStyle {
   position: fixed;
@@ -36,9 +37,9 @@
 
 .section {
   background: #f1f5f9;
+  flex-grow: 1;
   padding: 40px 24px; /* increased padding for wider feel */
   border-radius: 32px;
-  width: 100%;
   min-width: 350px; /* ensure minimum width for content */
 }
 

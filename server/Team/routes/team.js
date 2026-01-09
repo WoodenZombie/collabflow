@@ -3,6 +3,7 @@ const router = express.Router({ mergeParams: true });
 const teamController = require('../controllers/team');
 const {teamValidation } = require('../validation/team');
 const verifyRole = require('../../common/middleware/verifyRole');
+const verifyTeamMember = require('../../common/middleware/verifyTeamMember');
 
 //roles
 const MANAGER = 'Project Manager';
@@ -38,8 +39,9 @@ router.route("/:teamId")
 );
 
 //adding new member team (id = teamId)
+// Allow any team member or project manager to add members to their team
 router.post("/:teamId/members", 
-    verifyRole([MANAGER], 'project', 'id', 'role'),
+    verifyTeamMember(),
     teamController.addTeamMember
 );
 

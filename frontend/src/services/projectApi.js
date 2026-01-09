@@ -399,3 +399,56 @@ export const updateProject = async (projectId, projectData) => {
     throw error;
   }
 };
+
+/**
+ * Add a user to a project by email
+ * @param {string|number} projectId - Project ID
+ * @param {string} email - User email
+ * @returns {Promise<{message: string, membershipId: number}>}
+ */
+export const addProjectMember = async (projectId, email) => {
+  try {
+    if (!projectId) {
+      throw new Error("Project ID is required");
+    }
+    if (!email || !email.trim()) {
+      throw new Error("User email is required");
+    }
+
+    const projectIdNum = typeof projectId === "string" ? parseInt(projectId) : projectId;
+
+    if (isNaN(projectIdNum)) {
+      throw new Error("Invalid project ID format");
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/projects/${projectIdNum}/members`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        credentials: "include",
+        body: JSON.stringify({ email: email.trim() }),
+      }
+    );
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Failed to add user to project. Status: ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error adding project member:", error);
+    throw error;
+  }
+};

@@ -10,12 +10,13 @@
     "migrate": "npx knex migrate:latest",
     "dev": "nodemon ./common/index.js",
     "start": "node ./common/index.js",
-    "build": "mkdir -p public && echo '<h1>Server is active</h1>' > public/index.html", 
+    "build": "mkdir -p public && echo '<h1>Server is active</h1>' > public/index.html",
     "test": "jest"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "express-validator": "^7.3.0",

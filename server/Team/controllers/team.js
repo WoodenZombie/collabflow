@@ -81,19 +81,36 @@ exports.addTeamMember = asyncErrorHandler(async (req, res, next) => {
 //removing user from team
 exports.removeTeamMember = asyncErrorHandler(async (req, res, next) => {
     const teamId = req.params.teamId; 
+    const projectId = req.params.id;
     const userIdToRemove = req.params.memberId;
+
+    // Validate team exists
+    const team = await teamModel.getById(teamId);
+    if (!team) {
+        return next(new customError(`Team with ID ${teamId} not found.`, 404));
+    }
+
+    // Validate user exists
+    const userToRemove = await userModel.findById(userIdToRemove);
+    if (!userToRemove) {
+        return next(new customError(`User with ID ${userIdToRemove} not found.`, 404));
+    }
 
     // Check if the user is a team member
     const existingMembership = await teamMembershipModel.getMembership(teamId, userIdToRemove);
-    if (!existingMembership) return next(new customError(`User is not a member of team ${teamId}.`, 404));
+    if (!existingMembership) {
+        return next(new customError(`User ${userIdToRemove} is not a member of team ${teamId}.`, 404));
+    }
     
-    // remove member from team
+    // Remove member from team
     const result = await teamMembershipModel.removeMember(teamId, userIdToRemove);
     
-    // verification, that atleast one record was deleted
-    if (result === 0) return next(new customError(`Could not remove user from team ${teamId}.`, 500));
+    // Verification that at least one record was deleted
+    if (result === 0) {
+        return next(new customError(`Could not remove user ${userIdToRemove} from team ${teamId}.`, 500));
+    }
 
     res.status(200).json({ 
-        message: `User ${userIdToRemove} successfully removed from the team ${teamId}.`
+        message: `User ${userToRemove.name} (${userToRemove.email}) successfully removed from the team ${teamId}.`
     });
 });
